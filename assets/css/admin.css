@@ -655,7 +655,7 @@ body {
   right: 0;
   bottom: 0;
   background: radial-gradient(circle at center, #3E1F11 0%, #1A0B04 100%);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 20px;
