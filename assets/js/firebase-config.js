@@ -139,6 +139,14 @@ async function initStoreSeed() {
     if (!snap.exists()) {
       await set(prodRef, jammyProduct);
     }
+    const ordersRef = ref(db, "orders");
+    const ordersSnap = await get(ordersRef);
+    if (!ordersSnap.exists()) {
+      const localOrders = getStored(CACHE_KEYS.ORDERS, null);
+      if (localOrders && Object.keys(localOrders).length > 0) {
+        await set(ordersRef, localOrders);
+      }
+    }
   } catch (err) {}
 }
 initStoreSeed();
@@ -159,6 +167,8 @@ export function subscribeToProduct(callback) {
           setStored(CACHE_KEYS.PRODUCT, data);
           callback(data);
         }
+      }, (err) => {
+        // Fallback to local storage if network or permissions block
       });
     } catch (e) {}
   }
@@ -188,6 +198,8 @@ export function subscribeToOrders(callback) {
         } else {
           callback(getStored(CACHE_KEYS.ORDERS, {}));
         }
+      }, (err) => {
+        // Fallback to local storage if network or permissions block
       });
     } catch (e) {}
   }
@@ -221,6 +233,8 @@ export function subscribeToSingleOrder(orderId, callback) {
           setStored(CACHE_KEYS.ORDERS, current);
           callback(order);
         }
+      }, (err) => {
+        // Fallback to local storage if network or permissions block
       });
     } catch (e) {}
   }
