@@ -394,7 +394,7 @@ function openOrderTicketModal(order) {
         ${order.items.map(item => `
           <div style="display: flex; justify-content: space-between; font-size: 0.9rem; border-bottom: 1px solid #F3F4F6; padding-bottom: 6px;">
             <div>
-              <strong>${item.quantity}x JammyRolls (₱15/pc)</strong>
+              <strong>${item.quantity}x JammyRolls (₱${item.price || liveProduct?.price || 15}/pc)</strong>
               <div style="font-size: 0.78rem; color: var(--admin-text-muted);">
                 Dip: ${item.selectedDip} ${item.selectedToppings?.length ? `• Toppings: ${item.selectedToppings.join(', ')}` : ''}
               </div>
@@ -414,6 +414,7 @@ function openOrderTicketModal(order) {
     <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
       <button class="btn-status-act" onclick="window.print()">🖨️ Print Ticket</button>
       <button class="btn-status-act" id="btn-cancel-this-order" style="color: var(--color-danger); border-color: #FCA5A5;">Cancel Order</button>
+      <button class="btn-status-act" id="btn-delete-this-order" style="color: #991B1B; background: #FEE2E2; border-color: #F87171;">Delete Order 🗑️</button>
     </div>
   `;
 
@@ -441,6 +442,30 @@ function openOrderTicketModal(order) {
     window._tempConfirmCancelOrder = false;
     updateOrderStatus(order.orderId, "Cancelled");
     modal.classList.remove("active");
+  });
+
+  document.getElementById("btn-delete-this-order")?.addEventListener("click", () => {
+    const confirmed = window._tempConfirmDeleteOrder;
+    if (!confirmed) {
+      const delBtn = document.getElementById("btn-delete-this-order");
+      if (delBtn) {
+        delBtn.textContent = "Tap again to delete permanently 🗑️";
+        delBtn.style.background = "#FCA5A5";
+        window._tempConfirmDeleteOrder = true;
+        setTimeout(() => {
+          if (delBtn) {
+            delBtn.textContent = "Delete Order 🗑️";
+            delBtn.style.background = "#FEE2E2";
+          }
+          window._tempConfirmDeleteOrder = false;
+        }, 3000);
+      }
+      return;
+    }
+    window._tempConfirmDeleteOrder = false;
+    deleteOrder(order.orderId);
+    modal.classList.remove("active");
+    showAdminNotification(`Order #${order.orderId} deleted permanently.`);
   });
 
   document.getElementById("btn-close-order-modal")?.addEventListener("click", () => {

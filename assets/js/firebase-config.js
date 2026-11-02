@@ -30,6 +30,10 @@ const CACHE_KEYS = {
   ORDERS: "jammyrolls_orders_v3"
 };
 
+// Subscriber Registries for instant real-time UI updates
+const prodSubscribers = new Set();
+const ordersSubscribers = new Set();
+
 try {
   app = initializeApp(cloudConfig);
   db = getDatabase(app, cloudConfig.databaseURL);
@@ -54,100 +58,72 @@ function setStored(key, val) {
   } catch (e) {}
 }
 
-// Ensure clean product seed (15 pesos per roll)
+// Native Cross-Tab Real-time Synchronizer
+window.addEventListener("storage", (e) => {
+  if (e.key === CACHE_KEYS.PRODUCT && e.newValue) {
+    try {
+      const updatedProd = JSON.parse(e.newValue);
+      prodSubscribers.forEach(cb => cb(updatedProd));
+    } catch (err) {}
+  }
+  if (e.key === CACHE_KEYS.ORDERS && e.newValue) {
+    try {
+      const updatedOrders = JSON.parse(e.newValue);
+      ordersSubscribers.forEach(cb => cb(updatedOrders));
+    } catch (err) {}
+  }
+});
+
+// Seed product only if completely uninitialized (never overwrite admin-configured price)
 const cachedProd = getStored(CACHE_KEYS.PRODUCT, null);
-if (!cachedProd || cachedProd.price !== 15) {
+if (!cachedProd) {
   setStored(CACHE_KEYS.PRODUCT, jammyProduct);
 }
 
-// Initial sample orders for demonstration
-if (!getStored(CACHE_KEYS.ORDERS, null)) {
-  const initialOrders = {
-    "JR-1001": {
-      orderId: "JR-1001",
-      customerName: "Maria Santos",
-      phone: "0917-882-9102",
-      fulfillment: "delivery",
-      address: "Blk 12 Lot 4, Sunburst Villas, Brgy. San Antonio",
-      landmark: "Near Yellow Gate, across 7-Eleven",
-      notes: "Please keep it warm! Extra napkins if possible. Thanks!",
-      paymentMethod: "GCash",
-      paymentRef: "GC-982341",
-      status: "Preparing",
-      statusHistory: [
-        { status: "Pending", time: new Date(Date.now() - 30 * 60000).toISOString() },
-        { status: "Preparing", time: new Date(Date.now() - 15 * 60000).toISOString() }
-      ],
-      createdAt: new Date(Date.now() - 30 * 60000).toISOString(),
-      items: [
-        {
-          id: "jammyrolls-single",
-          name: "JammyRolls (Banana Churros Roll)",
-          price: 15,
-          quantity: 6,
-          selectedDip: "Warm Belgian Choco Ganache",
-          selectedToppings: ["Toasted Crushed Almonds"],
-          itemTotal: 95
-        }
-      ],
-      subtotal: 95,
-      deliveryFee: 49,
-      total: 144
-    },
-    "JR-1002": {
-      orderId: "JR-1002",
-      customerName: "Kenneth Bautista",
-      phone: "0928-554-1290",
-      fulfillment: "pickup",
-      address: "Store Counter Pickup",
-      landmark: "Counter Pickup",
-      notes: "Will pick up fresh",
-      paymentMethod: "Cash",
-      paymentRef: "Pay at counter",
-      status: "Ready",
-      statusHistory: [
-        { status: "Pending", time: new Date(Date.now() - 40 * 60000).toISOString() },
-        { status: "Preparing", time: new Date(Date.now() - 25 * 60000).toISOString() },
-        { status: "Ready", time: new Date(Date.now() - 5 * 60000).toISOString() }
-      ],
-      createdAt: new Date(Date.now() - 40 * 60000).toISOString(),
-      items: [
-        {
-          id: "jammyrolls-single",
-          name: "JammyRolls (Banana Churros Roll)",
-          price: 15,
-          quantity: 10,
-          selectedDip: "Salted Dulce de Leche Caramel",
-          selectedToppings: ["Extra Cinnamon Cane Sugar"],
-          itemTotal: 150
-        }
-      ],
-      subtotal: 150,
-      deliveryFee: 0,
-      total: 150
-    }
-  };
-  setStored(CACHE_KEYS.ORDERS, initialOrders);
+// Clean out legacy mock data so only actual customer orders appear
+const storedOrders = getStored(CACHE_KEYS.ORDERS, {});
+let cleanedLegacy = false;
+if (storedOrders["JR-1001"] && storedOrders["JR-1001"].customerName === "Maria Santos") {
+  delete storedOrders["JR-1001"];
+  cleanedLegacy = true;
+}
+if (storedOrders["JR-1002"] && storedOrders["JR-1002"].customerName === "Kenneth Bautista") {
+  delete storedOrders["JR-1002"];
+  cleanedLegacy = true;
+}
+if (cleanedLegacy) {
+  setStored(CACHE_KEYS.ORDERS, storedOrders);
 }
 
-// Initial cloud seed
+// Initial cloud seed & clean
 async function initStoreSeed() {
   if (!liveSyncReady || !db) return;
   try {
     const prodRef = ref(db, "store/product");
     const snap = await get(prodRef);
     if (!snap.exists()) {
-      await set(prodRef, jammyProduct);
-    }
-    const ordersRef = ref(db, "orders");
-    const ordersSnap = await get(ordersRef);
-    if (!ordersSnap.exists()) {
-      const localOrders = getStored(CACHE_KEYS.ORDERS, null);
-      if (localOrders && Object.keys(localOrders).length > 0) {
-        await set(ordersRef, localOrders);
+      const currentProd = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
+      await set(prodRef, currentProd);
+    } else {
+      const cloudProd = snap.val();
+      if (cloudProd && cloudProd.price) {
+        setStored(CACHE_KEYS.PRODUCT, cloudProd);
+        prodSubscribers.forEach(cb => cb(cloudProd));
       }
     }
-  } catch (err) {}
+
+    // Remove legacy mock orders from cloud database if present
+    const mock1Snap = await get(ref(db, "orders/JR-1001"));
+    if (mock1Snap.exists() && mock1Snap.val()?.customerName === "Maria Santos") {
+      await set(ref(db, "orders/JR-1001"), null);
+    }
+    const mock2Snap = await get(ref(db, "orders/JR-1002"));
+    if (mock2Snap.exists() && mock2Snap.val()?.customerName === "Kenneth Bautista") {
+      await set(ref(db, "orders/JR-1002"), null);
+    }
+  } catch (err) {
+    console.warn("Cloud store sync notice:", err);
+  }
 }
 initStoreSeed();
 
@@ -155,6 +131,7 @@ initStoreSeed();
  * Subscribe to Product & Stock updates
  */
 export function subscribeToProduct(callback) {
+  prodSubscribers.add(callback);
   const cached = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
   callback(cached);
 
@@ -165,10 +142,10 @@ export function subscribeToProduct(callback) {
         if (snapshot.exists()) {
           const data = snapshot.val();
           setStored(CACHE_KEYS.PRODUCT, data);
-          callback(data);
+          prodSubscribers.forEach(cb => cb(data));
         }
       }, (err) => {
-        // Fallback to local storage if network or permissions block
+        console.warn("Product sync notice:", err);
       });
     } catch (e) {}
   }
@@ -181,9 +158,10 @@ export function subscribeToProduct(callback) {
 }
 
 /**
- * Subscribe to all Orders (Admin feed)
+ * Subscribe to all Orders (Admin & Kitchen feed)
  */
 export function subscribeToOrders(callback) {
+  ordersSubscribers.add(callback);
   const cached = getStored(CACHE_KEYS.ORDERS, {});
   callback(cached);
 
@@ -191,15 +169,30 @@ export function subscribeToOrders(callback) {
     try {
       const ordersRef = ref(db, "orders");
       onValue(ordersRef, (snapshot) => {
+        const localOrders = getStored(CACHE_KEYS.ORDERS, {});
+        let cloudOrders = {};
         if (snapshot.exists()) {
-          const data = snapshot.val();
-          setStored(CACHE_KEYS.ORDERS, data);
-          callback(data);
-        } else {
-          callback(getStored(CACHE_KEYS.ORDERS, {}));
+          cloudOrders = snapshot.val() || {};
+          // Filter out legacy mock data
+          if (cloudOrders["JR-1001"]?.customerName === "Maria Santos") delete cloudOrders["JR-1001"];
+          if (cloudOrders["JR-1002"]?.customerName === "Kenneth Bautista") delete cloudOrders["JR-1002"];
+        }
+
+        // Safely merge so locally placed orders are NEVER deleted by cloud snapshot
+        const merged = { ...localOrders, ...cloudOrders };
+        setStored(CACHE_KEYS.ORDERS, merged);
+        ordersSubscribers.forEach(cb => cb(merged));
+
+        // Push any local orders that might be missing in cloud
+        for (const [id, ord] of Object.entries(localOrders)) {
+          if (!cloudOrders[id]) {
+            try {
+              set(ref(db, `orders/${id}`), ord);
+            } catch (e) {}
+          }
         }
       }, (err) => {
-        // Fallback to local storage if network or permissions block
+        console.warn("Live orders sync notice:", err);
       });
     } catch (e) {}
   }
@@ -233,9 +226,7 @@ export function subscribeToSingleOrder(orderId, callback) {
           setStored(CACHE_KEYS.ORDERS, current);
           callback(order);
         }
-      }, (err) => {
-        // Fallback to local storage if network or permissions block
-      });
+      }, (err) => {});
     } catch (e) {}
   }
 
@@ -263,7 +254,7 @@ export async function createOrder(orderData) {
     ]
   };
 
-  // 1. Save locally
+  // 1. Save locally immediately
   const orders = getStored(CACHE_KEYS.ORDERS, {});
   orders[orderId] = finalOrder;
   setStored(CACHE_KEYS.ORDERS, orders);
@@ -276,7 +267,11 @@ export async function createOrder(orderData) {
   currentProd.isAvailable = nextStock > 0;
   setStored(CACHE_KEYS.PRODUCT, currentProd);
 
-  // 3. Sync to Cloud
+  // Notify active listeners
+  ordersSubscribers.forEach(cb => cb(orders));
+  prodSubscribers.forEach(cb => cb(currentProd));
+
+  // 3. Sync to Cloud Database
   if (liveSyncReady && db) {
     try {
       await set(ref(db, `orders/${orderId}`), finalOrder);
@@ -284,7 +279,9 @@ export async function createOrder(orderData) {
         stock: nextStock,
         isAvailable: nextStock > 0
       });
-    } catch (err) {}
+    } catch (err) {
+      console.warn("Cloud order write notice:", err);
+    }
   }
 
   return finalOrder;
@@ -306,6 +303,7 @@ export async function updateOrderStatus(orderId, newStatus, note = "") {
       note: note || `Order updated to ${newStatus}`
     });
     setStored(CACHE_KEYS.ORDERS, orders);
+    ordersSubscribers.forEach(cb => cb(orders));
   }
 
   if (liveSyncReady && db) {
@@ -314,7 +312,28 @@ export async function updateOrderStatus(orderId, newStatus, note = "") {
         status: newStatus,
         statusHistory: orders[orderId]?.statusHistory || []
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Cloud status update notice:", e);
+    }
+  }
+}
+
+/**
+ * Delete Order (Admin action)
+ */
+export async function deleteOrder(orderId) {
+  if (!orderId) return;
+  const orders = getStored(CACHE_KEYS.ORDERS, {});
+  delete orders[orderId];
+  setStored(CACHE_KEYS.ORDERS, orders);
+  ordersSubscribers.forEach(cb => cb(orders));
+
+  if (liveSyncReady && db) {
+    try {
+      await set(ref(db, `orders/${orderId}`), null);
+    } catch (e) {
+      console.warn("Cloud delete order notice:", e);
+    }
   }
 }
 
@@ -329,6 +348,7 @@ export async function updateInventoryStock(newStockCount, isAvailable = true) {
   currentProd.stock = stockNum;
   currentProd.isAvailable = available;
   setStored(CACHE_KEYS.PRODUCT, currentProd);
+  prodSubscribers.forEach(cb => cb(currentProd));
 
   if (liveSyncReady && db) {
     try {
@@ -336,7 +356,9 @@ export async function updateInventoryStock(newStockCount, isAvailable = true) {
         stock: stockNum,
         isAvailable: available
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Cloud stock update notice:", e);
+    }
   }
 }
 
@@ -348,12 +370,15 @@ export async function updateProductPrice(newPrice) {
   const currentProd = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
   currentProd.price = priceNum;
   setStored(CACHE_KEYS.PRODUCT, currentProd);
+  prodSubscribers.forEach(cb => cb(currentProd));
 
   if (liveSyncReady && db) {
     try {
       await update(ref(db, "store/product"), {
         price: priceNum
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Cloud price update notice:", e);
+    }
   }
 }

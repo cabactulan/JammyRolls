@@ -473,7 +473,7 @@ function updateCartUI() {
       <div class="empty-cart-state">
         <div class="empty-cart-icon">🍌🧺</div>
         <h4 style="margin-bottom: 6px;">Your Box is Empty</h4>
-        <p style="font-size: 0.88rem;">Add freshly fried JammyRolls (₱15/pc) to your order box!</p>
+        <p style="font-size: 0.88rem;">Add freshly fried JammyRolls (₱${liveProduct?.price || 15}/pc) to your order box!</p>
       </div>
     `;
     if (subtotalEl) subtotalEl.textContent = "₱0";
