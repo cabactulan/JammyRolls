@@ -80,22 +80,7 @@ if (!cachedProd) {
   setStored(CACHE_KEYS.PRODUCT, jammyProduct);
 }
 
-// Clean out legacy mock data so only actual customer orders appear
-const storedOrders = getStored(CACHE_KEYS.ORDERS, {});
-let cleanedLegacy = false;
-if (storedOrders["JR-1001"] && storedOrders["JR-1001"].customerName === "Maria Santos") {
-  delete storedOrders["JR-1001"];
-  cleanedLegacy = true;
-}
-if (storedOrders["JR-1002"] && storedOrders["JR-1002"].customerName === "Kenneth Bautista") {
-  delete storedOrders["JR-1002"];
-  cleanedLegacy = true;
-}
-if (cleanedLegacy) {
-  setStored(CACHE_KEYS.ORDERS, storedOrders);
-}
-
-// Initial cloud seed & clean
+// Initial cloud seed — sync product info from cloud if available
 async function initStoreSeed() {
   if (!liveSyncReady || !db) return;
   try {
@@ -110,16 +95,6 @@ async function initStoreSeed() {
         setStored(CACHE_KEYS.PRODUCT, cloudProd);
         prodSubscribers.forEach(cb => cb(cloudProd));
       }
-    }
-
-    // Remove legacy mock orders from cloud database if present
-    const mock1Snap = await get(ref(db, "orders/JR-1001"));
-    if (mock1Snap.exists() && mock1Snap.val()?.customerName === "Maria Santos") {
-      await set(ref(db, "orders/JR-1001"), null);
-    }
-    const mock2Snap = await get(ref(db, "orders/JR-1002"));
-    if (mock2Snap.exists() && mock2Snap.val()?.customerName === "Kenneth Bautista") {
-      await set(ref(db, "orders/JR-1002"), null);
     }
   } catch (err) {
     console.warn("Cloud store sync notice:", err);
@@ -169,16 +144,13 @@ export function subscribeToOrders(callback) {
     try {
       const ordersRef = ref(db, "orders");
       onValue(ordersRef, (snapshot) => {
-        const localOrders = getStored(CACHE_KEYS.ORDERS, {});
         let cloudOrders = {};
         if (snapshot.exists()) {
           cloudOrders = snapshot.val() || {};
-          // Filter out legacy mock data
-          if (cloudOrders["JR-1001"]?.customerName === "Maria Santos") delete cloudOrders["JR-1001"];
-          if (cloudOrders["JR-1002"]?.customerName === "Kenneth Bautista") delete cloudOrders["JR-1002"];
         }
 
-        // Safely merge so locally placed orders are NEVER deleted by cloud snapshot
+        // Use cloud as source of truth, merged with any pending local orders
+        const localOrders = getStored(CACHE_KEYS.ORDERS, {});
         const merged = { ...localOrders, ...cloudOrders };
         setStored(CACHE_KEYS.ORDERS, merged);
         ordersSubscribers.forEach(cb => cb(merged));
