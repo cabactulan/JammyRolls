@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JammyRolls — Operations Hub & Store Management</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../assets/images/jammyrolls-logo.png">
+
+  <!-- Chart.js for Visual Trends -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       1. AUTHENTICATION LOGIN GATE
+       ========================================================================== -->
+  <div id="admin-login-screen">
+    <div class="login-auth-card">
+      <img src="../assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="login-brand-logo">
+      <h2 class="login-title">Operations Portal</h2>
+      <p class="login-desc">
+        Authorized access for Jamaica, Lara, Glaisa, Prince, and store managers.
+      </p>
+
+      <div class="login-error-badge" id="admin-login-error"></div>
+
+      <form id="admin-login-form">
+        <div class="login-input-group">
+          <label class="login-input-label">Username</label>
+          <input type="text" id="login-username" class="login-input-field" placeholder="e.g. admin or founder name" required autofocus>
+        </div>
+
+        <div class="login-input-group">
+          <label class="login-input-label">Password</label>
+          <input type="password" id="login-password" class="login-input-field" placeholder="Enter security password" required>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; font-size: 0.82rem; color: #4B5563;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="login-remember">
+            <span>Remember on this device</span>
+          </label>
+          <span style="color: #9CA3AF;">Default: admin / jammy2026</span>
+        </div>
+
+        <button type="submit" class="btn-login-submit">
+          Sign In to Store Dashboard 🔐
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       2. AUTHENTICATED DASHBOARD APPLICATION
+       ========================================================================== -->
+  <div id="admin-dashboard-app" style="display: none; width: 100%; min-height: 100vh;">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <img src="../assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="sidebar-logo">
+        <div>
+          <div class="sidebar-brand-name">JammyRolls</div>
+          <div class="sidebar-brand-sub">Operations Hub</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item-btn active" data-section="analytics">
+          <span>📊</span>
+          <span>Analytics Overview</span>
+        </button>
+
+        <button class="nav-item-btn" data-section="orders">
+          <span>🍳</span>
+          <span>Live Kitchen Orders</span>
+          <span class="nav-badge-pill" id="sidebar-pending-badge" style="display: none;">0</span>
+        </button>
+
+        <button class="nav-item-btn" data-section="inventory">
+          <span>📦</span>
+          <span>Daily Stock & Price</span>
+        </button>
+
+        <button class="nav-item-btn" data-section="founders">
+          <span>👥</span>
+          <span>Founders & Team</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-status-pill">
+          <span class="status-dot-pulse"></span>
+          <span>Kitchen Live Sync: Active</span>
+        </div>
+        <div style="font-size: 0.72rem; color: #9CA3AF; margin-top: 6px;">
+          Store Status: Online 🟢
+        </div>
+        <button class="btn-status-act btn-trigger-logout" style="width: 100%; margin-top: 14px; background: rgba(255,255,255,0.08); color: #FCA5A5; border-color: rgba(239,68,68,0.3);">
+          🚪 Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="topbar-title-wrap">
+          <h1>Store Operations Hub</h1>
+          <p class="topbar-subtitle">
+            Logged in as <strong id="topbar-user-name" style="color: #D97706;">Store Admin</strong> • Today's store overview
+          </p>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Live Clock -->
+          <div style="background: #FFF; border: 1px solid var(--admin-border); padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; color: #1F130B;" id="admin-live-clock">
+            --:--:--
+          </div>
+
+          <!-- Kitchen Chime Toggle -->
+          <button class="btn-sound-toggle" id="btn-toggle-sound">
+            <span>🔔</span>
+            <span>Sound Alert: ON</span>
+          </button>
+
+          <!-- Topbar Sign Out -->
+          <button class="btn-status-act btn-trigger-logout" style="color: var(--color-danger); border-color: #FCA5A5; padding: 8px 16px;">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <!-- SECTION 1: ANALYTICS OVERVIEW -->
+      <section class="admin-section" id="section-analytics">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Total Revenue</span>
+              <div class="metric-icon-wrap metric-icon-gold">💰</div>
+            </div>
+            <div class="metric-val" id="kpi-total-revenue">₱0</div>
+            <div class="metric-trend trend-up">
+              <span>●</span> Lifetime gross sales
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Today's Sales</span>
+              <div class="metric-icon-wrap metric-icon-green">🔥</div>
+            </div>
+            <div class="metric-val" id="kpi-today-revenue">₱0</div>
+            <div class="metric-trend trend-up">
+              <span>●</span> Today's orders
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Active Kitchen Orders</span>
+              <div class="metric-icon-wrap metric-icon-amber">🍳</div>
+            </div>
+            <div class="metric-val" id="kpi-active-orders">0</div>
+            <div class="metric-trend trend-alert">
+              <span>●</span> Pending & frying in kitchen
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Average Order Value</span>
+              <div class="metric-icon-wrap metric-icon-blue">📈</div>
+            </div>
+            <div class="metric-val" id="kpi-avg-order">₱0</div>
+            <div class="metric-trend trend-up" id="kpi-stock-status-badge">
+              Batch stock active
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Revenue Trend (Last 7 Days)</h3>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #D97706;">PHP Sales (₱)</span>
+            </div>
+            <div style="height: 260px; position: relative;">
+              <canvas id="chart-sales-trend"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Order Status Breakdown</h3>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #10B981;">Kitchen Queue</span>
+            </div>
+            <div style="height: 260px; position: relative;">
+              <canvas id="chart-status-dist"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: LIVE KITCHEN ORDERS -->
+      <section class="admin-section" id="section-orders" style="display: none;">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2 style="font-family: 'Fredoka', cursive; font-size: 1.4rem;">Live Kitchen Queue</h2>
+              <p style="font-size: 0.85rem; color: var(--admin-text-muted);">Incoming customer orders update automatically as they arrive</p>
+            </div>
+
+            <div class="filter-pills-row">
+              <button class="filter-pill order-filter-pill active" data-status="all">All Orders</button>
+              <button class="filter-pill order-filter-pill" data-status="Pending">Pending (New)</button>
+              <button class="filter-pill order-filter-pill" data-status="Preparing">Preparing / Frying</button>
+              <button class="filter-pill order-filter-pill" data-status="Ready">Ready / Out for Delivery</button>
+              <button class="filter-pill order-filter-pill" data-status="Completed">Completed</button>
+              <button class="filter-pill order-filter-pill" data-status="Cancelled">Cancelled</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID & Time</th>
+                  <th>Customer</th>
+                  <th>Fulfillment</th>
+                  <th>Rolls Ordered</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Kitchen Action</th>
+                </tr>
+              </thead>
+              <tbody id="orders-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: DAILY STOCK & PRICE (SINGLE PRODUCT AT 15 PESOS) -->
+      <section class="admin-section" id="section-inventory" style="display: none;">
+        <div class="panel-card" style="padding: 28px;">
+          <div style="margin-bottom: 24px;">
+            <h2 style="font-family: 'Fredoka', cursive; font-size: 1.5rem;">JammyRolls Stock & Price Management</h2>
+            <p style="font-size: 0.88rem; color: var(--admin-text-muted);">
+              Manage the total available fresh pieces of JammyRolls (Banana Churros Roll) and product pricing.
+            </p>
+          </div>
+
+          <!-- Product Details & Status Card -->
+          <div style="background: linear-gradient(135deg, #FFFDF8 0%, #FEF3C7 100%); border: 2px solid #FDE68A; border-radius: 16px; padding: 28px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1.3fr; gap: 30px; align-items: center;">
+            <div>
+              <span class="badge badge-choco" style="margin-bottom: 8px;">Single Flagship Product</span>
+              <h3 style="font-family: 'Fredoka', cursive; font-size: 1.8rem; color: #1F130B; margin-bottom: 6px;">
+                JammyRolls (Banana Churros Roll)
+              </h3>
+              <p style="font-size: 0.88rem; color: var(--admin-text-muted); margin-bottom: 14px;">
+                Crispy Golden Cinnamon Churro Crust • Sweet Ripe Saba Banana • Molten Chocolate Lava
+              </p>
+
+              <!-- Price Control -->
+              <div style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted);">Current Product Price:</span>
+                  <div style="font-family: 'Fredoka', cursive; font-size: 1.5rem; color: #D97706; font-weight: 700;" id="display-product-price">
+                    ₱15 / roll
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 0.85rem; font-weight: 600;">Edit (₱):</span>
+                  <input type="number" id="input-edit-price" value="15" min="1" style="width: 70px; padding: 6px 8px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;">
+                  <button class="btn-status-act" id="btn-save-price" style="background: #D97706; color: #FFF;">Save</button>
+                </div>
+              </div>
+
+              <!-- Store Status Availability Toggle -->
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="stock-availability-toggle" style="width: 20px; height: 20px; accent-color: #10B981; cursor: pointer;">
+                <label for="stock-availability-toggle" id="stock-availability-label" style="font-weight: 700; font-size: 0.95rem; color: #1F130B; cursor: pointer;">
+                  Store Status: Open & Frying Fresh Batches
+                </label>
+              </div>
+            </div>
+
+            <!-- Stock Count & Adjustments -->
+            <div style="background: #FFF; border-radius: 14px; padding: 22px; border: 1px solid #E5E7EB; box-shadow: var(--shadow-card);">
+              <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted); margin-bottom: 4px;">
+                Current Batch Available Today
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px;">
+                <span style="font-family: 'Fredoka', cursive; font-size: 3rem; font-weight: 700; line-height: 1;" id="stock-current-display">150</span>
+                <span style="font-size: 1rem; color: var(--admin-text-muted); font-weight: 600;">rolls remaining</span>
+              </div>
+
+              <!-- Quick Increment / Decrement Buttons -->
+              <div style="font-size: 0.82rem; font-weight: 700; color: #4B5563; margin-bottom: 8px;">Quick Adjust Batch:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
+                <button class="btn-stock-adjust btn-batch-adjust" data-change="-20" style="width: auto; padding: 6px 12px;">-20</button>
+                <button class="btn-stock-adjust btn-batch-adjust" data-change="-10" style="width: auto; padding: 6px 12px;">-10</button>
+                <button class="btn-stock-adjust btn-batch-adjust" data-change="-5" style="width: auto; padding: 6px 12px;">-5</button>
+                <button class="btn-stock-adjust btn-batch-adjust" data-change="5" style="width: auto; padding: 6px 12px;">+5</button>
+                <button class="btn-stock-adjust btn-batch-adjust" data-change="10" style="width: auto; padding: 6px 12px;">+10</button>
+                <button class="btn-stock-adjust btn-batch-adjust" data-change="20" style="width: auto; padding: 6px 12px;">+20</button>
+                <button class="btn-stock-adjust btn-batch-adjust" data-change="50" style="width: auto; padding: 6px 12px;">+50 Fresh Batch</button>
+              </div>
+
+              <!-- Manual Stock Set Input -->
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 0.85rem; font-weight: 600;">Set Exact Count:</span>
+                <input type="number" id="stock-manual-input" style="width: 100px; padding: 8px 12px; border: 1px solid var(--admin-border); border-radius: 8px; font-weight: 700; font-size: 1rem;" min="0">
+                <button class="btn-status-act" id="btn-save-manual-stock" style="background: #1F130B; color: #FFF; padding: 8px 16px;">
+                  Update Stock
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: FOUNDERS & TEAM -->
+      <section class="admin-section" id="section-founders" style="display: none;">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <h2 style="font-family: 'Fredoka', cursive; font-size: 1.4rem;">JammyRolls Founders & Leadership</h2>
+              <p style="font-size: 0.85rem; color: var(--admin-text-muted);">The passionate team behind JammyRolls</p>
+            </div>
+          </div>
+          <div class="admin-founders-grid" id="admin-founders-list">
+            <!-- Jamaica A. Reyes, Lara S. Nieles, Glaisa M. Cabactulan, Prince Ligero -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar (shown on mobile only) -->
+  <nav class="admin-bottom-nav" id="admin-bottom-nav" style="display:none;">
+    <div class="admin-bottom-nav-inner">
+      <button class="admin-bnav-btn active" data-section="analytics">
+        <span class="bnav-icon">📊</span>
+        <span>Analytics</span>
+      </button>
+      <button class="admin-bnav-btn" data-section="orders">
+        <span class="bnav-icon">🍳</span>
+        <span>Orders</span>
+        <span class="admin-bnav-badge" id="bnav-pending-badge" style="display:none;">0</span>
+      </button>
+      <button class="admin-bnav-btn" data-section="inventory">
+        <span class="bnav-icon">📦</span>
+        <span>Stock</span>
+      </button>
+      <button class="admin-bnav-btn" data-section="founders">
+        <span class="bnav-icon">👥</span>
+        <span>Team</span>
+      </button>
+      <button class="admin-bnav-btn btn-trigger-logout" data-section="logout">
+        <span class="bnav-icon">🚪</span>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==========================================================================
+       3. LOGOUT CONFIRMATION MODAL
+       ========================================================================== -->
+  <div class="admin-modal-backdrop" id="admin-logout-modal">
+    <div class="logout-confirm-card">
+      <div class="logout-icon-wrap">🚪</div>
+      <h3 style="font-family: 'Fredoka', cursive; font-size: 1.35rem; margin-bottom: 8px;">Confirm Sign Out</h3>
+      <p style="font-size: 0.9rem; color: var(--admin-text-muted); margin-bottom: 24px; line-height: 1.5;">
+        Are you sure you want to log out of the JammyRolls Operations Hub?
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button class="btn-status-act" id="btn-cancel-logout" style="padding: 10px 20px; font-size: 0.92rem;">
+          Cancel
+        </button>
+        <button class="btn-login-submit" id="btn-confirm-logout" style="width: auto; padding: 10px 24px; font-size: 0.95rem; background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: #FFF; box-shadow: none;">
+          Yes, Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kitchen Order Slip Modal -->
+  <div class="admin-modal-backdrop" id="admin-order-modal">
+    <div class="admin-modal">
+      <div class="admin-modal-header">
+        <h3 style="font-family: 'Fredoka', cursive;">Order Receipt & Kitchen Slip</h3>
+        <button class="btn-status-act" id="btn-close-order-modal">✕</button>
+      </div>
+      <div class="admin-modal-body" id="admin-order-modal-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <span id="kpi-total-orders" style="display: none;">0</span>
+
+  <!-- Admin Controller -->
+  <script type="module" src="../assets/js/admin.js"></script>
+</body>
+</html>
