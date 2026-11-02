@@ -46,14 +46,20 @@ export function showToast(message, type = "info") {
   }, 3500);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   initProductSubscriptions();
   renderFounders();
   updateCartUI();
   setupEventListeners();
   setupMobileNav();
   setupScrollspy();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 function setupScrollspy() {
   const sections = document.querySelectorAll("section[id]");

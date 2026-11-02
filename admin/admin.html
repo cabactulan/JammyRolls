@@ -95,7 +95,7 @@
       <div class="sidebar-footer">
         <div class="sidebar-status-pill">
           <span class="status-dot-pulse"></span>
-          <span>Kitchen Live Sync: Active</span>
+          <span>Store Status: Open & Ready</span>
         </div>
         <div style="font-size: 0.72rem; color: #9CA3AF; margin-top: 6px;">
           Store Status: Online 🟢
@@ -199,7 +199,7 @@
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">Order Status Breakdown</h3>
-              <span style="font-size: 0.78rem; font-weight: 700; color: #10B981;">Kitchen Queue</span>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #10B981;">Order Status</span>
             </div>
             <div style="height: 260px; position: relative;">
               <canvas id="chart-status-dist"></canvas>
@@ -213,8 +213,8 @@
         <div class="panel-card">
           <div class="panel-header">
             <div>
-              <h2 style="font-family: 'Fredoka', cursive; font-size: 1.4rem;">Live Kitchen Queue</h2>
-              <p style="font-size: 0.85rem; color: var(--admin-text-muted);">Incoming customer orders update automatically as they arrive</p>
+              <h2 style="font-family: 'Fredoka', cursive; font-size: 1.4rem;">Live Orders</h2>
+              <p style="font-size: 0.85rem; color: var(--admin-text-muted);">Orders placed by customers appear here</p>
             </div>
 
             <div class="filter-pills-row">
@@ -342,11 +342,10 @@
           </div>
         </div>
       </section>
-    </main>
-  </div>
+    
 
   <!-- Mobile Bottom Navigation Bar (shown on mobile only) -->
-  <nav class="admin-bottom-nav" id="admin-bottom-nav" style="display:none;">
+  <nav class="admin-bottom-nav" id="admin-bottom-nav" >
     <div class="admin-bottom-nav-inner">
       <button class="admin-bnav-btn active" data-section="analytics">
         <span class="bnav-icon">📊</span>
@@ -371,6 +370,8 @@
       </button>
     </div>
   </nav>
+    </main>
+  </div>
 
   <!-- ==========================================================================
        3. LOGOUT CONFIRMATION MODAL
@@ -393,7 +394,7 @@
     </div>
   </div>
 
-  <!-- Kitchen Order Slip Modal -->
+  <!-- Order Slip Modal -->
   <div class="admin-modal-backdrop" id="admin-order-modal">
     <div class="admin-modal">
       <div class="admin-modal-header">

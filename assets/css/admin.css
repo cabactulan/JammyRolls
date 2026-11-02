@@ -780,7 +780,7 @@ body {
    Mobile Bottom Navigation Bar
    ========================================================================== */
 .admin-bottom-nav {
-  display: none;
+  display: none !important;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -891,10 +891,10 @@ body {
     padding-bottom: 64px;
   }
   .admin-sidebar {
-    display: none;
+    display: none !important;
   }
   .admin-bottom-nav {
-    display: block;
+    display: block !important;
   }
   .admin-main {
     margin-left: 0;

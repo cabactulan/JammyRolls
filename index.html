@@ -107,17 +107,7 @@
           <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls Banana Churro Showcase" class="hero-main-logo">
         </div>
 
-        <!-- Floating Badges -->
-        <div class="floating-pill pill-2">
-          <div class="pill-icon">🍌</div>
-          <span>Ripe Sweet Bananas</span>
         </div>
-
-        <div class="floating-pill pill-3">
-          <div class="pill-icon">🥨</div>
-          <span>Cinnamon Sugar Crunch</span>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -169,9 +159,72 @@
         </p>
       </div>
 
+      
       <!-- Single Product Card Component -->
       <div id="product-showcase-container">
-        <!-- Injected dynamically by main.js with live stock count and pack sizes -->
+        <div class="product-hero-card">
+          <div class="product-hero-left">
+            <div class="product-hero-visual">
+              <div class="product-hero-glow"></div>
+              <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls Banana Churros Roll" class="product-hero-img">
+              <div class="product-stock-pill in-stock" style="position: absolute; top: 20px; left: 20px;">
+                <span class="product-stock-dot"></span>
+                <span id="static-stock-text">150 rolls available in today's fresh batch</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-hero-right">
+            <div class="badge badge-yellow" style="margin-bottom: 10px;">Original Recipe ✨</div>
+            <h2 style="font-size: 2.2rem; color: var(--color-choco-dark); margin-bottom: 6px;">
+              JammyRolls (Banana Churros Roll)
+            </h2>
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;">
+              <span style="font-family: var(--font-brand); font-size: 2.2rem; font-weight: 700; color: #D97706;">
+                ₱15
+              </span>
+              <span style="font-size: 1rem; color: var(--color-text-muted); font-weight: 600;">per roll</span>
+            </div>
+
+            <p style="font-size: 1rem; color: var(--color-cinnamon); font-weight: 700; margin-bottom: 12px;">
+              Crispy Golden Churro Crust • Sweet Saba Banana • Molten Chocolate Lava
+            </p>
+            <p style="font-size: 0.95rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 24px;">
+              Freshly deep-fried artisan cinnamon-sugar churros pastry rolled with sweet ripe Saba banana and bursting with rich, molten chocolate lava. Handcrafted fresh on every order!
+            </p>
+
+            <!-- Quick Quantity & Dip Selection Preview -->
+            <div style="background: var(--color-surface-soft); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                  <span style="font-weight: 700; color: var(--color-choco-dark);">Quantity:</span>
+                  <div style="font-size: 0.8rem; color: var(--color-text-muted);">₱15 per roll</div>
+                </div>
+                <div class="quantity-control-wrap">
+                  <button class="qty-btn" id="hero-qty-minus">-</button>
+                  <span class="qty-val" id="hero-qty-val">1</span>
+                  <button class="qty-btn" id="hero-qty-plus">+</button>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--color-border); padding-top: 10px;">
+                <span style="font-size: 0.9rem; color: var(--color-text-muted);">Total:</span>
+                <span style="font-family: var(--font-brand); font-size: 1.5rem; font-weight: 700; color: var(--color-choco-dark);" id="hero-calc-price">
+                  ₱15
+                </span>
+              </div>
+            </div>
+
+            <!-- Call to Action Buttons -->
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+              <button class="btn btn-primary" id="btn-quick-add" style="padding: 14px 28px; font-size: 1.05rem;">
+                Add to Cart 🛒
+              </button>
+              <button class="btn btn-choco" id="btn-open-customizer" style="padding: 14px 24px; font-size: 1rem;">
+                Customize 🍯
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -220,9 +273,41 @@
         </p>
       </div>
 
+      
       <!-- Rendered dynamically with founders details -->
       <div class="founders-grid" id="founders-grid">
-        <!-- Jamaica A. Reyes, Lara S. Nieles, Glaisa M. Cabactulan, Prince Ligero -->
+        <div class="founder-card">
+          <div class="founder-avatar-wrap">
+            <div class="founder-avatar-inner">JR</div>
+          </div>
+          <h4 class="founder-name">Jamaica A. Reyes</h4>
+          <div class="founder-role">Chief Executive Baker & Recipe Innovator</div>
+          <p class="founder-quote">“Every roll is rolled with passion, fresh sweet bananas, and love for handcrafted sweet perfection.”</p>
+        </div>
+        <div class="founder-card">
+          <div class="founder-avatar-wrap">
+            <div class="founder-avatar-inner">LN</div>
+          </div>
+          <h4 class="founder-name">Lara S. Nieles</h4>
+          <div class="founder-role">Head of Operations & Quality Control</div>
+          <p class="founder-quote">“Maintaining that perfect golden crispiness on the outside while keeping the inside gooey and warm.”</p>
+        </div>
+        <div class="founder-card">
+          <div class="founder-avatar-wrap">
+            <div class="founder-avatar-inner">GC</div>
+          </div>
+          <h4 class="founder-name">Glaisa M. Cabactulan</h4>
+          <div class="founder-role">Creative Brand & Customer Experience Director</div>
+          <p class="founder-quote">“JammyRolls is not just dessert—it's a joyful, crunchy experience that brightens your everyday moments.”</p>
+        </div>
+        <div class="founder-card">
+          <div class="founder-avatar-wrap">
+            <div class="founder-avatar-inner">PL</div>
+          </div>
+          <h4 class="founder-name">Prince Ligero</h4>
+          <div class="founder-role">Supply Chain & Logistics Specialist</div>
+          <p class="founder-quote">“Sourcing only top-grade bananas, Belgian chocolate, and premium ingredients delivered fresh daily.”</p>
+        </div>
       </div>
     </div>
   </section>
