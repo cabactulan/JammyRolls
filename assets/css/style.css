@@ -593,12 +593,6 @@ img {
   white-space: nowrap;
 }
 
-.floating-pill.pill-1 {
-  top: 10%;
-  left: -20px;
-  animation: floatBadge1 4.5s ease-in-out infinite;
-}
-
 .floating-pill.pill-2 {
   bottom: 8%;
   right: -20px;
