@@ -11,8 +11,7 @@ Founded by **Jamaica A. Reyes**, **Lara S. Nieles**, **Glaisa M. Cabactulan**, a
 ### 🛍️ Customer Experience
 - **Single Flagship Product**: Signature Banana Churros Rolls at **₱15 per roll**.
 - **Interactive Ordering**: Dynamic quantity selector, dip customization (Belgian Chocolate Ganache, Caramel Cinnamon Drizzle, Strawberry Velvet, Sweet Condensed Milk), and crunchy toppings.
-- **Fast Checkout**: Delivery or Store Pickup options with instant subtotal and delivery calculations.
-- **Real-Time Live Order Tracking**: Customers can track kitchen status (`Pending` ➔ `Preparing` ➔ `Ready` ➔ `Completed`) in real time.
+- **Fast Checkout**: Delivery or Store Pickup options with instant subtotal, delivery calculations, and immediate order confirmation.
 - **Fully Responsive**: Mobile-first design with smooth slide-over cart, touch-friendly navigation, and animated dialogs.
 
 ### 🍳 Operations Hub & Admin Portal (`/admin/`)
@@ -70,3 +69,4 @@ Website/
 
 ## 📜 License
 © 2026 JammyRolls Philippines. Handcrafted with ❤️.
+

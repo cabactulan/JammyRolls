@@ -51,9 +51,51 @@ document.addEventListener("DOMContentLoaded", () => {
   renderFounders();
   updateCartUI();
   setupEventListeners();
-  checkUrlForTracking();
   setupMobileNav();
+  setupScrollspy();
 });
+
+function setupScrollspy() {
+  const sections = document.querySelectorAll("section[id]");
+  const navLinks = document.querySelectorAll(".nav-link");
+
+  function onScroll() {
+    const scrollPos = window.scrollY + 140;
+    sections.forEach(section => {
+      const top = section.offsetTop;
+      const height = section.offsetHeight;
+      const id = section.getAttribute("id");
+
+      if (scrollPos >= top && scrollPos < top + height) {
+        navLinks.forEach(link => {
+          link.classList.remove("active");
+          if (link.getAttribute("href") === `#${id}`) {
+            link.classList.add("active");
+          }
+        });
+      }
+    });
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Smooth click scroll and highlight
+  navLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+      const targetId = link.getAttribute("href");
+      if (targetId && targetId.startsWith("#")) {
+        const targetEl = document.querySelector(targetId);
+        if (targetEl) {
+          e.preventDefault();
+          targetEl.scrollIntoView({ behavior: "smooth" });
+          navLinks.forEach(l => l.classList.remove("active"));
+          link.classList.add("active");
+        }
+      }
+    });
+  });
+}
 
 function setupMobileNav() {
   const toggle = document.getElementById("mobile-nav-toggle");
@@ -149,8 +191,8 @@ function renderProductSection() {
         <div style="background: var(--color-surface-soft); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <div>
-              <span style="font-weight: 700; color: var(--color-choco-dark);">Quick Order Quantity:</span>
-              <div style="font-size: 0.8rem; color: var(--color-text-muted);">How many rolls would you like?</div>
+              <span style="font-weight: 700; color: var(--color-choco-dark);">Quantity:</span>
+              <div style="font-size: 0.8rem; color: var(--color-text-muted);">₱${pricePerRoll} per roll</div>
             </div>
             <div class="quantity-control-wrap">
               <button class="qty-btn" id="hero-qty-minus">-</button>
@@ -169,10 +211,10 @@ function renderProductSection() {
         <!-- Call to Action Buttons -->
         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
           <button class="btn btn-primary" id="btn-quick-add" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 28px; font-size: 1.05rem;">
-            ${isSoldOut ? 'Sold Out Today ✕' : 'Add to Box 🛒'}
+            ${isSoldOut ? 'Sold Out Today ✕' : 'Add to Cart 🛒'}
           </button>
           <button class="btn btn-choco" id="btn-open-customizer" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 24px; font-size: 1rem;">
-            Customize Dips & Toppings 🍯
+            Customize 🍯
           </button>
         </div>
       </div>
@@ -223,7 +265,9 @@ function renderProductSection() {
     cart.push(cartItem);
     saveCart();
     playSweetChime();
-    showToast(`Added ${heroQty}x JammyRolls (₱${itemTotal}) to your box! 🍌`, "success");
+    showToast(`Added ${heroQty}x JammyRolls (₱${itemTotal}) to your cart! 🍌`, "success");
+    openCartDrawer();
+  });
     openCartDrawer();
   });
 
@@ -258,8 +302,8 @@ function openCustomizeModal(initialQty = 1) {
       <!-- Quantity of Rolls -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding: 12px 16px; background-color: var(--color-surface-soft); border-radius: var(--radius-md);">
         <div>
-          <span style="font-weight: 700; color: var(--color-choco-dark);">Quantity of Rolls:</span>
-          <div style="font-size: 0.78rem; color: var(--color-text-muted);">${liveProduct.stock} rolls available today at ₱${pricePerRoll}/pc</div>
+          <span style="font-weight: 700; color: var(--color-choco-dark);">Quantity:</span>
+          <div style="font-size: 0.78rem; color: var(--color-text-muted);">₱${pricePerRoll} per roll</div>
         </div>
         <div class="quantity-control-wrap">
           <button class="qty-btn" id="modal-qty-minus">-</button>
@@ -270,7 +314,7 @@ function openCustomizeModal(initialQty = 1) {
 
       <!-- Dipping Sauce Choice -->
       <div class="modal-section-title">
-        <span>Choose Your Dip (Included)</span>
+        <span>Choose Dip (Included)</span>
         <span class="badge badge-choco" style="font-size: 0.7rem;">Free</span>
       </div>
       <div class="custom-options-group">
@@ -290,7 +334,7 @@ function openCustomizeModal(initialQty = 1) {
 
       <!-- Extra Crunchy Toppings -->
       <div class="modal-section-title">
-        <span>Add Crunchy Toppings (Optional)</span>
+        <span>Toppings (Optional)</span>
         <span style="font-size: 0.75rem; color: var(--color-cinnamon); font-weight: 600;">Dusted fresh</span>
       </div>
       <div class="custom-options-group">
@@ -307,8 +351,8 @@ function openCustomizeModal(initialQty = 1) {
 
       <!-- Special Notes -->
       <div class="form-group" style="margin-top: 14px;">
-        <label class="form-label">Special Preparation Note (Optional):</label>
-        <input type="text" id="modal-item-note" class="form-control" placeholder="e.g. Extra cinnamon sugar, keep dip warm...">
+        <label class="form-label">Special Notes (Optional):</label>
+        <input type="text" id="modal-item-note" class="form-control" placeholder="e.g. Extra cinnamon sugar">
       </div>
     </div>
 
@@ -318,7 +362,7 @@ function openCustomizeModal(initialQty = 1) {
         <span class="modal-total-val" id="modal-calc-total">₱${pricePerRoll * quantity}</span>
       </div>
       <button class="btn btn-primary" id="btn-add-to-box">
-        Add to My Box 🛒
+        Add to Cart 🛒
       </button>
     </div>
   `;
@@ -562,128 +606,57 @@ function openCheckoutModal() {
       modal.classList.remove("active");
 
       localStorage.setItem("jammyrolls_latest_order_id", created.orderId);
-      openOrderTracker(created.orderId);
+      openOrderConfirmation(orderData, created.orderId);
       showToast(`Order #${created.orderId} placed successfully! 🍌`, "success");
     } catch (err) {
       showToast("Could not place order. Please try again.", "warning");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = "Confirm & Place Order 🔥";
+      submitBtn.textContent = "Place Order";
     }
   };
 }
 
-export function openOrderTracker(orderId) {
-  const modal = document.getElementById("tracker-modal");
-  const modalBody = document.getElementById("tracker-modal-body");
+export function openOrderConfirmation(order, orderId) {
+  const modal = document.getElementById("confirmation-modal");
+  const modalBody = document.getElementById("confirmation-modal-body");
   if (!modal || !modalBody) return;
 
-  modal.classList.add("active");
   modalBody.innerHTML = `
-    <div style="text-align: center; padding: 30px;">
-      <div style="font-size: 2.5rem; animation: floatHero 1.5s infinite;">🍌</div>
-      <p style="margin-top: 10px; font-weight: 600;">Checking order with JammyRolls Kitchen...</p>
+    <div style="background: var(--color-surface-soft); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px; border: 1px solid var(--color-border);">
+      <div style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); margin-bottom: 4px;">Order Number</div>
+      <div style="font-family: var(--font-brand); font-size: 2rem; font-weight: 700; color: #D97706;">#${orderId}</div>
     </div>
+
+    <div style="text-align: left; background: #FFF; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+      <div style="font-weight: 700; font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.05rem; margin-bottom: 10px;">Order Summary</div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
+        <span style="color: var(--color-text-muted);">Customer:</span>
+        <strong>${order.customerName}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
+        <span style="color: var(--color-text-muted);">Fulfillment:</span>
+        <strong>${order.fulfillment === 'delivery' ? 'Delivery' : 'Pick Up'}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
+        <span style="color: var(--color-text-muted);">Payment:</span>
+        <strong>${order.paymentMethod}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; color: var(--color-choco-dark); border-top: 1px dashed var(--color-border); padding-top: 10px; margin-top: 10px;">
+        <span>Total:</span>
+        <span style="color: #D97706;">₱${order.total}</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-done-confirmation" style="width: 100%;">
+      Done
+    </button>
   `;
 
-  subscribeToSingleOrder(orderId, (order) => {
-    if (!order) {
-      modalBody.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px;">
-          <div style="font-size: 3rem; margin-bottom: 12px;">🔎</div>
-          <h3>Order #${orderId} Not Found</h3>
-          <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-top: 6px;">
-            Please double check your Order ID or contact JammyRolls support.
-          </p>
-        </div>
-      `;
-      return;
-    }
-    renderTrackerDetails(order, modalBody);
+  modal.classList.add("active");
+  document.getElementById("btn-done-confirmation")?.addEventListener("click", () => {
+    modal.classList.remove("active");
   });
-}
-
-function renderTrackerDetails(order, container) {
-  const statusLevels = {
-    "Pending": 1,
-    "Preparing": 2,
-    "Ready": 3,
-    "Completed": 4,
-    "Cancelled": 0
-  };
-
-  const currentLevel = statusLevels[order.status] || 1;
-  const progressPercent = currentLevel === 0 ? 0 : Math.min(100, ((currentLevel - 1) / 3) * 100);
-
-  const statusDescriptions = {
-    "Pending": "Your order is received and queued for rolling!",
-    "Preparing": "Chef is currently rolling sweet banana & frying churros to golden perfection!",
-    "Ready": order.fulfillment === "delivery" ? "Driver is on the way with your warm JammyRolls!" : "Fresh & hot! Your JammyRolls order is ready at the counter!",
-    "Completed": "Delivered & Enjoyed! Thank you for ordering from JammyRolls! 🍌🍫",
-    "Cancelled": "This order was cancelled."
-  };
-
-  container.innerHTML = `
-    <div class="tracker-status-box">
-      <div class="tracker-badge status-${order.status}">
-        <span class="status-dot-pulse" style="background-color: currentColor;"></span>
-        <span>${order.status}</span>
-      </div>
-      <h3 style="font-size: 1.4rem; color: var(--color-choco-dark); margin-bottom: 6px;">Order #${order.orderId}</h3>
-      <p style="font-size: 0.92rem; color: var(--color-choco-medium); font-weight: 600;">
-        ${statusDescriptions[order.status] || "Processing order"}
-      </p>
-    </div>
-
-    ${order.status !== "Cancelled" ? `
-      <div class="progress-steps-row">
-        <div class="progress-line-filled" style="width: ${progressPercent}%;"></div>
-        
-        <div class="progress-step-item ${currentLevel >= 1 ? 'completed' : ''} ${currentLevel === 1 ? 'active' : ''}">
-          <div class="progress-step-circle">📝</div>
-          <span class="progress-step-label">Placed</span>
-        </div>
-
-        <div class="progress-step-item ${currentLevel >= 2 ? 'completed' : ''} ${currentLevel === 2 ? 'active' : ''}">
-          <div class="progress-step-circle">🍳</div>
-          <span class="progress-step-label">Frying</span>
-        </div>
-
-        <div class="progress-step-item ${currentLevel >= 3 ? 'completed' : ''} ${currentLevel === 3 ? 'active' : ''}">
-          <div class="progress-step-circle">${order.fulfillment === 'delivery' ? '🛵' : '🛍️'}</div>
-          <span class="progress-step-label">${order.fulfillment === 'delivery' ? 'Delivering' : 'Ready'}</span>
-        </div>
-
-        <div class="progress-step-item ${currentLevel >= 4 ? 'completed' : ''} ${currentLevel === 4 ? 'active' : ''}">
-          <div class="progress-step-circle">✨</div>
-          <span class="progress-step-label">Enjoy!</span>
-        </div>
-      </div>
-    ` : ''}
-
-    <div style="background-color: var(--color-surface-soft); border-radius: var(--radius-md); padding: 18px; margin: 20px 0;">
-      <div style="font-weight: 700; font-family: var(--font-brand); color: var(--color-choco-dark); margin-bottom: 10px;">
-        Order Details
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem;">
-        ${order.items.map(i => `
-          <div style="display: flex; justify-content: space-between;">
-            <span>${i.quantity}x JammyRolls <span style="color: var(--color-text-light);">(${i.selectedDip})</span></span>
-            <strong>₱${i.itemTotal}</strong>
-          </div>
-        `).join("")}
-        <div style="border-top: 1px dashed var(--color-border); padding-top: 8px; margin-top: 4px; display: flex; justify-content: space-between; font-weight: 700;">
-          <span>Total (${order.paymentMethod})</span>
-          <span style="color: var(--color-choco-dark); font-size: 1.05rem;">₱${order.total}</span>
-        </div>
-      </div>
-    </div>
-
-    <div style="font-size: 0.82rem; color: var(--color-text-muted); text-align: center;">
-      <span>Customer: ${order.customerName} (${order.phone})</span><br>
-      <span>Fulfillment: ${order.fulfillment === 'delivery' ? `Delivery to: ${order.address}` : 'Counter Pickup'}</span>
-    </div>
-  `;
 }
 
 function renderFounders() {
@@ -714,25 +687,8 @@ function setupEventListeners() {
     document.getElementById("checkout-modal")?.classList.remove("active");
   });
 
-  document.getElementById("btn-nav-track-order")?.addEventListener("click", () => {
-    document.getElementById("lookup-order-modal")?.classList.add("active");
-  });
-
-  document.getElementById("btn-close-lookup")?.addEventListener("click", () => {
-    document.getElementById("lookup-order-modal")?.classList.remove("active");
-  });
-
-  document.getElementById("form-order-lookup")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const id = document.getElementById("lookup-order-input").value.trim().toUpperCase();
-    if (id) {
-      document.getElementById("lookup-order-modal")?.classList.remove("active");
-      openOrderTracker(id);
-    }
-  });
-
-  document.getElementById("btn-close-tracker")?.addEventListener("click", () => {
-    document.getElementById("tracker-modal")?.classList.remove("active");
+  document.getElementById("btn-close-confirmation")?.addEventListener("click", () => {
+    document.getElementById("confirmation-modal")?.classList.remove("active");
   });
 
   window.addEventListener("scroll", () => {
@@ -743,12 +699,4 @@ function setupEventListeners() {
       header?.classList.remove("scrolled");
     }
   });
-}
-
-function checkUrlForTracking() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const trackId = urlParams.get("track");
-  if (trackId) {
-    openOrderTracker(trackId.toUpperCase());
-  }
 }

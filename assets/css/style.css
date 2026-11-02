@@ -302,34 +302,47 @@ img {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 8px;
   list-style: none;
 }
 
 .nav-link {
   font-family: var(--font-brand);
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: var(--color-choco-dark);
   position: relative;
-  padding: 4px 0;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 
-.nav-link::after {
+.nav-link:hover {
+  color: #B45309;
+  background-color: rgba(245, 158, 11, 0.12);
+  transform: translateY(-1px);
+}
+
+.nav-link.active {
+  color: #1F130B;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+  font-weight: 700;
+}
+
+.nav-link.active::after {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0%;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
   height: 3px;
-  border-radius: 2px;
-  background-color: var(--color-primary);
-  transition: var(--transition-smooth);
-}
-
-.nav-link:hover::after,
-.nav-link.active::after {
-  width: 100%;
+  border-radius: 9999px;
+  background-color: #D97706;
 }
 
 .nav-actions {
@@ -1976,6 +1989,12 @@ img {
 
   .nav-links.mobile-open li a:hover {
     background: var(--color-surface-soft);
+  }
+
+  .nav-links.mobile-open li a.active {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    color: #1F130B;
+    font-weight: 800;
   }
 
   /* Hide "My Box" text on cart button; keep icon + badge */
