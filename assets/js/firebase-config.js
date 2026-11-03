@@ -80,16 +80,13 @@ if (!cachedProd) {
   setStored(CACHE_KEYS.PRODUCT, jammyProduct);
 }
 
-// Initial cloud seed — sync product info from cloud if available
-async function initStoreSeed() {
+// On startup, pull product info from cloud if available (read-only, never auto-write)
+async function initCloudSync() {
   if (!liveSyncReady || !db) return;
   try {
     const prodRef = ref(db, "store/product");
     const snap = await get(prodRef);
-    if (!snap.exists()) {
-      const currentProd = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
-      await set(prodRef, currentProd);
-    } else {
+    if (snap.exists()) {
       const cloudProd = snap.val();
       if (cloudProd && cloudProd.price) {
         setStored(CACHE_KEYS.PRODUCT, cloudProd);
@@ -97,10 +94,10 @@ async function initStoreSeed() {
       }
     }
   } catch (err) {
-    console.warn("Cloud store sync notice:", err);
+    console.warn("Cloud sync notice:", err);
   }
 }
-initStoreSeed();
+initCloudSync();
 
 /**
  * Subscribe to Product & Stock updates
