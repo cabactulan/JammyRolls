@@ -144,25 +144,10 @@ export function subscribeToOrders(callback) {
     try {
       const ordersRef = ref(db, "orders");
       onValue(ordersRef, (snapshot) => {
-        let cloudOrders = {};
-        if (snapshot.exists()) {
-          cloudOrders = snapshot.val() || {};
-        }
-
-        // Use cloud as source of truth, merged with any pending local orders
-        const localOrders = getStored(CACHE_KEYS.ORDERS, {});
-        const merged = { ...localOrders, ...cloudOrders };
-        setStored(CACHE_KEYS.ORDERS, merged);
-        ordersSubscribers.forEach(cb => cb(merged));
-
-        // Push any local orders that might be missing in cloud
-        for (const [id, ord] of Object.entries(localOrders)) {
-          if (!cloudOrders[id]) {
-            try {
-              set(ref(db, `orders/${id}`), ord);
-            } catch (e) {}
-          }
-        }
+        // Cloud is the single source of truth
+        const cloudOrders = snapshot.exists() ? (snapshot.val() || {}) : {};
+        setStored(CACHE_KEYS.ORDERS, cloudOrders);
+        ordersSubscribers.forEach(cb => cb(cloudOrders));
       }, (err) => {
         console.warn("Live orders sync notice:", err);
       });
