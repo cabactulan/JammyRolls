@@ -101,44 +101,58 @@ function initAuthGuard() {
   const loginForm = document.getElementById("admin-login-form");
   const errorMsg = document.getElementById("admin-login-error");
 
-  if (checkIsAuthenticated()) {
-    if (loginGate) loginGate.style.display = "none";
-    if (dashboard) dashboard.style.display = "flex";
-    const loggedUser = sessionStorage.getItem("jammyrolls_admin_user") || "Store Admin";
-    const userDisplay = document.getElementById("topbar-user-name");
-    if (userDisplay) userDisplay.textContent = loggedUser;
-    setTimeout(updateCharts, 200);
-  } else {
-    if (loginGate) loginGate.style.display = "flex";
-    if (dashboard) dashboard.style.display = "none";
+  function setAuthState(isAuth, username = "") {
+    document.documentElement.setAttribute("data-admin-auth", isAuth ? "yes" : "no");
+    if (loginGate) loginGate.style.display = isAuth ? "none" : "flex";
+    if (dashboard) dashboard.style.display = isAuth ? "flex" : "none";
+    if (isAuth) {
+      const loggedUser = username || sessionStorage.getItem("jammyrolls_admin_user") || "Store Admin";
+      const userDisplay = document.getElementById("topbar-user-name");
+      if (userDisplay) userDisplay.textContent = loggedUser;
+      setTimeout(updateCharts, 200);
+    }
   }
 
+  // Initial gate check
+  if (checkIsAuthenticated()) {
+    setAuthState(true);
+  } else {
+    setAuthState(false);
+  }
+
+  // Handle Login submission
   loginForm?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const userVal = document.getElementById("login-username").value.trim().toLowerCase();
-    const passVal = document.getElementById("login-password").value.trim();
+    const userVal = document.getElementById("login-username")?.value.trim().toLowerCase() || "";
+    const passVal = document.getElementById("login-password")?.value.trim() || "";
     const rememberMe = document.getElementById("login-remember")?.checked;
 
     if (VALID_ADMINS.includes(userVal) && passVal === ADMIN_PASS) {
+      const formattedUser = userVal.charAt(0).toUpperCase() + userVal.slice(1);
       sessionStorage.setItem("jammyrolls_admin_session", "active");
-      sessionStorage.setItem("jammyrolls_admin_user", userVal.charAt(0).toUpperCase() + userVal.slice(1));
+      sessionStorage.setItem("jammyrolls_admin_user", formattedUser);
       if (rememberMe) {
         localStorage.setItem("jammyrolls_admin_remembered", "active");
+      } else {
+        localStorage.removeItem("jammyrolls_admin_remembered");
       }
-      if (loginGate) loginGate.style.display = "none";
-      if (dashboard) dashboard.style.display = "flex";
-      const userDisplay = document.getElementById("topbar-user-name");
-      if (userDisplay) userDisplay.textContent = userVal.charAt(0).toUpperCase() + userVal.slice(1);
-      showAdminNotification(`Welcome, ${userVal}! Operations dashboard ready.`);
-      setTimeout(updateCharts, 200);
+      if (errorMsg) {
+        errorMsg.style.display = "none";
+        errorMsg.textContent = "";
+      }
+      setAuthState(true, formattedUser);
+      showAdminNotification(`Welcome, ${formattedUser}! Operations dashboard ready.`);
     } else {
       if (errorMsg) {
         errorMsg.style.display = "block";
-        errorMsg.textContent = "Invalid credentials. Please verify your username and password.";
+        errorMsg.textContent = "Invalid username or password. Please try again.";
       }
+      const passInput = document.getElementById("login-password");
+      if (passInput) passInput.select();
     }
   });
 
+  // Handle Logout
   const logoutBtns = document.querySelectorAll(".btn-trigger-logout");
   const logoutModal = document.getElementById("admin-logout-modal");
   const confirmLogoutBtn = document.getElementById("btn-confirm-logout");
@@ -154,15 +168,26 @@ function initAuthGuard() {
     if (logoutModal) logoutModal.classList.remove("active");
   });
 
+  // Also close modal when clicking on the backdrop
+  logoutModal?.addEventListener("click", (e) => {
+    if (e.target === logoutModal) {
+      logoutModal.classList.remove("active");
+    }
+  });
+
   confirmLogoutBtn?.addEventListener("click", () => {
     sessionStorage.removeItem("jammyrolls_admin_session");
     sessionStorage.removeItem("jammyrolls_admin_user");
     localStorage.removeItem("jammyrolls_admin_remembered");
     if (logoutModal) logoutModal.classList.remove("active");
-    if (dashboard) dashboard.style.display = "none";
-    if (loginGate) loginGate.style.display = "flex";
-    const passInput = document.getElementById("login-password");
-    if (passInput) passInput.value = "";
+    if (loginForm) loginForm.reset();
+    if (errorMsg) {
+      errorMsg.style.display = "none";
+      errorMsg.textContent = "";
+    }
+    setAuthState(false);
+    const userInput = document.getElementById("login-username");
+    if (userInput) userInput.focus();
   });
 }
 
