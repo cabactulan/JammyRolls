@@ -274,8 +274,6 @@ function renderProductSection() {
     showToast(`Added ${heroQty}x JammyRolls (₱${itemTotal}) to your cart! 🍌`, "success");
     openCartDrawer();
   });
-    openCartDrawer();
-  });
 
   // Customize Button
   document.getElementById("btn-open-customizer")?.addEventListener("click", () => {
