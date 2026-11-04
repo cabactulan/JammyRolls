@@ -163,3 +163,4 @@ if (document.readyState === "loading") {
 } else {
   initCustomersPage();
 }
+
