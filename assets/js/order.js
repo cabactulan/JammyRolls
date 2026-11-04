@@ -313,3 +313,4 @@ if (document.readyState === 'loading') {
 } else {
   initOrderPage();
 }
+
