@@ -422,7 +422,7 @@ function openOrderTicketModal(order) {
     <div class="receipt-container" id="printable-receipt-card">
       <!-- Receipt Brand Header -->
       <div class="receipt-header">
-        <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="receipt-logo-img">
+        <img src="../assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="receipt-logo-img">
         <div class="receipt-brand-name">JAMMYROLLS</div>
         <div class="receipt-brand-sub">Banana Churros Roll</div>
         <div class="receipt-store-info">
