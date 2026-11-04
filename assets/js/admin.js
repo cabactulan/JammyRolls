@@ -4,15 +4,19 @@ import {
   subscribeToOrders, 
   updateOrderStatus, 
   updateInventoryStock,
-  updateProductPrice 
+  updateProductPrice,
+  subscribeToReviews,
+  deleteReview
 } from "./firebase-config.js";
 
 import { foundersInfo } from "./products-data.js";
 
 // State
 let allOrders = {};
+let allReviews = {};
 let liveProduct = null;
 let currentOrderFilter = "all";
+let currentReviewFilter = "all";
 let soundAlertEnabled = true;
 let previousOrderCount = null;
 let salesChart = null;
@@ -79,6 +83,7 @@ function showAdminNotification(msg) {
 function initAdminApp() {
   initAuthGuard();
   initSubscriptions();
+  initReviewsAdmin();
   setupNavigation();
   setupAdminControls();
   renderAdminFounders();
@@ -757,5 +762,161 @@ function setupNavigation() {
       ? "<span>🔔</span><span>Sound Alert: ON</span>"
       : "<span>🔕</span><span>Sound Alert: OFF</span>";
     showAdminNotification(soundAlertEnabled ? "Kitchen chimes enabled" : "Kitchen chimes muted");
+  });
+}
+
+/**
+ * ==========================================================================
+ * Admin Reviews & Feedback Controller
+ * ==========================================================================
+ */
+function initReviewsAdmin() {
+  // Subscribe to live reviews
+  subscribeToReviews((reviewsObj) => {
+    allReviews = reviewsObj || {};
+    updateReviewKPIs();
+    renderReviewsTable();
+  });
+
+  // Setup review filter pills
+  document.querySelectorAll("#review-filter-pills .order-filter-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll("#review-filter-pills .order-filter-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentReviewFilter = pill.getAttribute("data-rating");
+      renderReviewsTable();
+    });
+  });
+}
+
+function updateReviewKPIs() {
+  const reviewsList = Object.values(allReviews || {});
+  const totalCount = reviewsList.length;
+
+  const avgEl = document.getElementById("kpi-reviews-avg");
+  const starsEl = document.getElementById("kpi-reviews-stars");
+  const totalEl = document.getElementById("kpi-reviews-total");
+  const fiveStarEl = document.getElementById("kpi-reviews-fivestar");
+  const fiveStarPctEl = document.getElementById("kpi-reviews-fivestar-pct");
+  const sidebarReviewsBadge = document.getElementById("sidebar-reviews-badge");
+  const bnavReviewsBadge = document.getElementById("bnav-reviews-badge");
+
+  if (totalCount === 0) {
+    if (avgEl) avgEl.textContent = "0.0";
+    if (starsEl) starsEl.textContent = "No reviews yet";
+    if (totalEl) totalEl.textContent = "0";
+    if (fiveStarEl) fiveStarEl.textContent = "0";
+    if (fiveStarPctEl) fiveStarPctEl.textContent = "0% of reviews";
+    if (sidebarReviewsBadge) sidebarReviewsBadge.style.display = "none";
+    if (bnavReviewsBadge) bnavReviewsBadge.style.display = "none";
+    return;
+  }
+
+  const sumRating = reviewsList.reduce((acc, r) => acc + (parseFloat(r.rating) || 5), 0);
+  const avg = (sumRating / totalCount).toFixed(1);
+  const roundedStars = Math.round(avg);
+  const starIcons = "★".repeat(roundedStars) + "☆".repeat(Math.max(0, 5 - roundedStars));
+
+  const fiveStarCount = reviewsList.filter(r => parseInt(r.rating) === 5).length;
+  const fiveStarPct = Math.round((fiveStarCount / totalCount) * 100);
+
+  if (avgEl) avgEl.textContent = avg;
+  if (starsEl) starsEl.textContent = `${starIcons} (${totalCount} total)`;
+  if (totalEl) totalEl.textContent = totalCount;
+  if (fiveStarEl) fiveStarEl.textContent = fiveStarCount;
+  if (fiveStarPctEl) fiveStarPctEl.textContent = `${fiveStarPct}% of reviews`;
+
+  if (sidebarReviewsBadge) {
+    sidebarReviewsBadge.textContent = totalCount;
+    sidebarReviewsBadge.style.display = totalCount > 0 ? "inline-block" : "none";
+  }
+  if (bnavReviewsBadge) {
+    bnavReviewsBadge.textContent = totalCount;
+    bnavReviewsBadge.style.display = totalCount > 0 ? "inline-block" : "none";
+  }
+}
+
+function renderReviewsTable() {
+  const tbody = document.getElementById("reviews-table-body");
+  if (!tbody) return;
+
+  const reviewsList = Object.values(allReviews || {}).sort((a, b) => {
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+
+  const filtered = currentReviewFilter === "all"
+    ? reviewsList
+    : reviewsList.filter(r => String(r.rating) === currentReviewFilter);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; padding: 40px; color: var(--admin-text-muted);">
+          No customer reviews found under "${currentReviewFilter === 'all' ? 'All' : currentReviewFilter + ' ⭐'}".
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const formattedDate = r.createdAt 
+      ? new Date(r.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : "Recent";
+
+    const ratingNum = Math.min(5, Math.max(1, parseInt(r.rating) || 5));
+    const starGold = "★".repeat(ratingNum);
+    const starEmpty = "☆".repeat(5 - ratingNum);
+
+    return `
+      <tr data-review-id="${r.reviewId}">
+        <td>
+          <div style="font-size: 0.82rem; font-weight: 600; color: #1F130B;">${formattedDate}</div>
+          <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${r.reviewId}</div>
+        </td>
+        <td>
+          <div style="font-weight: 700; color: #1F130B;">${r.customerName}</div>
+        </td>
+        <td>
+          <div style="color: #F59E0B; font-size: 1.05rem; letter-spacing: 1px;">
+            ${starGold}<span style="color: #D1D5DB;">${starEmpty}</span>
+          </div>
+          <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${ratingNum} out of 5</div>
+        </td>
+        <td>
+          <div style="font-size: 0.88rem; color: #374151; max-width: 480px; line-height: 1.5;">
+            "${r.comment}"
+          </div>
+        </td>
+        <td style="text-align: right;">
+          <button class="btn-status-act btn-delete-review" data-id="${r.reviewId}" style="color: #991B1B; background: #FEE2E2; border-color: #F87171; padding: 6px 12px; font-size: 0.82rem;">
+            Delete 🗑️
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  // Connect Delete Review buttons with confirmation
+  tbody.querySelectorAll(".btn-delete-review").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const reviewId = btn.getAttribute("data-id");
+      const confirmed = btn.getAttribute("data-confirmed") === "true";
+
+      if (!confirmed) {
+        btn.setAttribute("data-confirmed", "true");
+        btn.textContent = "Confirm Delete 🗑️";
+        btn.style.background = "#FCA5A5";
+        setTimeout(() => {
+          btn.setAttribute("data-confirmed", "false");
+          btn.textContent = "Delete 🗑️";
+          btn.style.background = "#FEE2E2";
+        }, 3000);
+        return;
+      }
+
+      deleteReview(reviewId);
+      showAdminNotification(`Review #${reviewId} deleted.`);
+    });
   });
 }

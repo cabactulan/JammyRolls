@@ -98,6 +98,12 @@
           <span>Stock & Price</span>
         </button>
 
+        <button class="nav-item-btn" data-section="reviews">
+          <span>💬</span>
+          <span>Reviews</span>
+          <span class="nav-badge-pill" id="sidebar-reviews-badge" style="display: none;">0</span>
+        </button>
+
         <button class="nav-item-btn" data-section="founders">
           <span>👥</span>
           <span>Team</span>
@@ -370,6 +376,11 @@
         <span class="bnav-icon">📦</span>
         <span>Stock</span>
       </button>
+      <button class="admin-bnav-btn" data-section="reviews">
+        <span class="bnav-icon">💬</span>
+        <span>Reviews</span>
+        <span class="admin-bnav-badge" id="bnav-reviews-badge" style="display: none;">0</span>
+      </button>
       <button class="admin-bnav-btn" data-section="founders">
         <span class="bnav-icon">👥</span>
         <span>Team</span>
@@ -380,6 +391,76 @@
       </button>
     </div>
   </nav>
+      <!-- SECTION 5: CUSTOMER REVIEWS & FEEDBACK -->
+      <section class="admin-section" id="section-reviews" style="display: none;">
+        <div class="admin-section-header">
+          <div>
+            <h2 class="admin-section-title">Customer Reviews & Feedback</h2>
+            <p class="admin-section-sub">Live customer feedback submitted from the online storefront</p>
+          </div>
+        </div>
+
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Average Rating</span>
+              <div class="metric-icon-wrap" style="background: #FEF3C7; color: #D97706;">⭐</div>
+            </div>
+            <div class="metric-val" id="kpi-reviews-avg">0.0</div>
+            <div class="metric-sub" id="kpi-reviews-stars">No reviews yet</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Total Reviews</span>
+              <div class="metric-icon-wrap" style="background: #E0E7FF; color: #4F46E5;">💬</div>
+            </div>
+            <div class="metric-val" id="kpi-reviews-total">0</div>
+            <div class="metric-sub">Customer submissions</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">5-Star Feedback</span>
+              <div class="metric-icon-wrap" style="background: #ECFDF5; color: #059669;">✨</div>
+            </div>
+            <div class="metric-val" id="kpi-reviews-fivestar">0</div>
+            <div class="metric-sub" id="kpi-reviews-fivestar-pct">0% of reviews</div>
+          </div>
+        </div>
+
+        <!-- Feedback Log Table -->
+        <div class="admin-card">
+          <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h3 style="font-family: 'Fredoka', cursive; font-size: 1.15rem;">Customer Feedback Log</h3>
+            <div class="order-filter-pills" id="review-filter-pills">
+              <button class="order-filter-pill active" data-rating="all">All</button>
+              <button class="order-filter-pill" data-rating="5">5 ⭐</button>
+              <button class="order-filter-pill" data-rating="4">4 ⭐</button>
+              <button class="order-filter-pill" data-rating="3">3 ⭐</button>
+              <button class="order-filter-pill" data-rating="2">2 ⭐</button>
+              <button class="order-filter-pill" data-rating="1">1 ⭐</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Date & Time</th>
+                  <th style="width: 180px;">Customer</th>
+                  <th style="width: 130px;">Rating</th>
+                  <th>Feedback Comment</th>
+                  <th style="width: 100px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="reviews-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 

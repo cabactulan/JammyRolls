@@ -2,7 +2,9 @@
 import { 
   subscribeToProduct, 
   createOrder, 
-  subscribeToSingleOrder 
+  subscribeToSingleOrder,
+  createReview,
+  subscribeToReviews
 } from "./firebase-config.js";
 
 import { 
@@ -48,6 +50,7 @@ export function showToast(message, type = "info") {
 
 function initApp() {
   initProductSubscriptions();
+  initReviewsSection();
   renderFounders();
   updateCartUI();
   setupEventListeners();
@@ -216,11 +219,8 @@ function renderProductSection() {
 
         <!-- Call to Action Buttons -->
         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-          <button class="btn btn-primary" id="btn-quick-add" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 28px; font-size: 1.05rem;">
+          <button class="btn btn-primary" id="btn-quick-add" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 32px; font-size: 1.05rem;">
             ${isSoldOut ? 'Sold Out Today ✕' : 'Add to Cart 🛒'}
-          </button>
-          <button class="btn btn-choco" id="btn-open-customizer" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 24px; font-size: 1rem;">
-            Customize 🍯
           </button>
         </div>
       </div>
@@ -274,177 +274,8 @@ function renderProductSection() {
     showToast(`Added ${heroQty}x JammyRolls (₱${itemTotal}) to your cart! 🍌`, "success");
     openCartDrawer();
   });
-
-  // Customize Button
-  document.getElementById("btn-open-customizer")?.addEventListener("click", () => {
-    openCustomizeModal(heroQty);
-  });
 }
 
-/**
- * Product Customization Modal
- */
-function openCustomizeModal(initialQty = 1) {
-  if (!liveProduct || !liveProduct.isAvailable || liveProduct.stock <= 0) return;
-
-  const pricePerRoll = liveProduct.price || 15;
-  let quantity = initialQty;
-
-  const modal = document.getElementById("customize-modal");
-  const modalContent = document.getElementById("customize-modal-content");
-  if (!modal || !modalContent) return;
-
-  modalContent.innerHTML = `
-    <div class="modal-header-visual">
-      <button class="modal-close-btn" id="btn-close-customize">&times;</button>
-      <span class="badge badge-yellow" style="margin-bottom: 6px;">Handcrafted & Freshly Fried</span>
-      <h2 class="modal-product-title">${liveProduct.name}</h2>
-      <p class="modal-product-tagline">₱${pricePerRoll} each • Sweet Saba Banana & Belgian Chocolate Lava</p>
-    </div>
-
-    <div class="modal-body">
-      <!-- Quantity of Rolls -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding: 12px 16px; background-color: var(--color-surface-soft); border-radius: var(--radius-md);">
-        <div>
-          <span style="font-weight: 700; color: var(--color-choco-dark);">Quantity:</span>
-          <div style="font-size: 0.78rem; color: var(--color-text-muted);">₱${pricePerRoll} per roll</div>
-        </div>
-        <div class="quantity-control-wrap">
-          <button class="qty-btn" id="modal-qty-minus">-</button>
-          <span class="qty-val" id="modal-qty-val">${quantity}</span>
-          <button class="qty-btn" id="modal-qty-plus">+</button>
-        </div>
-      </div>
-
-      <!-- Dipping Sauce Choice -->
-      <div class="modal-section-title">
-        <span>Choose Dip (Included)</span>
-        <span class="badge badge-choco" style="font-size: 0.7rem;">Free</span>
-      </div>
-      <div class="custom-options-group">
-        ${dipOptions.map((dip, idx) => `
-          <label class="custom-option-label">
-            <div class="custom-option-content">
-              <input type="radio" name="dipChoice" value="${dip.name}" data-price="${dip.price || 0}" ${idx === 0 ? 'checked' : ''}>
-              <div>
-                <div><strong>${dip.name}</strong></div>
-                <div style="font-size: 0.75rem; color: var(--color-text-muted);">${dip.desc}</div>
-              </div>
-            </div>
-            <span class="custom-option-price">${dip.price > 0 ? `+₱${dip.price}` : 'Free'}</span>
-          </label>
-        `).join("")}
-      </div>
-
-      <!-- Extra Crunchy Toppings -->
-      <div class="modal-section-title">
-        <span>Toppings (Optional)</span>
-        <span style="font-size: 0.75rem; color: var(--color-cinnamon); font-weight: 600;">Dusted fresh</span>
-      </div>
-      <div class="custom-options-group">
-        ${extraToppings.map(top => `
-          <label class="custom-option-label">
-            <div class="custom-option-content">
-              <input type="checkbox" name="extraToppings" value="${top.name}" data-price="${top.price}">
-              <span>${top.name}</span>
-            </div>
-            <span class="custom-option-price">${top.price > 0 ? `+₱${top.price}` : 'Free'}</span>
-          </label>
-        `).join("")}
-      </div>
-
-      <!-- Special Notes -->
-      <div class="form-group" style="margin-top: 14px;">
-        <label class="form-label">Special Notes (Optional):</label>
-        <input type="text" id="modal-item-note" class="form-control" placeholder="e.g. Extra cinnamon sugar">
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <div class="modal-total-calc">
-        <span class="modal-total-label">Total Amount</span>
-        <span class="modal-total-val" id="modal-calc-total">₱${pricePerRoll * quantity}</span>
-      </div>
-      <button class="btn btn-primary" id="btn-add-to-box">
-        Add to Cart 🛒
-      </button>
-    </div>
-  `;
-
-  modal.classList.add("active");
-
-  const totalValEl = document.getElementById("modal-calc-total");
-  const qtyValEl = document.getElementById("modal-qty-val");
-  const toppingInputs = modalContent.querySelectorAll('input[name="extraToppings"]');
-  const dipInputs = modalContent.querySelectorAll('input[name="dipChoice"]');
-
-  function calculateTotal() {
-    let base = pricePerRoll * quantity;
-    const selectedDip = modalContent.querySelector('input[name="dipChoice"]:checked');
-    if (selectedDip) {
-      base += parseFloat(selectedDip.getAttribute("data-price") || 0);
-    }
-    toppingInputs.forEach(i => {
-      if (i.checked) base += parseFloat(i.getAttribute("data-price") || 0);
-    });
-    if (totalValEl) totalValEl.textContent = `₱${base}`;
-    return base;
-  }
-
-  document.getElementById("modal-qty-minus")?.addEventListener("click", () => {
-    if (quantity > 1) {
-      quantity--;
-      if (qtyValEl) qtyValEl.textContent = quantity;
-      calculateTotal();
-    }
-  });
-
-  document.getElementById("modal-qty-plus")?.addEventListener("click", () => {
-    if (quantity < liveProduct.stock) {
-      quantity++;
-      if (qtyValEl) qtyValEl.textContent = quantity;
-      calculateTotal();
-    } else {
-      showToast(`Only ${liveProduct.stock} rolls remaining in today's fresh batch!`, "warning");
-    }
-  });
-
-  toppingInputs.forEach(i => i.addEventListener("change", calculateTotal));
-  dipInputs.forEach(i => i.addEventListener("change", calculateTotal));
-
-  document.getElementById("btn-close-customize")?.addEventListener("click", () => {
-    modal.classList.remove("active");
-  });
-
-  document.getElementById("btn-add-to-box")?.addEventListener("click", () => {
-    const selectedDip = modalContent.querySelector('input[name="dipChoice"]:checked')?.value || "Warm Belgian Choco Ganache";
-    const selectedToppings = [];
-    toppingInputs.forEach(t => {
-      if (t.checked) selectedToppings.push(t.value);
-    });
-    const notes = document.getElementById("modal-item-note")?.value.trim() || "";
-    const totalAmount = calculateTotal();
-
-    const cartItem = {
-      cartItemId: "cart-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
-      productId: liveProduct.id,
-      name: liveProduct.name,
-      pricePerUnit: pricePerRoll,
-      quantity,
-      selectedDip,
-      selectedToppings,
-      notes,
-      totalAmount
-    };
-
-    cart.push(cartItem);
-    saveCart();
-    playSweetChime();
-    showToast(`Added ${quantity}x JammyRolls to your box! 🍌`, "success");
-    modal.classList.remove("active");
-    openCartDrawer();
-  });
-}
 
 function saveCart() {
   localStorage.setItem("jammyrolls_customer_cart_v3", JSON.stringify(cart));
@@ -488,7 +319,7 @@ function updateCartUI() {
         <div class="cart-item-info">
           <div class="cart-item-name">${item.name} (${item.quantity} pcs)</div>
           <div class="cart-item-meta">
-            <div>Dip: <strong>${item.selectedDip}</strong></div>
+            ${item.selectedDip ? `<div>Dip: <strong>${item.selectedDip}</strong></div>` : ''}
             ${item.selectedToppings?.length ? `<div>Toppings: ${item.selectedToppings.join(", ")}</div>` : ''}
             ${item.notes ? `<div>Note: "<em>${item.notes}</em>"</div>` : ''}
           </div>
@@ -703,4 +534,166 @@ function setupEventListeners() {
       header?.classList.remove("scrolled");
     }
   });
+}
+
+/**
+ * ==========================================================================
+ * Customer Reviews & Feedback Component
+ * ==========================================================================
+ */
+function initReviewsSection() {
+  const form = document.getElementById("customer-review-form");
+  const starPicker = document.getElementById("star-rating-picker");
+  const ratingInput = document.getElementById("review-rating-val");
+  const ratingLabel = document.getElementById("star-rating-label");
+  const starBtns = starPicker?.querySelectorAll(".star-btn");
+
+  const ratingDescriptions = {
+    5: "5 Stars - Outstanding! ✨",
+    4: "4 Stars - Very Good! 👍",
+    3: "3 Stars - Good & Tasty 🙂",
+    2: "2 Stars - Fair 😐",
+    1: "1 Star - Needs Improvement 🙁"
+  };
+
+  let selectedRating = 5;
+
+  function setRatingUI(val) {
+    if (ratingInput) ratingInput.value = val;
+    if (ratingLabel) ratingLabel.textContent = ratingDescriptions[val] || `${val} Stars`;
+    starBtns?.forEach(btn => {
+      const btnRating = parseInt(btn.getAttribute("data-rating"));
+      btn.classList.toggle("active", btnRating <= val);
+    });
+  }
+
+  starBtns?.forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedRating = parseInt(btn.getAttribute("data-rating")) || 5;
+      setRatingUI(selectedRating);
+    });
+
+    btn.addEventListener("mouseenter", () => {
+      const hoverRating = parseInt(btn.getAttribute("data-rating")) || 5;
+      starBtns.forEach(b => {
+        const r = parseInt(b.getAttribute("data-rating"));
+        b.classList.toggle("hover", r <= hoverRating);
+      });
+      if (ratingLabel) ratingLabel.textContent = ratingDescriptions[hoverRating];
+    });
+  });
+
+  starPicker?.addEventListener("mouseleave", () => {
+    starBtns?.forEach(b => b.classList.remove("hover"));
+    setRatingUI(selectedRating);
+  });
+
+  // Handle Review Submission
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById("review-customer-name");
+    const commentInput = document.getElementById("review-customer-comment");
+    const submitBtn = document.getElementById("btn-submit-review");
+
+    const customerName = nameInput?.value.trim();
+    const comment = commentInput?.value.trim();
+    const rating = parseInt(ratingInput?.value) || selectedRating;
+
+    if (!customerName || !comment) {
+      showToast("Please provide your name and feedback!", "warning");
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Posting Review...";
+    }
+
+    try {
+      await createReview({
+        customerName,
+        rating,
+        comment
+      });
+
+      playSweetChime();
+      showToast("Thank you for your feedback! ⭐🍌", "success");
+
+      // Reset form
+      if (form) form.reset();
+      selectedRating = 5;
+      setRatingUI(5);
+    } catch (err) {
+      showToast("Could not submit review. Please try again.", "warning");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Post Review ✨";
+      }
+    }
+  });
+
+  // Subscribe to live reviews
+  subscribeToReviews((reviewsObj) => {
+    renderReviewsFeed(reviewsObj);
+  });
+}
+
+function renderReviewsFeed(reviewsObj) {
+  const listEl = document.getElementById("customer-reviews-list");
+  const avgScoreEl = document.getElementById("reviews-avg-score");
+  const avgStarsEl = document.getElementById("reviews-avg-stars");
+  const countDisplayEl = document.getElementById("reviews-count-display");
+  if (!listEl) return;
+
+  const reviewsList = Object.values(reviewsObj || {}).sort((a, b) => {
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+
+  if (reviewsList.length === 0) {
+    if (avgScoreEl) avgScoreEl.textContent = "5.0";
+    if (avgStarsEl) avgStarsEl.textContent = "★★★★★";
+    if (countDisplayEl) countDisplayEl.textContent = "No reviews yet • Be the first!";
+    listEl.innerHTML = `
+      <div class="reviews-empty-state">
+        <div class="reviews-empty-icon">🍌⭐</div>
+        <h4 class="reviews-empty-title">No Reviews Yet</h4>
+        <p class="reviews-empty-sub">Be the first to taste our hot fresh JammyRolls and share your feedback!</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Calculate Average
+  const sumRating = reviewsList.reduce((acc, r) => acc + (parseFloat(r.rating) || 5), 0);
+  const avgScore = (sumRating / reviewsList.length).toFixed(1);
+  const fullStars = Math.round(avgScore);
+  const starsString = "★".repeat(fullStars) + "☆".repeat(Math.max(0, 5 - fullStars));
+
+  if (avgScoreEl) avgScoreEl.textContent = avgScore;
+  if (avgStarsEl) avgStarsEl.textContent = starsString;
+  if (countDisplayEl) countDisplayEl.textContent = `Based on ${reviewsList.length} verified review${reviewsList.length === 1 ? '' : 's'}`;
+
+  listEl.innerHTML = reviewsList.map(r => {
+    const rDate = r.createdAt ? new Date(r.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : "Recently";
+    const initial = (r.customerName || "U").charAt(0).toUpperCase();
+    const starCount = Math.min(5, Math.max(1, parseInt(r.rating) || 5));
+    const starIcons = "★".repeat(starCount) + "☆".repeat(5 - starCount);
+
+    return `
+      <div class="customer-review-card">
+        <div class="review-card-header">
+          <div class="review-author-wrap">
+            <div class="review-author-avatar">${initial}</div>
+            <div>
+              <div class="review-author-name">${r.customerName}</div>
+              <div class="review-card-date">${rDate}</div>
+            </div>
+          </div>
+          <div class="review-card-stars">${starIcons}</div>
+        </div>
+        <p class="review-card-comment">${r.comment}</p>
+      </div>
+    `;
+  }).join("");
 }

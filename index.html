@@ -35,6 +35,7 @@
         <li><a href="#hero" class="nav-link active">Home</a></li>
         <li><a href="#menu" class="nav-link">Menu</a></li>
         <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#reviews" class="nav-link">Reviews</a></li>
         <li><a href="#founders" class="nav-link">Founders</a></li>
       </ul>
 
@@ -210,11 +211,8 @@
 
             <!-- Call to Action Buttons -->
             <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-              <button class="btn btn-primary" id="btn-quick-add" style="padding: 14px 28px; font-size: 1.05rem;">
+              <button class="btn btn-primary" id="btn-quick-add" style="padding: 14px 32px; font-size: 1.05rem;">
                 Add to Cart 🛒
-              </button>
-              <button class="btn btn-choco" id="btn-open-customizer" style="padding: 14px 24px; font-size: 1rem;">
-                Customize 🍯
               </button>
             </div>
           </div>
@@ -251,6 +249,71 @@
           <div class="feature-icon-wrapper" style="margin: 0 auto 16px;">3️⃣</div>
           <h3 style="font-size: 1.2rem; margin-bottom: 8px;">Cinnamon Sugar & Dip</h3>
           <p style="font-size: 0.9rem;">Dusted straight from the fryer with raw cane sugar and organic cinnamon, paired with our velvety dips.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews & Customer Feedback Section -->
+  <section class="reviews-section" id="reviews">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Customer Love</span>
+        <h2 class="section-title">Reviews & Feedback</h2>
+        <p class="section-subtitle">
+          Hear from fellow dessert lovers or leave your own review about our fresh JammyRolls!
+        </p>
+      </div>
+
+      <div class="reviews-layout">
+        <!-- Submit Review Form Card -->
+        <div class="review-form-card">
+          <h3 class="review-form-title">Leave a Review</h3>
+          <p class="review-form-sub">Loved our Banana Churros Rolls? Share your feedback with us!</p>
+          
+          <form id="customer-review-form">
+            <div class="form-group">
+              <label class="form-label">Your Rating</label>
+              <div class="star-rating-select" id="star-rating-picker">
+                <button type="button" class="star-btn active" data-rating="1">★</button>
+                <button type="button" class="star-btn active" data-rating="2">★</button>
+                <button type="button" class="star-btn active" data-rating="3">★</button>
+                <button type="button" class="star-btn active" data-rating="4">★</button>
+                <button type="button" class="star-btn active" data-rating="5">★</button>
+                <span class="star-rating-label" id="star-rating-label">5 Stars - Outstanding!</span>
+              </div>
+              <input type="hidden" id="review-rating-val" value="5">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="review-customer-name">Your Name *</label>
+              <input type="text" id="review-customer-name" class="form-control" placeholder="e.g. Maria Santos" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="review-customer-comment">Your Feedback *</label>
+              <textarea id="review-customer-comment" class="form-control" rows="3" placeholder="Tell us about the crunch, chocolate, or banana flavor..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btn-submit-review" style="width: 100%;">
+              Post Review ✨
+            </button>
+          </form>
+        </div>
+
+        <!-- Live Reviews Feed -->
+        <div class="reviews-display-area">
+          <div class="reviews-stats-bar">
+            <div class="reviews-avg-block">
+              <span class="reviews-avg-num" id="reviews-avg-score">5.0</span>
+              <div class="reviews-avg-stars" id="reviews-avg-stars">★★★★★</div>
+              <span class="reviews-count-text" id="reviews-count-display">0 reviews</span>
+            </div>
+          </div>
+
+          <div class="reviews-feed-list" id="customer-reviews-list">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
       </div>
     </div>
@@ -323,6 +386,7 @@
             <li><a href="#hero" class="footer-link">Home</a></li>
             <li><a href="#menu" class="footer-link">Menu</a></li>
             <li><a href="#about" class="footer-link">About Us</a></li>
+            <li><a href="#reviews" class="footer-link">Reviews</a></li>
             <li><a href="#founders" class="footer-link">Our Founders</a></li>
           </ul>
         </div>
@@ -379,12 +443,7 @@
     </div>
   </div>
 
-  <!-- Product Customization Modal -->
-  <div class="modal-backdrop" id="customize-modal">
-    <div class="modal-card" id="customize-modal-content">
-      <!-- Injected by main.js -->
-    </div>
-  </div>
+
 
   <!-- Fast Checkout Modal -->
   <div class="modal-backdrop" id="checkout-modal">

@@ -27,12 +27,14 @@ let liveSyncReady = false;
 
 const CACHE_KEYS = {
   PRODUCT: "jammyrolls_product_v3",
-  ORDERS: "jammyrolls_orders_v3"
+  ORDERS: "jammyrolls_orders_v3",
+  REVIEWS: "jammyrolls_reviews_v3"
 };
 
 // Subscriber Registries for instant real-time UI updates
 const prodSubscribers = new Set();
 const ordersSubscribers = new Set();
+const reviewsSubscribers = new Set();
 
 try {
   app = initializeApp(cloudConfig);
@@ -70,6 +72,12 @@ window.addEventListener("storage", (e) => {
     try {
       const updatedOrders = JSON.parse(e.newValue);
       ordersSubscribers.forEach(cb => cb(updatedOrders));
+    } catch (err) {}
+  }
+  if (e.key === CACHE_KEYS.REVIEWS && e.newValue) {
+    try {
+      const updatedReviews = JSON.parse(e.newValue);
+      reviewsSubscribers.forEach(cb => cb(updatedReviews));
     } catch (err) {}
   }
 });
@@ -333,6 +341,86 @@ export async function updateProductPrice(newPrice) {
       });
     } catch (e) {
       console.warn("Cloud price update notice:", e);
+    }
+  }
+}
+
+/**
+ * Subscribe to Customer Reviews (Live Feed)
+ */
+export function subscribeToReviews(callback) {
+  reviewsSubscribers.add(callback);
+  const cached = getStored(CACHE_KEYS.REVIEWS, {});
+  callback(cached);
+
+  if (liveSyncReady && db) {
+    try {
+      const reviewsRef = ref(db, "reviews");
+      onValue(reviewsRef, (snapshot) => {
+        const cloudReviews = snapshot.exists() ? (snapshot.val() || {}) : {};
+        setStored(CACHE_KEYS.REVIEWS, cloudReviews);
+        reviewsSubscribers.forEach(cb => cb(cloudReviews));
+      }, (err) => {
+        console.warn("Live reviews sync notice:", err);
+      });
+    } catch (e) {}
+  }
+
+  window.addEventListener("store-sync-update", (e) => {
+    if (e.detail.key === CACHE_KEYS.REVIEWS) {
+      callback(e.detail.val);
+    }
+  });
+}
+
+/**
+ * Create Customer Review / Feedback
+ */
+export async function createReview(reviewData) {
+  const reviewId = "REV-" + Date.now() + "-" + Math.floor(1000 + Math.random() * 9000);
+  const now = new Date().toISOString();
+
+  const finalReview = {
+    reviewId,
+    customerName: reviewData.customerName ? reviewData.customerName.trim() : "Valued Customer",
+    rating: Math.min(5, Math.max(1, parseInt(reviewData.rating) || 5)),
+    comment: reviewData.comment ? reviewData.comment.trim() : "",
+    createdAt: now
+  };
+
+  // 1. Save locally immediately
+  const reviews = getStored(CACHE_KEYS.REVIEWS, {});
+  reviews[reviewId] = finalReview;
+  setStored(CACHE_KEYS.REVIEWS, reviews);
+  reviewsSubscribers.forEach(cb => cb(reviews));
+
+  // 2. Sync to Firebase Realtime Database
+  if (liveSyncReady && db) {
+    try {
+      await set(ref(db, `reviews/${reviewId}`), finalReview);
+    } catch (err) {
+      console.warn("Cloud review write notice:", err);
+    }
+  }
+
+  return finalReview;
+}
+
+/**
+ * Delete Customer Review (Admin action)
+ */
+export async function deleteReview(reviewId) {
+  if (!reviewId) return;
+  const reviews = getStored(CACHE_KEYS.REVIEWS, {});
+  delete reviews[reviewId];
+  setStored(CACHE_KEYS.REVIEWS, reviews);
+  reviewsSubscribers.forEach(cb => cb(reviews));
+
+  if (liveSyncReady && db) {
+    try {
+      await set(ref(db, `reviews/${reviewId}`), null);
+    } catch (e) {
+      console.warn("Cloud delete review notice:", e);
     }
   }
 }
