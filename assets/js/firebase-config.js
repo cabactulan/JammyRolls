@@ -1,3 +1,4 @@
+import { satisfiedCustomersFromFolder } from "./satisfied-customers-data.js";
 // Live Cloud Synchronization & Store Service
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -29,7 +30,7 @@ const CACHE_KEYS = {
   PRODUCT: "jammyrolls_product_v3",
   ORDERS: "jammyrolls_orders_v3",
   REVIEWS: "jammyrolls_reviews_v3",
-  CUSTOMER_PHOTOS: "jammyrolls_customer_photos_v3"
+  CUSTOMER_PHOTOS: "jammyrolls_customer_photos_v4"
 };
 
 // Subscriber Registries for instant real-time UI updates
@@ -434,74 +435,7 @@ export async function deleteReview(reviewId) {
 /**
  * Default Curated Customer Photos (Satisfied Customers)
  */
-export const DEFAULT_CUSTOMER_PHOTOS = {
-  "PHOTO-1": {
-    photoId: "PHOTO-1",
-    customerName: "Bianca & Carla T.",
-    location: "IT Park, Cebu",
-    rating: 5,
-    tag: "Office Merienda 🏢",
-    comment: "Ordered 15 JammyRolls for our afternoon team merienda and everyone was obsessed! The crispy crust and molten chocolate core are unbeatable.",
-    photoUrl: "assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg",
-    isFeatured: true,
-    createdAt: "2026-11-01T14:30:00.000Z"
-  },
-  "PHOTO-2": {
-    photoId: "PHOTO-2",
-    customerName: "David Santos",
-    location: "Banilad, Mandaue",
-    rating: 5,
-    tag: "Delivery Joy 🛵",
-    comment: "Still steaming hot and ultra-crispy when the rider arrived. The saba banana sweetness blends perfectly with the churros cinnamon sugar!",
-    photoUrl: "assets/images/Satisfied Customers/5499b286-58ef-4e68-afc7-26c4ed4f8d33.jpg",
-    isFeatured: true,
-    createdAt: "2026-11-02T16:15:00.000Z"
-  },
-  "PHOTO-3": {
-    photoId: "PHOTO-3",
-    customerName: "Kaye Alcantara",
-    location: "Lahug, Cebu City",
-    rating: 5,
-    tag: "Dessert Lover 🍌",
-    comment: "My new everyday craving! One roll is never enough. Definitely buying again for the whole family this weekend.",
-    photoUrl: "assets/images/Satisfied Customers/7cd13e61-0aa1-4d21-8c37-a7fde6e08f72.jpg",
-    isFeatured: true,
-    createdAt: "2026-11-03T11:45:00.000Z"
-  },
-  "PHOTO-4": {
-    photoId: "PHOTO-4",
-    customerName: "Mark & Friends",
-    location: "Talamban, Cebu",
-    rating: 5,
-    tag: "Barkada Treat 🎉",
-    comment: "Crunchiest banana churros we've ever tasted! Paired with hot coffee, it's absolute heaven.",
-    photoUrl: "assets/images/Satisfied Customers/f8744009-622c-41a0-b265-f1599bbef780.jpg",
-    isFeatured: true,
-    createdAt: "2026-11-03T18:20:00.000Z"
-  },
-  "PHOTO-5": {
-    photoId: "PHOTO-5",
-    customerName: "Jolina Perez",
-    location: "Cebu Business Park",
-    rating: 5,
-    tag: "Verified Foodie ⭐",
-    comment: "Hands down the best snack in Cebu. ₱15 for this handcrafted quality is unbelievable value!",
-    photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
-    isFeatured: true,
-    createdAt: "2026-11-04T09:10:00.000Z"
-  },
-  "PHOTO-6": {
-    photoId: "PHOTO-6",
-    customerName: "Rico & Danica Cruz",
-    location: "Mabolo, Cebu City",
-    rating: 5,
-    tag: "Family Favorite 👨‍👩‍👦",
-    comment: "The kids couldn't get enough of the molten chocolate lava inside! A must-try treat for everyone.",
-    photoUrl: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80",
-    isFeatured: true,
-    createdAt: "2026-11-04T12:00:00.000Z"
-  }
-};
+export const DEFAULT_CUSTOMER_PHOTOS = satisfiedCustomersFromFolder;
 
 /**
  * Subscribe to Customer Photos (Live Feed)
@@ -554,7 +488,7 @@ export async function createCustomerPhoto(photoData) {
     rating: Math.min(5, Math.max(1, parseInt(photoData.rating) || 5)),
     tag: photoData.tag ? photoData.tag.trim() : "Happy Customer ✨",
     comment: photoData.comment ? photoData.comment.trim() : "Loved the fresh JammyRolls!",
-    photoUrl: photoData.photoUrl || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80",
+    photoUrl: photoData.photoUrl || "assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg",
     isFeatured: photoData.isFeatured !== undefined ? !!photoData.isFeatured : true,
     createdAt: now
   };
