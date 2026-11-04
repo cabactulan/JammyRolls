@@ -104,6 +104,12 @@
           <span class="nav-badge-pill" id="sidebar-reviews-badge" style="display: none;">0</span>
         </button>
 
+        <button class="nav-item-btn" data-section="gallery">
+          <span>📸</span>
+          <span>Photos</span>
+          <span class="nav-badge-pill" id="sidebar-photos-badge" style="display: none;">0</span>
+        </button>
+
         <button class="nav-item-btn" data-section="founders">
           <span>👥</span>
           <span>Team</span>
@@ -381,6 +387,10 @@
         <span>Reviews</span>
         <span class="admin-bnav-badge" id="bnav-reviews-badge" style="display: none;">0</span>
       </button>
+      <button class="admin-bnav-btn" data-section="gallery">
+        <span class="bnav-icon">📸</span>
+        <span>Photos</span>
+      </button>
       <button class="admin-bnav-btn" data-section="founders">
         <span class="bnav-icon">👥</span>
         <span>Team</span>
@@ -461,6 +471,144 @@
           </div>
         </div>
       </section>
+
+      <!-- SECTION 6: CUSTOMER PHOTOS & WALL OF SMILES -->
+      <section class="admin-section" id="section-gallery" style="display: none;">
+        <div class="admin-section-header">
+          <div>
+            <h2 class="admin-section-title">Customer Photos & Wall of Smiles</h2>
+            <p class="admin-section-sub">Showcase satisfied dessert lovers on the storefront and dedicated photo gallery</p>
+          </div>
+        </div>
+
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Total Customer Photos</span>
+              <div class="metric-icon-wrap" style="background: #E0E7FF; color: #4F46E5;">📸</div>
+            </div>
+            <div class="metric-val" id="kpi-photos-total">0</div>
+            <div class="metric-sub">Satisfied customers</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Featured on Home</span>
+              <div class="metric-icon-wrap" style="background: #FEF3C7; color: #D97706;">⭐</div>
+            </div>
+            <div class="metric-val" id="kpi-photos-featured">0</div>
+            <div class="metric-sub">Active highlights</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Average Rating</span>
+              <div class="metric-icon-wrap" style="background: #ECFDF5; color: #059669;">✨</div>
+            </div>
+            <div class="metric-val" id="kpi-photos-avg">5.0</div>
+            <div class="metric-sub">★★★★★ Verified</div>
+          </div>
+        </div>
+
+        <!-- Add Customer Photo Form Card -->
+        <div class="admin-card" style="margin-bottom: 28px;">
+          <div class="admin-card-header">
+            <h3 style="font-family: 'Fredoka', cursive; font-size: 1.15rem;">Add New Customer Photo</h3>
+          </div>
+          
+          <form id="admin-add-photo-form" style="padding: 4px 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <div class="login-input-group" style="margin-bottom: 0;">
+                <label class="login-input-label">Customer Name *</label>
+                <input type="text" id="new-photo-name" class="login-input" placeholder="e.g. Maria Santos" required>
+              </div>
+
+              <div class="login-input-group" style="margin-bottom: 0;">
+                <label class="login-input-label">Location / Area</label>
+                <input type="text" id="new-photo-location" class="login-input" placeholder="e.g. IT Park, Cebu">
+              </div>
+
+              <div class="login-input-group" style="margin-bottom: 0;">
+                <label class="login-input-label">Tag / Occasion</label>
+                <select id="new-photo-tag" class="login-input" style="height: 48px;">
+                  <option value="Office Merienda 🏢">Office Merienda 🏢</option>
+                  <option value="Delivery Joy 🛵">Delivery Joy 🛵</option>
+                  <option value="Barkada Treat 🎉">Barkada Treat 🎉</option>
+                  <option value="Family Favorite 👨‍👩‍👦">Family Favorite 👨‍👩‍👦</option>
+                  <option value="Verified Foodie ⭐">Verified Foodie ⭐</option>
+                  <option value="Dessert Lover 🍌">Dessert Lover 🍌</option>
+                </select>
+              </div>
+
+              <div class="login-input-group" style="margin-bottom: 0;">
+                <label class="login-input-label">Rating</label>
+                <select id="new-photo-rating" class="login-input" style="height: 48px;">
+                  <option value="5">★★★★★ (5 Stars - Amazing)</option>
+                  <option value="4">★★★★☆ (4 Stars - Great)</option>
+                  <option value="3">★★★☆☆ (3 Stars - Good)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Photo URL & Presets -->
+            <div class="login-input-group" style="margin-bottom: 14px;">
+              <label class="login-input-label">Photo (Upload local file OR enter image URL) *</label>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
+                <input type="file" id="new-photo-file" accept="image/*" class="login-input" style="padding: 10px; max-width: 280px;">
+                <input type="url" id="new-photo-url" class="login-input" placeholder="Or paste image URL: https://..." style="flex: 1; min-width: 240px;">
+              </div>
+              <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-bottom: 8px;">
+                Or select one of our curated customer photo presets:
+              </div>
+              <div class="photo-preset-selector" id="photo-preset-selector">
+                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg" title="Satisfied Customer 1">
+                  <img src="../assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg" alt="Customer 1">
+                </div>
+                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/5499b286-58ef-4e68-afc7-26c4ed4f8d33.jpg" title="Satisfied Customer 2">
+                  <img src="../assets/images/Satisfied Customers/5499b286-58ef-4e68-afc7-26c4ed4f8d33.jpg" alt="Customer 2">
+                </div>
+                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/7cd13e61-0aa1-4d21-8c37-a7fde6e08f72.jpg" title="Satisfied Customer 3">
+                  <img src="../assets/images/Satisfied Customers/7cd13e61-0aa1-4d21-8c37-a7fde6e08f72.jpg" alt="Customer 3">
+                </div>
+                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/f8744009-622c-41a0-b265-f1599bbef780.jpg" title="Satisfied Customer 4">
+                  <img src="../assets/images/Satisfied Customers/f8744009-622c-41a0-b265-f1599bbef780.jpg" alt="Customer 4">
+                </div>
+              </div>
+            </div>
+
+            <!-- Customer Quote -->
+            <div class="login-input-group" style="margin-bottom: 18px;">
+              <label class="login-input-label">Customer Quote / Feedback *</label>
+              <textarea id="new-photo-comment" class="login-input" rows="2" placeholder="e.g. The molten chocolate core and crunchy cinnamon churro crust is amazing!" required style="height: auto; padding: 12px;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                <input type="checkbox" id="new-photo-featured" checked style="width: 18px; height: 18px; accent-color: #D97706;">
+                <span style="font-weight: 600; color: #1F130B;">Feature on Homepage (Wall of Smiles)</span>
+              </label>
+
+              <button type="submit" class="btn-login-submit" id="btn-submit-photo" style="width: auto; padding: 12px 28px; font-size: 0.95rem;">
+                <span>Add Customer Photo</span>
+                <span>✨</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Customer Photos Grid -->
+        <div class="admin-card">
+          <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-family: 'Fredoka', cursive; font-size: 1.15rem;">Current Customer Photos Gallery</h3>
+            <span style="font-size: 0.82rem; color: var(--admin-text-muted);" id="admin-photos-count-label">0 photos</span>
+          </div>
+
+          <div class="admin-photos-grid" id="admin-photos-list" style="margin-top: 14px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 

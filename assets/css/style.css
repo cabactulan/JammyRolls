@@ -2556,3 +2556,330 @@ img {
     padding: 28px 18px;
   }
 }
+
+
+/* ==========================================================================
+   Customer Photo Gallery & Satisfied Customers Section
+   ========================================================================== */
+.customers-gallery-section {
+  padding: 80px 0;
+  background: linear-gradient(180deg, var(--color-bg) 0%, #FFFDF9 100%);
+  border-top: 1px solid var(--color-border);
+  position: relative;
+}
+
+.gallery-filter-wrap {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.gallery-filter-btn {
+  background: #FFF;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gallery-filter-btn:hover {
+  background: var(--color-surface-soft);
+  color: var(--color-choco-dark);
+  border-color: #D1D5DB;
+}
+
+.gallery-filter-btn.active {
+  background: var(--color-choco-dark);
+  color: #FBBF24;
+  border-color: var(--color-choco-dark);
+  box-shadow: 0 4px 12px rgba(62, 31, 17, 0.15);
+}
+
+.customer-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+  margin-bottom: 40px;
+}
+
+@media (max-width: 960px) {
+  .customer-photos-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .customer-photos-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+.customer-photo-card {
+  background: #FFF;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(62, 31, 17, 0.04);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-photo-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(62, 31, 17, 0.1);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+.customer-photo-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  background: #2B150A;
+  cursor: pointer;
+}
+
+.customer-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  display: block;
+}
+
+.customer-photo-card:hover .customer-photo-img {
+  transform: scale(1.05);
+}
+
+.customer-photo-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(31, 19, 11, 0.78);
+  backdrop-filter: blur(8px);
+  color: #FFF;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.customer-photo-zoom-hint {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.customer-photo-card:hover .customer-photo-zoom-hint {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.customer-photo-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.customer-photo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.customer-photo-name {
+  font-family: var(--font-brand);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-choco-dark);
+  line-height: 1.2;
+}
+
+.customer-photo-location {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.customer-photo-stars {
+  color: #F59E0B;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+}
+
+.customer-photo-comment {
+  font-size: 0.88rem;
+  color: #4B3A2F;
+  line-height: 1.55;
+  margin-top: 8px;
+  flex: 1;
+}
+
+.customer-photo-footer {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.customer-photo-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #059669;
+  font-weight: 700;
+}
+
+/* Lightbox Modal */
+.photo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(18, 10, 5, 0.92);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.photo-lightbox.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.photo-lightbox-card {
+  background: #FFF;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  max-width: 780px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+  position: relative;
+  animation: zoomIn 0.25s ease;
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.photo-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #FFF;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.photo-lightbox-close:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.1);
+}
+
+.photo-lightbox-img-wrap {
+  width: 100%;
+  max-height: 55vh;
+  background: #1A0B04;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-lightbox-img {
+  width: 100%;
+  height: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  display: block;
+}
+
+.photo-lightbox-body {
+  padding: 24px;
+  background: #FFF;
+  overflow-y: auto;
+}
+
+/* Share Experience CTA Card */
+.gallery-cta-banner {
+  background: linear-gradient(135deg, #3E1F11 0%, #612F13 100%);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px;
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 30px;
+  box-shadow: 0 12px 30px rgba(62, 31, 17, 0.15);
+}
+
+.gallery-cta-text h3 {
+  font-family: var(--font-brand);
+  font-size: 1.5rem;
+  color: #FBBF24;
+  margin-bottom: 6px;
+}
+
+.gallery-cta-text p {
+  color: #FDF4E7;
+  font-size: 0.95rem;
+  margin: 0;
+  max-width: 540px;
+}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Satisfied Customers — JammyRolls Philippines</title>
+  <meta name="description" content="Browse real photos and happy moments from dessert lovers enjoying freshly fried JammyRolls (Banana Churros Rolls) across Cebu.">
+  
+  <link rel="icon" type="image/png" href="assets/images/jammyrolls-logo.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="header">
+    <div class="container navbar">
+      <a href="index.html" class="brand-logo-wrap">
+        <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="brand-logo-img">
+      </a>
+
+      <!-- Mobile Menu Toggle Button -->
+      <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle Navigation Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav-links" id="nav-links-list">
+        <li><a href="index.html#hero" class="nav-link">Home</a></li>
+        <li><a href="index.html#menu" class="nav-link">Menu</a></li>
+        <li><a href="index.html#about" class="nav-link">About</a></li>
+        <li><a href="customers.html" class="nav-link active">Happy Customers</a></li>
+        <li><a href="index.html#reviews" class="nav-link">Reviews</a></li>
+        <li><a href="index.html#founders" class="nav-link">Founders</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Direct Order Link -->
+        <a href="index.html#menu" class="btn btn-primary" style="padding: 10px 22px; font-size: 0.92rem;">
+          <span>Order Now</span>
+          <span>🔥</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Hero Header -->
+  <section class="hero-section" style="padding: 50px 0 30px; min-height: auto;">
+    <div class="container" style="text-align: center;">
+      <div class="hero-tag" style="margin: 0 auto 16px;">
+        <span class="emoji">📸</span>
+        <span class="text">Wall of Jammy Smiles</span>
+      </div>
+      <h1 class="hero-title" style="font-size: 2.8rem; margin-bottom: 14px;">
+        Our Satisfied Customers
+      </h1>
+      <p class="hero-desc" style="max-width: 680px; margin: 0 auto 28px; font-size: 1.05rem;">
+        Nothing brings us greater joy than seeing big smiles, crunchy bites, and sweet chocolate moments. Here are authentic customer photos from dessert lovers across Cebu!
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+        <div style="background: #FFF; border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 18px; font-size: 0.88rem; font-weight: 700; color: var(--color-choco-dark); display: inline-flex; align-items: center; gap: 8px;">
+          <span>⭐</span> 4.98 / 5.0 Customer Rating
+        </div>
+        <div style="background: #FFF; border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 18px; font-size: 0.88rem; font-weight: 700; color: var(--color-choco-dark); display: inline-flex; align-items: center; gap: 8px;">
+          <span>🍌</span> 100% Fresh Local Saba Bananas
+        </div>
+        <div style="background: #FFF; border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 18px; font-size: 0.88rem; font-weight: 700; color: var(--color-choco-dark); display: inline-flex; align-items: center; gap: 8px;">
+          <span>✨</span> Handcrafted & Fried to Order
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customer Gallery Section -->
+  <section class="customers-gallery-section" style="padding-top: 30px; border-top: none;">
+    <div class="container">
+      
+      <!-- Filter Row -->
+      <div class="gallery-filter-wrap" id="gallery-filter-buttons">
+        <button class="gallery-filter-btn active" data-filter="all">All Photos ✨</button>
+        <button class="gallery-filter-btn" data-filter="office">Office Merienda 🏢</button>
+        <button class="gallery-filter-btn" data-filter="delivery">Delivery Joy 🛵</button>
+        <button class="gallery-filter-btn" data-filter="barkada">Barkada Treats 🎉</button>
+        <button class="gallery-filter-btn" data-filter="favorite">Family Favorites 👨‍👩‍👦</button>
+      </div>
+
+      <!-- Photo Grid -->
+      <div class="customer-photos-grid" id="full-customers-grid">
+        <!-- Rendered dynamically via customers.js -->
+      </div>
+
+      <!-- CTA Banner -->
+      <div class="gallery-cta-banner">
+        <div class="gallery-cta-text">
+          <h3>Tasted JammyRolls Recently? 🍌📸</h3>
+          <p>We’d love to see your crunchy moments! Leave a review or share your photos to be featured on our Wall of Smiles.</p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="index.html#reviews" class="btn btn-primary" style="padding: 12px 28px; font-size: 0.95rem;">
+            <span>Post a Review</span>
+            <span>⭐</span>
+          </a>
+          <a href="index.html#menu" class="btn btn-choco" style="padding: 12px 28px; font-size: 0.95rem;">
+            <span>Order JammyRolls (₱15)</span>
+            <span>🔥</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Lightbox Modal -->
+  <div class="photo-lightbox" id="customer-lightbox" role="dialog" aria-modal="true" aria-label="Customer Photo Viewer">
+    <div class="photo-lightbox-card">
+      <button class="photo-lightbox-close" id="lightbox-close-btn" aria-label="Close Photo">✕</button>
+      <div class="photo-lightbox-img-wrap">
+        <img src="" alt="Satisfied Customer" class="photo-lightbox-img" id="lightbox-img">
+      </div>
+      <div class="photo-lightbox-body">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+          <h3 id="lightbox-name" style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.3rem;"></h3>
+          <div id="lightbox-stars" style="color: #F59E0B; font-size: 1.1rem; letter-spacing: 2px;">★★★★★</div>
+        </div>
+        <div id="lightbox-location" style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;"></div>
+        <p id="lightbox-comment" style="font-size: 0.95rem; color: #4B3A2F; line-height: 1.6; font-style: italic;"></p>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+          <span id="lightbox-tag" style="background: #FEF3C7; color: #92400E; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;"></span>
+          <a href="index.html#menu" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.85rem;">
+            Order JammyRolls 🔥
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="footer-logo">
+          <p class="footer-about-text">
+            JammyRolls crafts signature artisan Banana Churros Rolls. Golden crispy churro pastry rolled with sweet banana and warm molten chocolate lava.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Quick Links</h4>
+          <ul class="footer-links-list">
+            <li><a href="index.html#hero" class="footer-link">Home</a></li>
+            <li><a href="index.html#menu" class="footer-link">Menu</a></li>
+            <li><a href="index.html#about" class="footer-link">About Us</a></li>
+            <li><a href="customers.html" class="footer-link">Happy Customers</a></li>
+            <li><a href="index.html#reviews" class="footer-link">Reviews</a></li>
+            <li><a href="index.html#founders" class="footer-link">Our Founders</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Operating Hours</h4>
+          <p style="color: #C7B29F; font-size: 0.9rem; line-height: 1.6;">
+            Monday – Sunday: 9:00 AM – 9:00 PM<br>
+            Hot batches prepared on demand.<br>
+            Cash, GCash & Maya accepted.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 JammyRolls Philippines. Handcrafted with love & bananas.</div>
+        <div>Crispy outside • Gooey inside</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="assets/js/customers.js"></script>
+</body>
+</html>

@@ -3,7 +3,8 @@ import {
   subscribeToProduct, 
   createOrder, 
   createReview,
-  subscribeToReviews
+  subscribeToReviews,
+  subscribeToCustomerPhotos
 } from "./firebase-config.js";
 
 import { 
@@ -51,6 +52,7 @@ export function showToast(message, type = "info") {
 function initApp() {
   initProductSubscriptions();
   initReviewsSection();
+  initCustomerGallery();
   renderFounders();
   setupEventListeners();
   setupMobileNav();
@@ -456,4 +458,144 @@ function renderReviewsFeed(reviewsObj) {
       </div>
     `;
   }).join("");
+}
+
+
+// Customer Photo Gallery (Satisfied Customers)
+let homepageCustomerPhotos = [];
+let homeFilter = "all";
+
+function initCustomerGallery() {
+  const filterBtns = document.querySelectorAll("#home-gallery-filters .gallery-filter-btn");
+  filterBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      homeFilter = btn.getAttribute("data-filter") || "all";
+      renderHomepageGallery();
+    });
+  });
+
+  setupHomeLightbox();
+
+  subscribeToCustomerPhotos((photosObj) => {
+    homepageCustomerPhotos = Object.values(photosObj || {}).sort((a, b) => {
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+    renderHomepageGallery();
+  });
+}
+
+function renderHomepageGallery() {
+  const grid = document.getElementById("homepage-customers-grid");
+  if (!grid) return;
+
+  const filtered = homepageCustomerPhotos.filter(photo => {
+    if (homeFilter === "all") return true;
+    const tag = (photo.tag || "").toLowerCase();
+    const comment = (photo.comment || "").toLowerCase();
+    if (homeFilter === "office") return tag.includes("office") || comment.includes("office") || comment.includes("team");
+    if (homeFilter === "delivery") return tag.includes("delivery") || comment.includes("rider") || comment.includes("deliver");
+    if (homeFilter === "barkada") return tag.includes("barkada") || comment.includes("friend") || comment.includes("coffee");
+    return true;
+  });
+
+  // Take top 6 for homepage
+  const displayPhotos = filtered.slice(0, 6);
+
+  if (displayPhotos.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: #FFF; border-radius: 16px; border: 1px dashed var(--color-border);">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">📸</div>
+        <h4 style="font-family: var(--font-brand); color: var(--color-choco-dark);">No Photos in this Category</h4>
+        <p style="color: var(--color-text-muted); font-size: 0.88rem;">Select "All Smiles" to view our satisfied customers!</p>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = displayPhotos.map(photo => {
+    const stars = "★".repeat(photo.rating || 5) + "☆".repeat(Math.max(0, 5 - (photo.rating || 5)));
+    const dateFormatted = photo.createdAt 
+      ? new Date(photo.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) 
+      : "Verified Customer";
+
+    const safeName = (photo.customerName || "Customer").replace(/"/g, '&quot;');
+    const safeLoc = (photo.location || "Cebu City").replace(/"/g, '&quot;');
+    const safeTag = (photo.tag || "Satisfied Foodie").replace(/"/g, '&quot;');
+    const safeComment = (photo.comment || "").replace(/"/g, '&quot;');
+    const safeUrl = (photo.photoUrl || "").replace(/"/g, '&quot;');
+
+    return `
+      <div class="customer-photo-card" data-id="${photo.photoId}">
+        <div class="customer-photo-img-wrap" onclick="window.openCustomerLightbox('${safeUrl}', '${safeName}', '${safeLoc}', '${safeTag}', '${safeComment}', ${photo.rating || 5})">
+          <img src="${photo.photoUrl}" alt="${safeName}" class="customer-photo-img" loading="lazy">
+          <span class="customer-photo-tag">${photo.tag || "✨ Happy Customer"}</span>
+          <div class="customer-photo-zoom-hint" title="Click to view full photo">🔍</div>
+        </div>
+        <div class="customer-photo-body">
+          <div class="customer-photo-header">
+            <div>
+              <div class="customer-photo-name">${photo.customerName}</div>
+              <div class="customer-photo-location">📍 ${photo.location || "Cebu City"}</div>
+            </div>
+            <div class="customer-photo-stars">${stars}</div>
+          </div>
+          <p class="customer-photo-comment">“${photo.comment}”</p>
+          <div class="customer-photo-footer">
+            <span class="customer-photo-verified">✓ Verified Foodie</span>
+            <span>${dateFormatted}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function setupHomeLightbox() {
+  const lightbox = document.getElementById("customer-lightbox");
+  const closeBtn = document.getElementById("lightbox-close-btn");
+  const orderBtn = document.getElementById("lightbox-order-btn");
+
+  window.openCustomerLightbox = function(url, name, loc, tag, comment, rating) {
+    if (!lightbox) return;
+    const imgEl = document.getElementById("lightbox-img");
+    const nameEl = document.getElementById("lightbox-name");
+    const locEl = document.getElementById("lightbox-location");
+    const tagEl = document.getElementById("lightbox-tag");
+    const starsEl = document.getElementById("lightbox-stars");
+    const commentEl = document.getElementById("lightbox-comment");
+
+    if (imgEl) imgEl.src = url;
+    if (nameEl) nameEl.textContent = name;
+    if (locEl) locEl.textContent = `📍 ${loc}`;
+    if (tagEl) tagEl.textContent = tag;
+    if (starsEl) starsEl.textContent = "★".repeat(rating || 5) + "☆".repeat(Math.max(0, 5 - (rating || 5)));
+    if (commentEl) commentEl.textContent = `“${comment}”`;
+
+    lightbox.classList.add("active");
+    document.body.style.overflow = "hidden";
+  };
+
+  function closeLightbox() {
+    if (lightbox) {
+      lightbox.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  }
+
+  if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
+  if (orderBtn) orderBtn.addEventListener("click", closeLightbox);
+
+  if (lightbox) {
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && lightbox?.classList.contains("active")) {
+      closeLightbox();
+    }
+  });
 }

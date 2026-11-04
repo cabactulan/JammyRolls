@@ -7,7 +7,11 @@ import {
   updateInventoryStock,
   updateProductPrice,
   subscribeToReviews,
-  deleteReview
+  deleteReview,
+  subscribeToCustomerPhotos,
+  createCustomerPhoto,
+  deleteCustomerPhoto,
+  toggleCustomerPhotoFeatured
 } from "./firebase-config.js";
 
 import { foundersInfo } from "./products-data.js";
@@ -15,6 +19,7 @@ import { foundersInfo } from "./products-data.js";
 // State
 let allOrders = {};
 let allReviews = {};
+let allCustomerPhotosAdmin = {};
 let liveProduct = null;
 let currentOrderFilter = "all";
 let currentReviewFilter = "all";
@@ -85,6 +90,7 @@ function initAdminApp() {
   initAuthGuard();
   initSubscriptions();
   initReviewsAdmin();
+  initCustomerPhotosAdmin();
   setupNavigation();
   setupAdminControls();
   renderAdminFounders();
@@ -1028,4 +1034,201 @@ function renderReviewsTable() {
       showAdminNotification(`Review #${reviewId} deleted.`);
     });
   });
+}
+
+
+// ==========================================================================
+// Customer Photos & Wall of Smiles Management (Admin)
+// ==========================================================================
+function initCustomerPhotosAdmin() {
+  // Preset selector
+  document.querySelectorAll("#photo-preset-selector .photo-preset-item").forEach(item => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll("#photo-preset-selector .photo-preset-item").forEach(i => i.classList.remove("selected"));
+      item.classList.add("selected");
+      const url = item.getAttribute("data-url");
+      const urlInput = document.getElementById("new-photo-url");
+      if (urlInput) urlInput.value = url;
+    });
+  });
+
+  // Local File Upload reader (converts to DataURL)
+  const fileInput = document.getElementById("new-photo-file");
+  fileInput?.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const urlInput = document.getElementById("new-photo-url");
+        if (urlInput) urlInput.value = event.target.result;
+        showAdminNotification("Local photo selected! Ready to add. 📸");
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Form Submit
+  const form = document.getElementById("admin-add-photo-form");
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("new-photo-name")?.value.trim();
+    const location = document.getElementById("new-photo-location")?.value.trim() || "Cebu City";
+    const tag = document.getElementById("new-photo-tag")?.value || "Happy Customer ✨";
+    const rating = parseInt(document.getElementById("new-photo-rating")?.value) || 5;
+    const photoUrl = document.getElementById("new-photo-url")?.value.trim();
+    const comment = document.getElementById("new-photo-comment")?.value.trim();
+    const isFeatured = document.getElementById("new-photo-featured")?.checked ?? true;
+
+    if (!name || !comment) {
+      showAdminNotification("Please enter customer name and quote!");
+      return;
+    }
+
+    if (!photoUrl) {
+      showAdminNotification("Please upload a photo or choose a preset!");
+      return;
+    }
+
+    const submitBtn = document.getElementById("btn-submit-photo");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Saving...</span> <span>⏳</span>`;
+    }
+
+    try {
+      await createCustomerPhoto({
+        customerName: name,
+        location,
+        tag,
+        rating,
+        photoUrl,
+        comment,
+        isFeatured
+      });
+
+      showAdminNotification(`Photo for ${name} added successfully! 📸`);
+      form.reset();
+      document.querySelectorAll("#photo-preset-selector .photo-preset-item").forEach(i => i.classList.remove("selected"));
+    } catch (err) {
+      showAdminNotification("Could not save photo. Please try again.");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Add Customer Photo</span> <span>✨</span>`;
+      }
+    }
+  });
+
+  // Action clicks (Toggle Featured, Delete)
+  const photosListEl = document.getElementById("admin-photos-list");
+  photosListEl?.addEventListener("click", async (e) => {
+    const toggleBtn = e.target.closest(".btn-photo-toggle-featured");
+    const deleteBtn = e.target.closest(".btn-photo-delete");
+
+    if (toggleBtn) {
+      const id = toggleBtn.getAttribute("data-id");
+      if (id) {
+        await toggleCustomerPhotoFeatured(id);
+        showAdminNotification("Homepage featured status updated! ⭐");
+      }
+    }
+
+    if (deleteBtn) {
+      const id = deleteBtn.getAttribute("data-id");
+      const name = deleteBtn.getAttribute("data-name") || "this photo";
+      if (confirm(`Are you sure you want to delete the photo from ${name}?`)) {
+        await deleteCustomerPhoto(id);
+        showAdminNotification("Customer photo deleted. 🗑️");
+      }
+    }
+  });
+
+  // Subscribe to live customer photos
+  subscribeToCustomerPhotos((photosObj) => {
+    allCustomerPhotosAdmin = photosObj || {};
+    updatePhotosKPIs();
+    renderAdminPhotosList();
+  });
+}
+
+function updatePhotosKPIs() {
+  const photosList = Object.values(allCustomerPhotosAdmin || {});
+  const total = photosList.length;
+  const featured = photosList.filter(p => p.isFeatured).length;
+  const avg = total > 0 
+    ? (photosList.reduce((acc, p) => acc + (p.rating || 5), 0) / total).toFixed(1) 
+    : "5.0";
+
+  const totalEl = document.getElementById("kpi-photos-total");
+  const featEl = document.getElementById("kpi-photos-featured");
+  const avgEl = document.getElementById("kpi-photos-avg");
+  const countLabel = document.getElementById("admin-photos-count-label");
+  const sidebarBadge = document.getElementById("sidebar-photos-badge");
+
+  if (totalEl) totalEl.textContent = total;
+  if (featEl) featEl.textContent = featured;
+  if (avgEl) avgEl.textContent = avg;
+  if (countLabel) countLabel.textContent = `${total} photo${total === 1 ? '' : 's'}`;
+
+  if (sidebarBadge) {
+    if (total > 0) {
+      sidebarBadge.textContent = total;
+      sidebarBadge.style.display = "inline-flex";
+    } else {
+      sidebarBadge.style.display = "none";
+    }
+  }
+}
+
+function renderAdminPhotosList() {
+  const container = document.getElementById("admin-photos-list");
+  if (!container) return;
+
+  const photosList = Object.values(allCustomerPhotosAdmin || {}).sort((a, b) => {
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+
+  if (photosList.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 36px 20px; color: var(--admin-text-muted);">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">📸</div>
+        <p>No customer photos added yet. Add one above to showcase on your site!</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = photosList.map(photo => {
+    const stars = "★".repeat(photo.rating || 5) + "☆".repeat(Math.max(0, 5 - (photo.rating || 5)));
+    const safeName = (photo.customerName || "Customer").replace(/"/g, '&quot;');
+    const isFeat = !!photo.isFeatured;
+
+    return `
+      <div class="admin-photo-card" id="admin-photo-${photo.photoId}">
+        <div class="admin-photo-thumb-wrap">
+          <img src="${photo.photoUrl && photo.photoUrl.startsWith('assets/') ? '../' + photo.photoUrl : photo.photoUrl}" alt="${safeName}" class="admin-photo-thumb" loading="lazy">
+          ${isFeat ? `<span class="admin-photo-badge-featured">⭐ Featured</span>` : ''}
+          <span class="admin-photo-tag-pill">${photo.tag || '✨ Customer'}</span>
+        </div>
+        <div class="admin-photo-body">
+          <div class="admin-photo-header">
+            <div>
+              <div class="admin-photo-name">${photo.customerName}</div>
+              <div class="admin-photo-location">📍 ${photo.location || 'Cebu'}</div>
+            </div>
+            <div class="admin-photo-stars">${stars}</div>
+          </div>
+          <p class="admin-photo-caption">“${photo.comment}”</p>
+          <div class="admin-photo-actions">
+            <button type="button" class="btn-photo-action btn-photo-toggle-featured" data-id="${photo.photoId}" title="Toggle Homepage Feature">
+              ${isFeat ? '★ Featured' : '☆ Feature on Home'}
+            </button>
+            <button type="button" class="btn-photo-action btn-photo-delete" data-id="${photo.photoId}" data-name="${safeName}" title="Delete Photo">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }

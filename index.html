@@ -35,6 +35,7 @@
         <li><a href="#hero" class="nav-link active">Home</a></li>
         <li><a href="#menu" class="nav-link">Menu</a></li>
         <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#customers" class="nav-link">Happy Customers</a></li>
         <li><a href="#reviews" class="nav-link">Reviews</a></li>
         <li><a href="#founders" class="nav-link">Founders</a></li>
       </ul>
@@ -318,6 +319,51 @@
     </div>
   </section>
 
+
+  <!-- Satisfied Customers Photo Showcase Section -->
+  <section class="customers-gallery-section" id="customers">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Wall of Jammy Smiles</span>
+        <h2 class="section-title">Satisfied Customers 📸</h2>
+        <p class="section-subtitle">
+          Real moments, pure crunch! See fellow dessert lovers enjoying their hot, fresh JammyRolls across Cebu.
+        </p>
+      </div>
+
+      <!-- Filter Buttons -->
+      <div class="gallery-filter-wrap" id="home-gallery-filters">
+        <button class="gallery-filter-btn active" data-filter="all">All Smiles ✨</button>
+        <button class="gallery-filter-btn" data-filter="office">Office Merienda 🏢</button>
+        <button class="gallery-filter-btn" data-filter="delivery">Delivery Joy 🛵</button>
+        <button class="gallery-filter-btn" data-filter="barkada">Barkada Treats 🎉</button>
+      </div>
+
+      <!-- Photos Grid Container (Populated via JS) -->
+      <div class="customer-photos-grid" id="homepage-customers-grid">
+        <!-- Rendered dynamically from live customer photos -->
+      </div>
+
+      <!-- Banner linking to full page & inviting customers -->
+      <div class="gallery-cta-banner">
+        <div class="gallery-cta-text">
+          <h3>Want to see more customer moments? 🍌✨</h3>
+          <p>Explore our complete photo wall or share your own crunchy JammyRolls experience with us!</p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="customers.html" class="btn btn-primary" style="padding: 12px 24px; font-size: 0.95rem;">
+            <span>View Full Photo Gallery</span>
+            <span>📸</span>
+          </a>
+          <a href="#reviews" class="btn btn-choco" style="padding: 12px 24px; font-size: 0.95rem;">
+            <span>Share Your Review</span>
+            <span>⭐</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Founders & Creators Section -->
   <section class="story-section" id="founders" style="background: #FFF; border-top: 1px solid var(--color-border);">
     <div class="container">
@@ -385,6 +431,7 @@
             <li><a href="#hero" class="footer-link">Home</a></li>
             <li><a href="#menu" class="footer-link">Menu</a></li>
             <li><a href="#about" class="footer-link">About Us</a></li>
+            <li><a href="#customers" class="footer-link">Happy Customers</a></li>
             <li><a href="#reviews" class="footer-link">Reviews</a></li>
             <li><a href="#founders" class="footer-link">Our Founders</a></li>
           </ul>
@@ -422,5 +469,30 @@
 
   <!-- Scripts -->
   <script type="module" src="assets/js/main.js"></script>
+
+  <!-- Customer Photo Lightbox Modal -->
+  <div class="photo-lightbox" id="customer-lightbox" role="dialog" aria-modal="true" aria-label="Customer Photo Viewer">
+    <div class="photo-lightbox-card">
+      <button class="photo-lightbox-close" id="lightbox-close-btn" aria-label="Close Photo">✕</button>
+      <div class="photo-lightbox-img-wrap">
+        <img src="" alt="Satisfied Customer" class="photo-lightbox-img" id="lightbox-img">
+      </div>
+      <div class="photo-lightbox-body">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+          <h3 id="lightbox-name" style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.3rem;"></h3>
+          <div id="lightbox-stars" style="color: #F59E0B; font-size: 1.1rem; letter-spacing: 2px;">★★★★★</div>
+        </div>
+        <div id="lightbox-location" style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 12px;"></div>
+        <p id="lightbox-comment" style="font-size: 0.95rem; color: #4B3A2F; line-height: 1.6; font-style: italic;"></p>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+          <span id="lightbox-tag" style="background: #FEF3C7; color: #92400E; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;"></span>
+          <a href="#menu" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.85rem;" id="lightbox-order-btn">
+            Order JammyRolls 🔥
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

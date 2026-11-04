@@ -1450,3 +1450,184 @@ body {
     color: #000 !important;
   }
 }
+
+
+/* ==========================================================================
+   Admin Customer Photos & Wall of Smiles Management
+   ========================================================================== */
+.admin-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.admin-photo-card {
+  background: #FFF;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-photo-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.admin-photo-thumb-wrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #1F130B;
+  overflow: hidden;
+}
+
+.admin-photo-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-photo-badge-featured {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #F59E0B;
+  color: #1F130B;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.admin-photo-tag-pill {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(31, 19, 11, 0.8);
+  color: #FFF;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.admin-photo-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.admin-photo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.admin-photo-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1F130B;
+}
+
+.admin-photo-location {
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+.admin-photo-stars {
+  color: #F59E0B;
+  font-size: 0.88rem;
+  letter-spacing: 1px;
+}
+
+.admin-photo-caption {
+  font-size: 0.84rem;
+  color: #4B5563;
+  line-height: 1.45;
+  margin-top: 8px;
+  flex: 1;
+}
+
+.admin-photo-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.btn-photo-action {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.btn-photo-toggle-featured {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+
+.btn-photo-toggle-featured:hover {
+  background: #FDE68A;
+}
+
+.btn-photo-delete {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-color: #FECACA;
+}
+
+.btn-photo-delete:hover {
+  background: #FECACA;
+}
+
+/* Preset Photo Picker in Admin */
+.photo-preset-selector {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 0;
+  margin-bottom: 12px;
+}
+
+.photo-preset-item {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.photo-preset-item:hover,
+.photo-preset-item.selected {
+  border-color: #D97706;
+  transform: scale(1.05);
+}
+
+.photo-preset-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
