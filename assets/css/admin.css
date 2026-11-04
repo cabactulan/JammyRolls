@@ -360,31 +360,64 @@ body {
   gap: 16px;
 }
 
-.filter-pills-row {
+.filter-pills-row,
+.order-filter-pills {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
-.filter-pill {
+.filter-pill,
+.order-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   padding: 6px 14px;
   border-radius: 9999px;
   font-size: 0.82rem;
   font-weight: 700;
   background: #F3F4F6;
   color: #4B5563;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  font-family: inherit;
 }
 
-.filter-pill:hover {
+.filter-pill:hover,
+.order-filter-pill:hover {
   background: #E5E7EB;
+  color: #1F130B;
 }
 
-.filter-pill.active {
+.filter-pill.active,
+.order-filter-pill.active {
   background: #1F130B;
   color: #FFF;
+  border-color: #1F130B;
+}
+
+/* Star Rating Filter Pills */
+#review-filter-pills .order-filter-pill,
+#review-filter-pills .filter-pill {
+  padding: 6px 13px;
+  font-weight: 700;
+}
+
+#review-filter-pills .star-icon {
+  color: #F59E0B;
+  font-size: 0.95rem;
+  line-height: 1;
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+
+#review-filter-pills .order-filter-pill.active .star-icon,
+#review-filter-pills .filter-pill.active .star-icon {
+  color: #FBBF24;
 }
 
 /* Order Item Rows */
@@ -948,13 +981,16 @@ body {
     flex-direction: column;
     align-items: flex-start;
   }
-  .filter-pills-row {
+  .filter-pills-row,
+  .order-filter-pills {
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 4px;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
   }
-  .filter-pill {
+  .filter-pill,
+  .order-filter-pill {
     white-space: nowrap;
     flex-shrink: 0;
   }
