@@ -1140,9 +1140,26 @@ body {
   margin-bottom: 14px;
 }
 
-.receipt-brand-logo {
-  font-size: 2rem;
-  margin-bottom: 4px;
+.receipt-logo-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: #FFF;
+  padding: 4px;
+  border: 2px solid #E5E7EB;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media print {
+  .receipt-logo-img {
+    width: 60px !important;
+    height: 60px !important;
+    border: 1px solid #999 !important;
+  }
 }
 
 .receipt-brand-name {
