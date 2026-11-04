@@ -821,7 +821,7 @@ function updateReviewKPIs() {
   const fiveStarPct = Math.round((fiveStarCount / totalCount) * 100);
 
   if (avgEl) avgEl.textContent = avg;
-  if (starsEl) starsEl.textContent = `${starIcons} (${totalCount} total)`;
+  if (starsEl) starsEl.innerHTML = `<span style="color: #F59E0B; font-size: 1.1rem; letter-spacing: 2px;">${"★".repeat(roundedStars)}</span><span style="color: #D1D5DB; font-size: 1.1rem; letter-spacing: 2px;">${"☆".repeat(Math.max(0, 5 - roundedStars))}</span> <span style="font-size: 0.82rem; color: var(--admin-text-muted);">(${totalCount} total)</span>`;
   if (totalEl) totalEl.textContent = totalCount;
   if (fiveStarEl) fiveStarEl.textContent = fiveStarCount;
   if (fiveStarPctEl) fiveStarPctEl.textContent = `${fiveStarPct}% of reviews`;
@@ -878,10 +878,10 @@ function renderReviewsTable() {
           <div style="font-weight: 700; color: #1F130B;">${r.customerName}</div>
         </td>
         <td>
-          <div style="color: #F59E0B; font-size: 1.05rem; letter-spacing: 1px;">
-            ${starGold}<span style="color: #D1D5DB;">${starEmpty}</span>
+          <div style="display: inline-flex; align-items: center; gap: 1px; font-size: 1.2rem; letter-spacing: 2px; line-height: 1;">
+            <span style="color: #F59E0B;">${starGold}</span><span style="color: #D1D5DB;">${starEmpty}</span>
           </div>
-          <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${ratingNum} out of 5</div>
+          <div style="font-size: 0.72rem; color: var(--admin-text-muted); margin-top: 3px;">${ratingNum} out of 5</div>
         </td>
         <td>
           <div style="font-size: 0.88rem; color: #374151; max-width: 480px; line-height: 1.5;">

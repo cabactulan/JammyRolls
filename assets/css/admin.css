@@ -286,6 +286,16 @@ body {
   margin-bottom: 6px;
 }
 
+.metric-sub {
+  font-size: 0.82rem;
+  color: #78716C;
+  line-height: 1.4;
+}
+
+.metric-sub span {
+  vertical-align: middle;
+}
+
 .metric-trend {
   display: flex;
   align-items: center;
