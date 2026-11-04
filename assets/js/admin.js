@@ -59,7 +59,7 @@ function playKitchenNotification() {
 function showAdminNotification(msg) {
   const note = document.createElement("div");
   note.style.position = "fixed";
-  note.style.bottom = "24px";
+  note.style.top = "24px";
   note.style.right = "24px";
   note.style.background = "#1F130B";
   note.style.color = "#FBBF24";

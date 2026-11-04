@@ -1678,7 +1678,7 @@ img {
    ========================================================================== */
 .toast-container {
   position: fixed;
-  bottom: 24px;
+  top: 24px;
   right: 24px;
   z-index: 2000;
   display: flex;
@@ -2205,7 +2205,7 @@ img {
   /* ── Toasts ── */
   .toast-container {
     right: 16px;
-    bottom: 16px;
+    top: 16px;
     left: 16px;
   }
 
