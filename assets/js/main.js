@@ -2,12 +2,12 @@
 import { 
   subscribeToProduct, 
   createOrder, 
-  subscribeToSingleOrder,
   createReview,
   subscribeToReviews
 } from "./firebase-config.js";
 
 import { 
+  jammyProduct,
   dipOptions, 
   extraToppings, 
   foundersInfo 
@@ -15,7 +15,7 @@ import {
 
 // App State
 let liveProduct = null;
-let cart = JSON.parse(localStorage.getItem("jammyrolls_customer_cart_v3") || "[]");
+let currentOrderQty = 1;
 
 function playSweetChime() {
   try {
@@ -52,7 +52,6 @@ function initApp() {
   initProductSubscriptions();
   initReviewsSection();
   renderFounders();
-  updateCartUI();
   setupEventListeners();
   setupMobileNav();
   setupScrollspy();
@@ -89,7 +88,6 @@ function setupScrollspy() {
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
-  // Smooth click scroll and highlight
   navLinks.forEach(link => {
     link.addEventListener("click", (e) => {
       const targetId = link.getAttribute("href");
@@ -117,7 +115,6 @@ function setupMobileNav() {
     toggle.setAttribute("aria-expanded", isOpen);
   });
 
-  // Close nav when a link is clicked
   navList.querySelectorAll("a").forEach(link => {
     link.addEventListener("click", () => {
       navList.classList.remove("mobile-open");
@@ -126,7 +123,6 @@ function setupMobileNav() {
     });
   });
 
-  // Close nav on outside click
   document.addEventListener("click", (e) => {
     if (!toggle.contains(e.target) && !navList.contains(e.target)) {
       navList.classList.remove("mobile-open");
@@ -145,23 +141,29 @@ function initProductSubscriptions() {
 
 /**
  * Render the Single Product Showcase (₱15 each)
+ * Customer orders directly from here.
  */
 function renderProductSection() {
   const container = document.getElementById("product-showcase-container");
-  if (!container || !liveProduct) return;
+  if (!container) return;
 
-  const pricePerRoll = liveProduct.price || 15;
-  const isSoldOut = !liveProduct.isAvailable || (liveProduct.stock <= 0);
-  const isLowStock = !isSoldOut && (liveProduct.stock <= (liveProduct.minStockAlert || 20));
+  const prod = liveProduct || jammyProduct;
+  const prodName = prod.name || jammyProduct.name;
+  const prodTagline = prod.tagline || jammyProduct.tagline;
+  const prodDesc = prod.description || jammyProduct.description;
+  const pricePerRoll = prod.price || 15;
+  const stockCount = typeof prod.stock === "number" ? prod.stock : (jammyProduct.stock || 150);
+  const isSoldOut = !prod.isAvailable || (stockCount <= 0);
+  const isLowStock = !isSoldOut && (stockCount <= (prod.minStockAlert || 20));
 
   let stockClass = "in-stock";
-  let stockText = `${liveProduct.stock} rolls available in today's fresh batch`;
+  let stockText = `${stockCount} Available`;
   if (isSoldOut) {
     stockClass = "sold-out";
-    stockText = "Batch Sold Out Today";
+    stockText = "Sold Out";
   } else if (isLowStock) {
     stockClass = "low-stock";
-    stockText = `Hurry! Only ${liveProduct.stock} rolls remaining today`;
+    stockText = `Only ${stockCount} Available`;
   }
 
   container.innerHTML = `
@@ -169,18 +171,18 @@ function renderProductSection() {
       <div class="product-hero-left">
         <div class="product-hero-visual">
           <div class="product-hero-glow"></div>
-          <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls Banana Churros Roll" class="product-hero-img">
-          <div class="product-stock-pill ${stockClass}" style="position: absolute; top: 20px; left: 20px;">
-            <span class="product-stock-dot"></span>
-            <span>${stockText}</span>
-          </div>
+          <img src="assets/images/jammyrolls-logo.png" alt="${prodName}" class="product-hero-img">
         </div>
       </div>
 
       <div class="product-hero-right">
-        <div class="badge badge-yellow" style="margin-bottom: 10px;">${liveProduct.badge || 'Original Recipe ✨'}</div>
+        <div class="product-stock-pill ${stockClass}" id="product-stock-badge" style="position: static; display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin-bottom: 12px; font-size: 0.82rem; padding: 5px 12px;">
+          <span class="product-stock-dot"></span>
+          <span>${stockText}</span>
+        </div>
+
         <h2 style="font-size: 2.2rem; color: var(--color-choco-dark); margin-bottom: 6px;">
-          ${liveProduct.name}
+          ${prodName}
         </h2>
         <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;">
           <span style="font-family: var(--font-brand); font-size: 2.2rem; font-weight: 700; color: #D97706;">
@@ -190,13 +192,13 @@ function renderProductSection() {
         </div>
 
         <p style="font-size: 1rem; color: var(--color-cinnamon); font-weight: 700; margin-bottom: 12px;">
-          ${liveProduct.tagline}
+          ${prodTagline}
         </p>
         <p style="font-size: 0.95rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 24px;">
-          ${liveProduct.description}
+          ${prodDesc}
         </p>
 
-        <!-- Quick Quantity & Dip Selection Preview -->
+        <!-- Quick Quantity & Total Calculation -->
         <div style="background: var(--color-surface-soft); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <div>
@@ -219,8 +221,8 @@ function renderProductSection() {
 
         <!-- Call to Action Buttons -->
         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-          <button class="btn btn-primary" id="btn-quick-add" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 32px; font-size: 1.05rem;">
-            ${isSoldOut ? 'Sold Out Today ✕' : 'Add to Cart 🛒'}
+          <button class="btn btn-primary" id="btn-open-order" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 36px; font-size: 1.05rem; width: 100%; max-width: 320px; justify-content: center;">
+            ${isSoldOut ? 'Sold Out ✕' : 'Order Now 🔥'}
           </button>
         </div>
       </div>
@@ -245,121 +247,46 @@ function renderProductSection() {
   });
 
   document.getElementById("hero-qty-plus")?.addEventListener("click", () => {
-    if (heroQty < liveProduct.stock) {
+    if (heroQty < stockCount) {
       heroQty++;
       updateHeroCalc();
     } else {
-      showToast(`Only ${liveProduct.stock} rolls available in this batch!`, "warning");
+      showToast(`Only ${stockCount} available!`, "warning");
     }
   });
 
-  // Quick Add Button
-  document.getElementById("btn-quick-add")?.addEventListener("click", () => {
-    const itemTotal = heroQty * pricePerRoll;
-    const cartItem = {
-      cartItemId: "cart-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
-      productId: liveProduct.id,
-      name: liveProduct.name,
-      pricePerUnit: pricePerRoll,
-      quantity: heroQty,
-      selectedDip: "Warm Belgian Choco Ganache",
-      selectedToppings: [],
-      notes: "",
-      totalAmount: itemTotal
-    };
-
-    cart.push(cartItem);
-    saveCart();
-    playSweetChime();
-    showToast(`Added ${heroQty}x JammyRolls (₱${itemTotal}) to your cart! 🍌`, "success");
-    openCartDrawer();
+  // Direct Order Button opens Fast Checkout Modal
+  document.getElementById("btn-open-order")?.addEventListener("click", () => {
+    if (isSoldOut) {
+      showToast("Sorry, JammyRolls are currently sold out!", "warning");
+      return;
+    }
+    openDirectCheckout(heroQty);
   });
 }
 
-
-function saveCart() {
-  localStorage.setItem("jammyrolls_customer_cart_v3", JSON.stringify(cart));
-  updateCartUI();
-}
-
-function updateCartUI() {
-  const badge = document.getElementById("cart-count-badge");
-  const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  if (badge) {
-    badge.textContent = totalCount;
-    badge.style.display = totalCount > 0 ? "flex" : "none";
-  }
-
-  const cartList = document.getElementById("cart-items-list");
-  const subtotalEl = document.getElementById("cart-subtotal");
-  const finalTotalEl = document.getElementById("cart-final-total");
-  const checkoutBtn = document.getElementById("btn-open-checkout");
-
-  if (!cartList) return;
-
-  if (cart.length === 0) {
-    cartList.innerHTML = `
-      <div class="empty-cart-state">
-        <div class="empty-cart-icon">🍌🧺</div>
-        <h4 style="margin-bottom: 6px;">Your Box is Empty</h4>
-        <p style="font-size: 0.88rem;">Add freshly fried JammyRolls (₱${liveProduct?.price || 15}/pc) to your order box!</p>
-      </div>
-    `;
-    if (subtotalEl) subtotalEl.textContent = "₱0";
-    if (finalTotalEl) finalTotalEl.textContent = "₱0";
-    if (checkoutBtn) checkoutBtn.disabled = true;
-    return;
-  }
-
-  let subtotal = 0;
-  cartList.innerHTML = cart.map(item => {
-    subtotal += item.totalAmount;
-    return `
-      <div class="cart-item-row">
-        <div class="cart-item-info">
-          <div class="cart-item-name">${item.name} (${item.quantity} pcs)</div>
-          <div class="cart-item-meta">
-            ${item.selectedDip ? `<div>Dip: <strong>${item.selectedDip}</strong></div>` : ''}
-            ${item.selectedToppings?.length ? `<div>Toppings: ${item.selectedToppings.join(", ")}</div>` : ''}
-            ${item.notes ? `<div>Note: "<em>${item.notes}</em>"</div>` : ''}
-          </div>
-        </div>
-        <div class="cart-item-price-col">
-          <span class="cart-item-total">₱${item.totalAmount}</span>
-          <button class="cart-remove-btn" data-cart-id="${item.cartItemId}">Remove ✕</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  if (subtotalEl) subtotalEl.textContent = `₱${subtotal}`;
-  if (finalTotalEl) finalTotalEl.textContent = `₱${subtotal}`;
-  if (checkoutBtn) checkoutBtn.disabled = false;
-
-  cartList.querySelectorAll(".cart-remove-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-cart-id");
-      cart = cart.filter(i => i.cartItemId !== id);
-      saveCart();
-    });
-  });
-}
-
-function openCartDrawer() {
-  document.getElementById("cart-drawer-overlay")?.classList.add("active");
-}
-
-function closeCartDrawer() {
-  document.getElementById("cart-drawer-overlay")?.classList.remove("active");
-}
-
-function openCheckoutModal() {
-  closeCartDrawer();
+/**
+ * Open Fast Checkout directly with selected quantity
+ */
+export function openDirectCheckout(quantity = 1) {
   const modal = document.getElementById("checkout-modal");
   if (!modal) return;
 
-  const subtotal = cart.reduce((sum, item) => sum + item.totalAmount, 0);
+  const prod = liveProduct || jammyProduct;
+  const pricePerRoll = prod.price || 15;
+  const prodName = prod.name || jammyProduct.name;
+  currentOrderQty = Math.max(1, quantity);
+
+  const subtotal = currentOrderQty * pricePerRoll;
   let fulfillmentType = "delivery";
+
+  // Update item preview
+  const itemNameEl = document.getElementById("checkout-item-name");
+  const itemQtyEl = document.getElementById("checkout-item-qty");
+  const itemPriceEl = document.getElementById("checkout-item-price");
+  if (itemNameEl) itemNameEl.textContent = prodName;
+  if (itemQtyEl) itemQtyEl.textContent = `Quantity: ${currentOrderQty} roll${currentOrderQty > 1 ? 's' : ''} (₱${pricePerRoll}/pc)`;
+  if (itemPriceEl) itemPriceEl.textContent = `₱${subtotal}`;
 
   const checkoutSubtotalEl = document.getElementById("checkout-subtotal");
   const checkoutDeliveryEl = document.getElementById("checkout-delivery-fee");
@@ -377,12 +304,12 @@ function openCheckoutModal() {
   }
 
   document.querySelectorAll(".fulfillment-toggle-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.onclick = () => {
       document.querySelectorAll(".fulfillment-toggle-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       fulfillmentType = btn.getAttribute("data-type");
       updateCheckoutTotals();
-    });
+    };
   });
 
   updateCheckoutTotals();
@@ -409,6 +336,9 @@ function openCheckoutModal() {
     submitBtn.textContent = "Placing Your Order...";
 
     try {
+      const deliveryFee = fulfillmentType === "delivery" ? 49 : 0;
+      const orderTotal = subtotal + deliveryFee;
+
       const orderData = {
         customerName: name,
         phone,
@@ -418,32 +348,32 @@ function openCheckoutModal() {
         paymentMethod,
         paymentRef,
         notes: customerNotes,
-        items: cart.map(item => ({
-          id: item.productId,
-          name: item.name,
-          price: item.pricePerUnit || 15,
-          quantity: item.quantity,
-          selectedDip: item.selectedDip,
-          selectedToppings: item.selectedToppings,
-          notes: item.notes,
-          itemTotal: item.totalAmount
-        })),
+        items: [{
+          id: prod.id || "jammyrolls-single",
+          name: prodName,
+          price: pricePerRoll,
+          quantity: currentOrderQty,
+          selectedDip: "Warm Belgian Choco Ganache",
+          selectedToppings: [],
+          notes: "",
+          itemTotal: subtotal
+        }],
         subtotal,
-        deliveryFee: fulfillmentType === "delivery" ? 49 : 0,
-        total: subtotal + (fulfillmentType === "delivery" ? 49 : 0)
+        deliveryFee,
+        total: orderTotal
       };
 
       const created = await createOrder(orderData);
       playSweetChime();
 
-      cart = [];
-      saveCart();
       modal.classList.remove("active");
+      checkoutForm.reset();
 
       localStorage.setItem("jammyrolls_latest_order_id", created.orderId);
       openOrderConfirmation(orderData, created.orderId);
       showToast(`Order #${created.orderId} placed successfully! 🍌`, "success");
     } catch (err) {
+      console.error(err);
       showToast("Could not place order. Please try again.", "warning");
     } finally {
       submitBtn.disabled = false;
@@ -468,6 +398,10 @@ export function openOrderConfirmation(order, orderId) {
       <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
         <span style="color: var(--color-text-muted);">Customer:</span>
         <strong>${order.customerName}</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
+        <span style="color: var(--color-text-muted);">Quantity:</span>
+        <strong>${order.items?.[0]?.quantity || 1} JammyRolls</strong>
       </div>
       <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
         <span style="color: var(--color-text-muted);">Fulfillment:</span>
@@ -511,13 +445,6 @@ function renderFounders() {
 }
 
 function setupEventListeners() {
-  document.getElementById("btn-open-cart")?.addEventListener("click", openCartDrawer);
-  document.getElementById("btn-close-cart")?.addEventListener("click", closeCartDrawer);
-  document.getElementById("cart-drawer-overlay")?.addEventListener("click", (e) => {
-    if (e.target.id === "cart-drawer-overlay") closeCartDrawer();
-  });
-
-  document.getElementById("btn-open-checkout")?.addEventListener("click", openCheckoutModal);
   document.getElementById("btn-close-checkout")?.addEventListener("click", () => {
     document.getElementById("checkout-modal")?.classList.remove("active");
   });

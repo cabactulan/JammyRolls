@@ -96,9 +96,10 @@ async function initCloudSync() {
     const snap = await get(prodRef);
     if (snap.exists()) {
       const cloudProd = snap.val();
-      if (cloudProd && cloudProd.price) {
-        setStored(CACHE_KEYS.PRODUCT, cloudProd);
-        prodSubscribers.forEach(cb => cb(cloudProd));
+      if (cloudProd) {
+        const mergedProd = { ...jammyProduct, ...cloudProd };
+        setStored(CACHE_KEYS.PRODUCT, mergedProd);
+        prodSubscribers.forEach(cb => cb(mergedProd));
       }
     }
   } catch (err) {
@@ -112,7 +113,8 @@ initCloudSync();
  */
 export function subscribeToProduct(callback) {
   prodSubscribers.add(callback);
-  const cached = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
+  const rawCached = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
+  const cached = { ...jammyProduct, ...rawCached };
   callback(cached);
 
   if (liveSyncReady && db) {
@@ -120,9 +122,10 @@ export function subscribeToProduct(callback) {
       const prodRef = ref(db, "store/product");
       onValue(prodRef, (snapshot) => {
         if (snapshot.exists()) {
-          const data = snapshot.val();
-          setStored(CACHE_KEYS.PRODUCT, data);
-          prodSubscribers.forEach(cb => cb(data));
+          const data = snapshot.val() || {};
+          const mergedProd = { ...jammyProduct, ...data };
+          setStored(CACHE_KEYS.PRODUCT, mergedProd);
+          prodSubscribers.forEach(cb => cb(mergedProd));
         }
       }, (err) => {
         console.warn("Product sync notice:", err);
