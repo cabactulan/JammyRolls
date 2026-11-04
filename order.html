@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Details — JammyRolls Philippines</title>
+  <meta name="description" content="Enter your order and delivery details for handcrafted freshly fried JammyRolls (Banana Churros Rolls).">
+  
+  <link rel="icon" type="image/png" href="assets/images/jammyrolls-logo.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <!-- Minimal Header -->
+  <header class="header" style="position: sticky; top: 0; background: rgba(254, 250, 246, 0.96); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--color-border); padding: 12px 0;">
+    <div class="container navbar" style="justify-content: space-between;">
+      <a href="index.html" class="brand-logo-wrap">
+        <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="brand-logo-img">
+      </a>
+
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <span style="font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+          <span>🔒</span> Secure Checkout
+        </span>
+        <a href="index.html#menu" class="btn btn-choco" style="padding: 8px 18px; font-size: 0.88rem;">
+          ← Back to Menu
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Order Main Section -->
+  <main class="order-page-section">
+    <div class="container" id="order-main-container">
+      
+      <!-- Breadcrumb -->
+      <a href="index.html#menu" class="order-back-link">
+        <span>←</span>
+        <span>Back to Menu</span>
+      </a>
+
+      <div style="margin-bottom: 28px;">
+        <span class="badge badge-yellow" style="margin-bottom: 8px;">Order Details</span>
+        <h1 style="font-size: 2.2rem; color: var(--color-choco-dark); margin-bottom: 6px;">
+          Complete Your Order
+        </h1>
+        <p style="color: var(--color-text-muted); font-size: 0.95rem;">
+          Freshly fried upon order confirmation. Hot, crispy churro crust rolled with sweet banana & Belgian chocolate.
+        </p>
+      </div>
+
+      <!-- Two-Column Order Grid -->
+      <div class="order-grid">
+
+        <!-- Left Column: Order Form -->
+        <div class="order-form-card">
+          <form id="order-details-form">
+
+            <!-- 1. Fulfillment Mode -->
+            <div class="order-card-section-title">
+              <span>🛵</span>
+              <span>1. Fulfillment Option</span>
+            </div>
+
+            <div class="toggle-pills" style="margin-bottom: 24px;">
+              <button type="button" class="toggle-pill-btn fulfillment-toggle-btn active" data-type="delivery">
+                🛵 Delivery (₱49)
+              </button>
+              <button type="button" class="toggle-pill-btn fulfillment-toggle-btn" data-type="pickup">
+                🛍️ Store Pick Up (Free)
+              </button>
+            </div>
+
+            <!-- 2. Customer Information -->
+            <div class="order-card-section-title">
+              <span>👤</span>
+              <span>2. Contact Information</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="order-name">Full Name *</label>
+              <input type="text" id="order-name" class="form-control" placeholder="e.g. Maria Santos" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+              <label class="form-label" for="order-phone">Contact Number *</label>
+              <input type="tel" id="order-phone" class="form-control" placeholder="e.g. 0917-123-4567" required>
+            </div>
+
+            <!-- 3. Delivery Address (hidden for pickup) -->
+            <div id="order-address-group" style="margin-bottom: 24px;">
+              <div class="order-card-section-title">
+                <span>📍</span>
+                <span>3. Delivery Address</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="order-address">Complete Address *</label>
+                <textarea id="order-address" class="form-control" rows="2" placeholder="House/Unit #, Street, Barangay, City..." required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="order-landmark">Landmark / Directions</label>
+                <input type="text" id="order-landmark" class="form-control" placeholder="e.g. Near Yellow Gate, opposite 7-Eleven">
+              </div>
+            </div>
+
+            <!-- 4. Payment Method -->
+            <div class="order-card-section-title">
+              <span>💳</span>
+              <span>4. Payment Method</span>
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <label class="custom-option-label" style="padding: 12px 16px;">
+                  <div class="custom-option-content">
+                    <input type="radio" name="paymentMethod" value="Cash" checked>
+                    <span style="font-weight: 600;">💵 Cash on Delivery / Pickup</span>
+                  </div>
+                </label>
+                <label class="custom-option-label" style="padding: 12px 16px;">
+                  <div class="custom-option-content">
+                    <input type="radio" name="paymentMethod" value="GCash">
+                    <span style="font-weight: 600;">📱 GCash (0917-882-9102 / JammyRolls)</span>
+                  </div>
+                </label>
+                <label class="custom-option-label" style="padding: 12px 16px;">
+                  <div class="custom-option-content">
+                    <input type="radio" name="paymentMethod" value="Maya">
+                    <span style="font-weight: 600;">💳 Maya Pay</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="order-payment-ref">Reference Number (if GCash or Maya):</label>
+              <input type="text" id="order-payment-ref" class="form-control" placeholder="Optional transaction reference number">
+            </div>
+
+            <!-- 5. Special Notes -->
+            <div class="form-group" style="margin-top: 20px;">
+              <label class="form-label" for="order-notes">Special Requests / Kitchen Notes:</label>
+              <input type="text" id="order-notes" class="form-control" placeholder="e.g. Extra cinnamon sugar, ring doorbell upon arrival">
+            </div>
+
+            <div style="margin-top: 30px;">
+              <button type="submit" class="btn btn-primary" id="btn-submit-order" style="width: 100%; padding: 16px; font-size: 1.15rem; justify-content: center;">
+                <span>Place Order</span>
+                <span>🔥</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Right Column: Order Summary Card -->
+        <div class="order-summary-card">
+          <h3 style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.25rem; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px dashed var(--color-border); display: flex; align-items: center; justify-content: space-between;">
+            <span>Order Summary 🧺</span>
+            <span id="summary-stock-notice" style="font-size: 0.78rem; font-weight: 700; color: #059669;">In Stock</span>
+          </h3>
+
+          <!-- Item Box -->
+          <div style="display: flex; gap: 14px; align-items: center; background: var(--color-surface-soft); padding: 14px; border-radius: var(--radius-md); margin-bottom: 18px;">
+            <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls" style="width: 54px; height: 54px; object-fit: contain; background: #FFF; border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--color-border);">
+            <div style="flex: 1;">
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-choco-dark); line-height: 1.3;">
+                JammyRolls (Banana Churros Roll)
+              </h4>
+              <div style="font-size: 0.8rem; color: var(--color-text-muted);">
+                ₱15 per roll • Hot & Fresh
+              </div>
+            </div>
+            <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.15rem; color: #D97706;" id="summary-item-total">
+              ₱15
+            </div>
+          </div>
+
+          <!-- Live Quantity Adjustment -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-choco-dark);">Quantity:</span>
+            <div class="quantity-control-wrap">
+              <button class="qty-btn" type="button" id="btn-summary-minus">-</button>
+              <span class="qty-val" id="summary-qty-val">1</span>
+              <button class="qty-btn" type="button" id="btn-summary-plus">+</button>
+            </div>
+          </div>
+
+          <!-- Included Dip info -->
+          <div style="font-size: 0.82rem; color: var(--color-text-muted); background: #FFF; border: 1px dashed var(--color-border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 20px;">
+            🍫 <strong>Includes:</strong> Warm Belgian Choco Ganache Dip
+          </div>
+
+          <!-- Price Calculations -->
+          <div style="border-top: 1px dashed var(--color-border); padding-top: 14px; margin-bottom: 18px;">
+            <div class="cart-summary-line" style="margin-bottom: 8px;">
+              <span>Subtotal</span>
+              <span id="summary-subtotal">₱15</span>
+            </div>
+            <div class="cart-summary-line" style="margin-bottom: 8px;">
+              <span>Delivery Fee</span>
+              <span id="summary-delivery-fee">₱49</span>
+            </div>
+            <div class="cart-summary-line total-line" style="margin-bottom: 0; padding-top: 10px; border-top: 1px solid var(--color-border);">
+              <span>Total Payable</span>
+              <span id="summary-grand-total" style="color: #D97706; font-size: 1.6rem;">₱64</span>
+            </div>
+          </div>
+
+          <!-- Trust Badges -->
+          <div style="font-size: 0.78rem; color: var(--color-text-muted); line-height: 1.5; text-align: center; border-top: 1px solid var(--color-border); padding-top: 14px;">
+            ✨ Fried fresh to golden crispiness on confirmation.<br>
+            Estimated preparation time: 10–15 mins.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="assets/js/order.js"></script>
+</body>
+</html>

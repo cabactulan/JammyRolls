@@ -2460,3 +2460,99 @@ img {
     position: static;
   }
 }
+
+
+/* ==========================================================================
+   Order Details Standalone Page
+   ========================================================================== */
+.order-page-section {
+  padding: 40px 0 80px;
+  min-height: calc(100vh - 80px);
+  background-color: var(--color-bg);
+}
+
+.order-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-brand);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-choco-dark);
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: var(--transition-fast);
+}
+
+.order-back-link:hover {
+  color: var(--color-primary);
+  transform: translateX(-4px);
+}
+
+.order-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .order-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.order-form-card {
+  background: #FFF;
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 600px) {
+  .order-form-card {
+    padding: 20px;
+  }
+}
+
+.order-summary-card {
+  background: #FFF;
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 100px;
+}
+
+.order-card-section-title {
+  font-family: var(--font-brand);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--color-choco-dark);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.order-confirmed-card {
+  max-width: 620px;
+  margin: 0 auto;
+  background: #FFF;
+  border-radius: var(--radius-xl);
+  padding: 40px 32px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .order-confirmed-card {
+    padding: 28px 18px;
+  }
+}

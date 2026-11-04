@@ -255,177 +255,18 @@ function renderProductSection() {
     }
   });
 
-  // Direct Order Button opens Fast Checkout Modal
+  // Direct Order Button navigates to Order Details page
   document.getElementById("btn-open-order")?.addEventListener("click", () => {
     if (isSoldOut) {
       showToast("Sorry, JammyRolls are currently sold out!", "warning");
       return;
     }
-    openDirectCheckout(heroQty);
+    window.location.href = `order.html?qty=${heroQty}`;
   });
 }
 
-/**
- * Open Fast Checkout directly with selected quantity
- */
 export function openDirectCheckout(quantity = 1) {
-  const modal = document.getElementById("checkout-modal");
-  if (!modal) return;
-
-  const prod = liveProduct || jammyProduct;
-  const pricePerRoll = prod.price || 15;
-  const prodName = prod.name || jammyProduct.name;
-  currentOrderQty = Math.max(1, quantity);
-
-  const subtotal = currentOrderQty * pricePerRoll;
-  let fulfillmentType = "delivery";
-
-  // Update item preview
-  const itemNameEl = document.getElementById("checkout-item-name");
-  const itemQtyEl = document.getElementById("checkout-item-qty");
-  const itemPriceEl = document.getElementById("checkout-item-price");
-  if (itemNameEl) itemNameEl.textContent = prodName;
-  if (itemQtyEl) itemQtyEl.textContent = `Quantity: ${currentOrderQty} roll${currentOrderQty > 1 ? 's' : ''} (₱${pricePerRoll}/pc)`;
-  if (itemPriceEl) itemPriceEl.textContent = `₱${subtotal}`;
-
-  const checkoutSubtotalEl = document.getElementById("checkout-subtotal");
-  const checkoutDeliveryEl = document.getElementById("checkout-delivery-fee");
-  const checkoutTotalEl = document.getElementById("checkout-total");
-  const addressGroup = document.getElementById("checkout-address-group");
-
-  function updateCheckoutTotals() {
-    const fee = fulfillmentType === "delivery" ? 49 : 0;
-    if (checkoutSubtotalEl) checkoutSubtotalEl.textContent = `₱${subtotal}`;
-    if (checkoutDeliveryEl) checkoutDeliveryEl.textContent = `₱${fee}`;
-    if (checkoutTotalEl) checkoutTotalEl.textContent = `₱${subtotal + fee}`;
-    if (addressGroup) {
-      addressGroup.style.display = fulfillmentType === "delivery" ? "block" : "none";
-    }
-  }
-
-  document.querySelectorAll(".fulfillment-toggle-btn").forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll(".fulfillment-toggle-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      fulfillmentType = btn.getAttribute("data-type");
-      updateCheckoutTotals();
-    };
-  });
-
-  updateCheckoutTotals();
-  modal.classList.add("active");
-
-  const checkoutForm = document.getElementById("checkout-form");
-  checkoutForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("checkout-name").value.trim();
-    const phone = document.getElementById("checkout-phone").value.trim();
-    const address = document.getElementById("checkout-address")?.value.trim() || "Store Counter Pickup";
-    const landmark = document.getElementById("checkout-landmark")?.value.trim() || "";
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || "Cash on Delivery";
-    const paymentRef = document.getElementById("checkout-payment-ref")?.value.trim() || "";
-    const customerNotes = document.getElementById("checkout-order-note")?.value.trim() || "";
-
-    if (!name || !phone) {
-      showToast("Please provide your name and contact number!", "warning");
-      return;
-    }
-
-    const submitBtn = document.getElementById("btn-submit-order");
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Placing Your Order...";
-
-    try {
-      const deliveryFee = fulfillmentType === "delivery" ? 49 : 0;
-      const orderTotal = subtotal + deliveryFee;
-
-      const orderData = {
-        customerName: name,
-        phone,
-        fulfillment: fulfillmentType,
-        address,
-        landmark,
-        paymentMethod,
-        paymentRef,
-        notes: customerNotes,
-        items: [{
-          id: prod.id || "jammyrolls-single",
-          name: prodName,
-          price: pricePerRoll,
-          quantity: currentOrderQty,
-          selectedDip: "Warm Belgian Choco Ganache",
-          selectedToppings: [],
-          notes: "",
-          itemTotal: subtotal
-        }],
-        subtotal,
-        deliveryFee,
-        total: orderTotal
-      };
-
-      const created = await createOrder(orderData);
-      playSweetChime();
-
-      modal.classList.remove("active");
-      checkoutForm.reset();
-
-      localStorage.setItem("jammyrolls_latest_order_id", created.orderId);
-      openOrderConfirmation(orderData, created.orderId);
-      showToast(`Order #${created.orderId} placed successfully! 🍌`, "success");
-    } catch (err) {
-      console.error(err);
-      showToast("Could not place order. Please try again.", "warning");
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Place Order";
-    }
-  };
-}
-
-export function openOrderConfirmation(order, orderId) {
-  const modal = document.getElementById("confirmation-modal");
-  const modalBody = document.getElementById("confirmation-modal-body");
-  if (!modal || !modalBody) return;
-
-  modalBody.innerHTML = `
-    <div style="background: var(--color-surface-soft); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px; border: 1px solid var(--color-border);">
-      <div style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); margin-bottom: 4px;">Order Number</div>
-      <div style="font-family: var(--font-brand); font-size: 2rem; font-weight: 700; color: #D97706;">#${orderId}</div>
-    </div>
-
-    <div style="text-align: left; background: #FFF; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
-      <div style="font-weight: 700; font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.05rem; margin-bottom: 10px;">Order Summary</div>
-      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
-        <span style="color: var(--color-text-muted);">Customer:</span>
-        <strong>${order.customerName}</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
-        <span style="color: var(--color-text-muted);">Quantity:</span>
-        <strong>${order.items?.[0]?.quantity || 1} JammyRolls</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
-        <span style="color: var(--color-text-muted);">Fulfillment:</span>
-        <strong>${order.fulfillment === 'delivery' ? 'Delivery' : 'Pick Up'}</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
-        <span style="color: var(--color-text-muted);">Payment:</span>
-        <strong>${order.paymentMethod}</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; color: var(--color-choco-dark); border-top: 1px dashed var(--color-border); padding-top: 10px; margin-top: 10px;">
-        <span>Total:</span>
-        <span style="color: #D97706;">₱${order.total}</span>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" id="btn-done-confirmation" style="width: 100%;">
-      Done
-    </button>
-  `;
-
-  modal.classList.add("active");
-  document.getElementById("btn-done-confirmation")?.addEventListener("click", () => {
-    modal.classList.remove("active");
-  });
+  window.location.href = `order.html?qty=${quantity}`;
 }
 
 function renderFounders() {
@@ -445,14 +286,6 @@ function renderFounders() {
 }
 
 function setupEventListeners() {
-  document.getElementById("btn-close-checkout")?.addEventListener("click", () => {
-    document.getElementById("checkout-modal")?.classList.remove("active");
-  });
-
-  document.getElementById("btn-close-confirmation")?.addEventListener("click", () => {
-    document.getElementById("confirmation-modal")?.classList.remove("active");
-  });
-
   window.addEventListener("scroll", () => {
     const header = document.querySelector(".header");
     if (window.scrollY > 30) {
