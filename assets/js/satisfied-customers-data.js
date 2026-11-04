@@ -51,3 +51,4 @@ export const satisfiedCustomersFromFolder = {
     createdAt: "2026-11-03T18:20:00.000Z"
   }
 };
+
