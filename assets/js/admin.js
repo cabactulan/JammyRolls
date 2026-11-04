@@ -344,7 +344,7 @@ function renderOrdersTable() {
         <td>
           <div class="order-action-btns">
             ${renderStatusButtons(order)}
-            <button class="btn-status-act btn-view-order" data-id="${order.orderId}" title="View Order Ticket">
+            <button class="btn-status-act btn-view-order" data-id="${order.orderId}" title="View Order Receipt">
               👁️ View
             </button>
           </div>
@@ -403,52 +403,160 @@ function openOrderTicketModal(order) {
   const modalBody = document.getElementById("admin-order-modal-body");
   if (!modal || !modalBody) return;
 
+  const formattedDate = order.createdAt 
+    ? new Date(order.createdAt).toLocaleString([], { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
+    : "Recent Order";
+
+  const subtotal = order.subtotal || order.items.reduce((s, i) => s + (i.itemTotal || (i.price * i.quantity)), 0);
+  const deliveryFee = order.deliveryFee || (order.fulfillment === "delivery" ? 49 : 0);
+  const total = order.total || (subtotal + deliveryFee);
+
   modalBody.innerHTML = `
-    <div style="text-align: center; border-bottom: 2px dashed #E5E7EB; padding-bottom: 16px; margin-bottom: 16px;">
-      <h3 style="font-family: 'Fredoka', cursive; font-size: 1.4rem;">JammyRolls Kitchen Ticket</h3>
-      <p style="font-size: 0.85rem; color: var(--admin-text-muted);">Order #${order.orderId} • ${new Date(order.createdAt).toLocaleString()}</p>
-    </div>
+    <div class="receipt-container" id="printable-receipt-card">
+      <!-- Receipt Brand Header -->
+      <div class="receipt-header">
+        <div class="receipt-brand-logo">🍌✨</div>
+        <div class="receipt-brand-name">JAMMYROLLS</div>
+        <div class="receipt-brand-sub">Banana Churros Roll</div>
+        <div class="receipt-store-info">
+          Crispy Outside • Gooey Inside<br>
+          Official Order Receipt
+        </div>
+      </div>
 
-    <div style="margin-bottom: 16px; font-size: 0.9rem;">
-      <div><strong>Customer:</strong> ${order.customerName}</div>
-      <div><strong>Contact:</strong> ${order.phone}</div>
-      <div><strong>Fulfillment:</strong> ${order.fulfillment.toUpperCase()}</div>
-      ${order.fulfillment === 'delivery' ? `<div><strong>Address:</strong> ${order.address} (Landmark: ${order.landmark || 'None'})</div>` : ''}
-      <div><strong>Payment:</strong> ${order.paymentMethod} ${order.paymentRef ? `(Ref: ${order.paymentRef})` : ''}</div>
-      ${order.notes ? `<div style="background: #FEF3C7; padding: 6px 10px; border-radius: 6px; margin-top: 6px;"><strong>Customer Note:</strong> ${order.notes}</div>` : ''}
-    </div>
+      <div class="receipt-divider-dashed"></div>
 
-    <div style="border-top: 1px solid #E5E7EB; padding-top: 12px; margin-bottom: 16px;">
-      <h4 style="font-family: 'Fredoka', cursive; margin-bottom: 10px;">Items Ordered</h4>
-      <div style="display: flex; flex-direction: column; gap: 8px;">
+      <!-- Receipt Meta -->
+      <div class="receipt-meta-grid">
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">ORDER NO:</span>
+          <span class="receipt-meta-val receipt-order-id">#${order.orderId}</span>
+        </div>
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">DATE & TIME:</span>
+          <span class="receipt-meta-val">${formattedDate}</span>
+        </div>
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">FULFILLMENT:</span>
+          <span class="receipt-meta-val receipt-fulfillment-badge ${order.fulfillment === 'delivery' ? 'fulfillment-delivery' : 'fulfillment-pickup'}">
+            ${order.fulfillment === 'delivery' ? '🛵 DELIVERY' : '🛍️ STORE PICKUP'}
+          </span>
+        </div>
+      </div>
+
+      <div class="receipt-divider-dashed"></div>
+
+      <!-- Customer & Destination Details -->
+      <div class="receipt-customer-section">
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">CUSTOMER:</span>
+          <span class="receipt-meta-val" style="font-weight: 700;">${order.customerName}</span>
+        </div>
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">CONTACT:</span>
+          <span class="receipt-meta-val">${order.phone}</span>
+        </div>
+        ${order.fulfillment === 'delivery' ? `
+          <div class="receipt-meta-row" style="align-items: flex-start;">
+            <span class="receipt-meta-label">ADDRESS:</span>
+            <span class="receipt-meta-val" style="text-align: right; max-width: 65%; font-weight: 600;">${order.address}${order.landmark ? ` (Landmark: ${order.landmark})` : ''}</span>
+          </div>
+        ` : ''}
+        <div class="receipt-meta-row">
+          <span class="receipt-meta-label">PAYMENT:</span>
+          <span class="receipt-meta-val" style="font-weight: 700;">${order.paymentMethod}${order.paymentRef ? ` [Ref: ${order.paymentRef}]` : ''}</span>
+        </div>
+        ${order.notes ? `
+          <div class="receipt-note-box">
+            <span style="font-weight: 700;">NOTE:</span> "${order.notes}"
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="receipt-divider-solid"></div>
+
+      <!-- Items Table -->
+      <div class="receipt-items-table">
+        <div class="receipt-items-header">
+          <span style="flex: 1;">ITEM DESCRIPTION</span>
+          <span style="width: 50px; text-align: center;">QTY</span>
+          <span style="width: 70px; text-align: right;">AMOUNT</span>
+        </div>
+
         ${order.items.map(item => `
-          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; border-bottom: 1px solid #F3F4F6; padding-bottom: 6px;">
-            <div>
-              <strong>${item.quantity}x JammyRolls (₱${item.price || liveProduct?.price || 15}/pc)</strong>
-              <div style="font-size: 0.78rem; color: var(--admin-text-muted);">
-                Dip: ${item.selectedDip} ${item.selectedToppings?.length ? `• Toppings: ${item.selectedToppings.join(', ')}` : ''}
+          <div class="receipt-item-row">
+            <div style="flex: 1;">
+              <div class="receipt-item-name">${item.name || 'JammyRolls'} (₱${item.price || liveProduct?.price || 15}/pc)</div>
+              <div class="receipt-item-meta">
+                ${item.selectedDip ? `• Dip: ${item.selectedDip}` : ''}
+                ${item.selectedToppings?.length ? `• ${item.selectedToppings.join(', ')}` : ''}
               </div>
-              ${item.notes ? `<div style="font-size: 0.78rem; color: #D97706;">Note: ${item.notes}</div>` : ''}
             </div>
-            <strong>₱${item.itemTotal}</strong>
+            <div class="receipt-item-qty">${item.quantity}x</div>
+            <div class="receipt-item-price">₱${item.itemTotal || (item.price * item.quantity)}</div>
           </div>
         `).join("")}
       </div>
+
+      <div class="receipt-divider-solid"></div>
+
+      <!-- Totals Section -->
+      <div class="receipt-totals-section">
+        <div class="receipt-total-line">
+          <span>Subtotal</span>
+          <span>₱${subtotal}</span>
+        </div>
+        ${deliveryFee > 0 ? `
+          <div class="receipt-total-line">
+            <span>Delivery Fee</span>
+            <span>₱${deliveryFee}</span>
+          </div>
+        ` : ''}
+        <div class="receipt-total-line receipt-grand-total">
+          <span>TOTAL AMOUNT:</span>
+          <span>₱${total}</span>
+        </div>
+      </div>
+
+      <div class="receipt-divider-dashed"></div>
+
+      <!-- Receipt Footer -->
+      <div class="receipt-footer">
+        <div class="receipt-barcode">||| | ||||| || |||| ||| |||||| |||| ||</div>
+        <div class="receipt-thankyou">THANK YOU FOR CRAVING JAMMYROLLS!</div>
+        <div class="receipt-footer-sub">
+          Freshly Handcrafted With Sweet Perfection ❤️<br>
+          Store Hours: 9:00 AM – 9:00 PM Daily<br>
+          Order Reference: #${order.orderId}
+        </div>
+      </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.15rem; border-top: 2px dashed #E5E7EB; padding-top: 12px;">
-      <span>Total Amount:</span>
-      <span>₱${order.total}</span>
-    </div>
-
-    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-      <button class="btn-status-act" onclick="window.print()">🖨️ Print Ticket</button>
-      <button class="btn-status-act" id="btn-cancel-this-order" style="color: var(--color-danger); border-color: #FCA5A5;">Cancel Order</button>
-      <button class="btn-status-act" id="btn-delete-this-order" style="color: #991B1B; background: #FEE2E2; border-color: #F87171;">Delete Order 🗑️</button>
+    <!-- Modal Action Buttons (Hidden when printing!) -->
+    <div class="receipt-no-print" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+      <button class="btn-status-act" id="btn-print-receipt-action" style="background: #1F130B; color: #FFF; font-weight: 700; padding: 8px 18px;">
+        🖨️ Print Receipt
+      </button>
+      <button class="btn-status-act" id="btn-cancel-this-order" style="color: var(--color-danger); border-color: #FCA5A5;">
+        Cancel Order
+      </button>
+      <button class="btn-status-act" id="btn-delete-this-order" style="color: #991B1B; background: #FEE2E2; border-color: #F87171;">
+        Delete Order 🗑️
+      </button>
     </div>
   `;
 
   modal.classList.add("active");
+
+  document.getElementById("btn-print-receipt-action")?.addEventListener("click", () => {
+    window.print();
+  });
 
   document.getElementById("btn-cancel-this-order")?.addEventListener("click", () => {
     // Use a custom confirmation instead of native confirm()
