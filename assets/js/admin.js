@@ -1072,15 +1072,15 @@ function initCustomerPhotosAdmin() {
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("new-photo-name")?.value.trim();
-    const location = document.getElementById("new-photo-location")?.value.trim() || "Cebu City";
+    const location = document.getElementById("new-photo-location")?.value.trim() || "Panabo City, Davao del Norte";
     const tag = document.getElementById("new-photo-tag")?.value || "Happy Customer ✨";
     const rating = parseInt(document.getElementById("new-photo-rating")?.value) || 5;
     const photoUrl = document.getElementById("new-photo-url")?.value.trim();
     const comment = document.getElementById("new-photo-comment")?.value.trim();
     const isFeatured = document.getElementById("new-photo-featured")?.checked ?? true;
 
-    if (!name || !comment) {
-      showAdminNotification("Please enter customer name and quote!");
+    if (!comment) {
+      showAdminNotification("Please enter a customer quote!");
       return;
     }
 
@@ -1106,7 +1106,7 @@ function initCustomerPhotosAdmin() {
         isFeatured
       });
 
-      showAdminNotification(`Photo for ${name} added successfully! 📸`);
+      showAdminNotification("Customer photo added successfully! 📸");
       form.reset();
       document.querySelectorAll("#photo-preset-selector .photo-preset-item").forEach(i => i.classList.remove("selected"));
     } catch (err) {
@@ -1136,7 +1136,7 @@ function initCustomerPhotosAdmin() {
     if (deleteBtn) {
       const id = deleteBtn.getAttribute("data-id");
       const name = deleteBtn.getAttribute("data-name") || "this photo";
-      if (confirm(`Are you sure you want to delete the photo from ${name}?`)) {
+      if (confirm("Are you sure you want to delete this customer photo?")) {
         await deleteCustomerPhoto(id);
         showAdminNotification("Customer photo deleted. 🗑️");
       }
@@ -1212,10 +1212,7 @@ function renderAdminPhotosList() {
         </div>
         <div class="admin-photo-body">
           <div class="admin-photo-header">
-            <div>
-              <div class="admin-photo-name">${photo.customerName}</div>
-              <div class="admin-photo-location">📍 ${photo.location || 'Cebu'}</div>
-            </div>
+            <div class="admin-photo-location">📍 ${photo.location || 'Panabo City'}</div>
             <div class="admin-photo-stars">${stars}</div>
           </div>
           <p class="admin-photo-caption">“${photo.comment}”</p>

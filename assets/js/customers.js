@@ -64,26 +64,21 @@ function renderGallery() {
       ? new Date(photo.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) 
       : "Verified Customer";
 
-    // Escape strings for onclick
-    const safeName = (photo.customerName || "Customer").replace(/"/g, '&quot;');
-    const safeLoc = (photo.location || "Cebu City").replace(/"/g, '&quot;');
+    const safeLoc = (photo.location || "Panabo City, Davao del Norte").replace(/"/g, '&quot;');
     const safeTag = (photo.tag || "Satisfied Foodie").replace(/"/g, '&quot;');
     const safeComment = (photo.comment || "").replace(/"/g, '&quot;');
     const safeUrl = (photo.photoUrl || "").replace(/"/g, '&quot;');
 
     return `
       <div class="customer-photo-card" data-id="${photo.photoId}">
-        <div class="customer-photo-img-wrap" onclick="window.openCustomerLightbox('${safeUrl}', '${safeName}', '${safeLoc}', '${safeTag}', '${safeComment}', ${photo.rating || 5})">
-          <img src="${photo.photoUrl}" alt="${safeName}" class="customer-photo-img" loading="lazy">
+        <div class="customer-photo-img-wrap" onclick="window.openCustomerLightbox('${safeUrl}', '${safeLoc}', '${safeTag}', '${safeComment}', ${photo.rating || 5})">
+          <img src="${photo.photoUrl}" alt="Satisfied Customer in ${safeLoc}" class="customer-photo-img" loading="lazy">
           <span class="customer-photo-tag">${photo.tag || "✨ Happy Customer"}</span>
           <div class="customer-photo-zoom-hint" title="Click to view full photo">🔍</div>
         </div>
         <div class="customer-photo-body">
           <div class="customer-photo-header">
-            <div>
-              <div class="customer-photo-name">${photo.customerName}</div>
-              <div class="customer-photo-location">📍 ${photo.location || "Cebu City"}</div>
-            </div>
+            <div class="customer-photo-location">📍 ${photo.location || "Panabo City, Davao del Norte"}</div>
             <div class="customer-photo-stars">${stars}</div>
           </div>
           <p class="customer-photo-comment">“${photo.comment}”</p>
@@ -101,18 +96,16 @@ function setupLightboxControls() {
   const lightbox = document.getElementById("customer-lightbox");
   const closeBtn = document.getElementById("lightbox-close-btn");
 
-  window.openCustomerLightbox = function(url, name, loc, tag, comment, rating) {
+  window.openCustomerLightbox = function(url, loc, tag, comment, rating) {
     if (!lightbox) return;
     const imgEl = document.getElementById("lightbox-img");
-    const nameEl = document.getElementById("lightbox-name");
     const locEl = document.getElementById("lightbox-location");
     const tagEl = document.getElementById("lightbox-tag");
     const starsEl = document.getElementById("lightbox-stars");
     const commentEl = document.getElementById("lightbox-comment");
 
     if (imgEl) imgEl.src = url;
-    if (nameEl) nameEl.textContent = name;
-    if (locEl) locEl.textContent = `📍 ${loc}`;
+    if (locEl) locEl.textContent = `📍 ${loc || "Panabo City, Davao del Norte"}`;
     if (tagEl) tagEl.textContent = tag;
     if (starsEl) starsEl.textContent = "★".repeat(rating || 5) + "☆".repeat(Math.max(0, 5 - (rating || 5)));
     if (commentEl) commentEl.textContent = `“${comment}”`;
