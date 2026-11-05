@@ -30,7 +30,7 @@ const CACHE_KEYS = {
   PRODUCT: "jammyrolls_product_v3",
   ORDERS: "jammyrolls_orders_v3",
   REVIEWS: "jammyrolls_reviews_v3",
-  CUSTOMER_PHOTOS: "jammyrolls_customer_photos_v5"
+  CUSTOMER_PHOTOS: "jammyrolls_customer_photos_v6"
 };
 
 // Subscriber Registries for instant real-time UI updates
@@ -483,11 +483,7 @@ export async function createCustomerPhoto(photoData) {
 
   const finalPhoto = {
     photoId,
-    customerName: photoData.customerName ? photoData.customerName.trim() : "",
-    location: photoData.location ? photoData.location.trim() : "Panabo City, Davao del Norte",
-    rating: Math.min(5, Math.max(1, parseInt(photoData.rating) || 5)),
-    tag: photoData.tag ? photoData.tag.trim() : "Happy Customer ✨",
-    comment: photoData.comment ? photoData.comment.trim() : "Loved the fresh JammyRolls!",
+    caption: photoData.caption ? photoData.caption.trim() : (photoData.comment ? photoData.comment.trim() : "Satisfied JammyRolls customer ✨"),
     photoUrl: photoData.photoUrl || "assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg",
     isFeatured: photoData.isFeatured !== undefined ? !!photoData.isFeatured : true,
     createdAt: now

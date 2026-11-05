@@ -517,39 +517,6 @@
           </div>
           
           <form id="admin-add-photo-form" style="padding: 4px 0;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px;">
-              <div class="login-input-group" style="margin-bottom: 0;">
-                <label class="login-input-label">Customer Name (optional)</label>
-                <input type="text" id="new-photo-name" class="login-input" placeholder="e.g. Maria Santos">
-              </div>
-
-              <div class="login-input-group" style="margin-bottom: 0;">
-                <label class="login-input-label">Location / Area</label>
-                <input type="text" id="new-photo-location" class="login-input" placeholder="e.g. Poblacion, Panabo City">
-              </div>
-
-              <div class="login-input-group" style="margin-bottom: 0;">
-                <label class="login-input-label">Tag / Occasion</label>
-                <select id="new-photo-tag" class="login-input" style="height: 48px;">
-                  <option value="Office Merienda 🏢">Office Merienda 🏢</option>
-                  <option value="Delivery Joy 🛵">Delivery Joy 🛵</option>
-                  <option value="Barkada Treat 🎉">Barkada Treat 🎉</option>
-                  <option value="Family Favorite 👨‍👩‍👦">Family Favorite 👨‍👩‍👦</option>
-                  <option value="Verified Foodie ⭐">Verified Foodie ⭐</option>
-                  <option value="Dessert Lover 🍌">Dessert Lover 🍌</option>
-                </select>
-              </div>
-
-              <div class="login-input-group" style="margin-bottom: 0;">
-                <label class="login-input-label">Rating</label>
-                <select id="new-photo-rating" class="login-input" style="height: 48px;">
-                  <option value="5">★★★★★ (5 Stars - Amazing)</option>
-                  <option value="4">★★★★☆ (4 Stars - Great)</option>
-                  <option value="3">★★★☆☆ (3 Stars - Good)</option>
-                </select>
-              </div>
-            </div>
-
             <!-- Photo URL & Presets -->
             <div class="login-input-group" style="margin-bottom: 14px;">
               <label class="login-input-label">Photo (Upload local file OR enter image URL) *</label>
@@ -576,10 +543,10 @@
               </div>
             </div>
 
-            <!-- Customer Quote -->
+            <!-- General Caption -->
             <div class="login-input-group" style="margin-bottom: 18px;">
-              <label class="login-input-label">Customer Quote / Feedback *</label>
-              <textarea id="new-photo-comment" class="login-input" rows="2" placeholder="e.g. The molten chocolate core and crunchy cinnamon churro crust is amazing!" required style="height: auto; padding: 12px;"></textarea>
+              <label class="login-input-label">General Caption (optional)</label>
+              <input type="text" id="new-photo-caption" class="login-input" placeholder="e.g. Fresh JammyRolls shared with great friends ✨">
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">

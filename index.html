@@ -331,13 +331,7 @@
         </p>
       </div>
 
-      <!-- Filter Buttons -->
-      <div class="gallery-filter-wrap" id="home-gallery-filters">
-        <button class="gallery-filter-btn active" data-filter="all">All Smiles ✨</button>
-        <button class="gallery-filter-btn" data-filter="office">Office Merienda 🏢</button>
-        <button class="gallery-filter-btn" data-filter="delivery">Delivery Joy 🛵</button>
-        <button class="gallery-filter-btn" data-filter="barkada">Barkada Treats 🎉</button>
-      </div>
+
 
       <!-- Photos Grid Container (Populated via JS) -->
       <div class="customer-photos-grid" id="homepage-customers-grid">
@@ -479,13 +473,8 @@
         <img src="" alt="Satisfied Customer" class="photo-lightbox-img" id="lightbox-img">
       </div>
       <div class="photo-lightbox-body">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div id="lightbox-location" style="font-size: 0.95rem; font-weight: 700; color: var(--color-choco-dark);"></div>
-          <div id="lightbox-stars" style="color: #F59E0B; font-size: 1.1rem; letter-spacing: 2px;">★★★★★</div>
-        </div>
-        <p id="lightbox-comment" style="font-size: 0.95rem; color: #4B3A2F; line-height: 1.6; font-style: italic;"></p>
-        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--color-border); display: flex; justify-content: space-between; align-items: center;">
-          <span id="lightbox-tag" style="background: #FEF3C7; color: #92400E; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;"></span>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <p id="lightbox-caption" style="font-size: 1rem; color: var(--color-choco-dark); font-weight: 600; margin: 0; flex: 1;"></p>
           <a href="#menu" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.85rem;" id="lightbox-order-btn">
             Order JammyRolls 🔥
           </a>

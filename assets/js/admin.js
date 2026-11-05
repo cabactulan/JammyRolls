@@ -1071,18 +1071,9 @@ function initCustomerPhotosAdmin() {
   const form = document.getElementById("admin-add-photo-form");
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name = document.getElementById("new-photo-name")?.value.trim();
-    const location = document.getElementById("new-photo-location")?.value.trim() || "Panabo City, Davao del Norte";
-    const tag = document.getElementById("new-photo-tag")?.value || "Happy Customer ✨";
-    const rating = parseInt(document.getElementById("new-photo-rating")?.value) || 5;
     const photoUrl = document.getElementById("new-photo-url")?.value.trim();
-    const comment = document.getElementById("new-photo-comment")?.value.trim();
+    const caption = document.getElementById("new-photo-caption")?.value.trim() || "Happy JammyRolls Customers ✨";
     const isFeatured = document.getElementById("new-photo-featured")?.checked ?? true;
-
-    if (!comment) {
-      showAdminNotification("Please enter a customer quote!");
-      return;
-    }
 
     if (!photoUrl) {
       showAdminNotification("Please upload a photo or choose a preset!");
@@ -1097,12 +1088,8 @@ function initCustomerPhotosAdmin() {
 
     try {
       await createCustomerPhoto({
-        customerName: name,
-        location,
-        tag,
-        rating,
         photoUrl,
-        comment,
+        caption,
         isFeatured
       });
 
@@ -1199,28 +1186,23 @@ function renderAdminPhotosList() {
   }
 
   container.innerHTML = photosList.map(photo => {
-    const stars = "★".repeat(photo.rating || 5) + "☆".repeat(Math.max(0, 5 - (photo.rating || 5)));
-    const safeName = (photo.customerName || "Customer").replace(/"/g, '&quot;');
+    const caption = photo.caption || photo.comment || "Happy JammyRolls Customers ✨";
+    const safeCaption = caption.replace(/"/g, '&quot;');
     const isFeat = !!photo.isFeatured;
 
     return `
       <div class="admin-photo-card" id="admin-photo-${photo.photoId}">
         <div class="admin-photo-thumb-wrap">
-          <img src="${photo.photoUrl && photo.photoUrl.startsWith('assets/') ? '../' + photo.photoUrl : photo.photoUrl}" alt="${safeName}" class="admin-photo-thumb" loading="lazy">
+          <img src="${photo.photoUrl && photo.photoUrl.startsWith('assets/') ? '../' + photo.photoUrl : photo.photoUrl}" alt="${safeCaption}" class="admin-photo-thumb" loading="lazy">
           ${isFeat ? `<span class="admin-photo-badge-featured">⭐ Featured</span>` : ''}
-          <span class="admin-photo-tag-pill">${photo.tag || '✨ Customer'}</span>
         </div>
         <div class="admin-photo-body">
-          <div class="admin-photo-header">
-            <div class="admin-photo-location">📍 ${photo.location || 'Panabo City'}</div>
-            <div class="admin-photo-stars">${stars}</div>
-          </div>
-          <p class="admin-photo-caption">“${photo.comment}”</p>
+          <p class="admin-photo-caption">${caption}</p>
           <div class="admin-photo-actions">
             <button type="button" class="btn-photo-action btn-photo-toggle-featured" data-id="${photo.photoId}" title="Toggle Homepage Feature">
               ${isFeat ? '★ Featured' : '☆ Feature on Home'}
             </button>
-            <button type="button" class="btn-photo-action btn-photo-delete" data-id="${photo.photoId}" data-name="${safeName}" title="Delete Photo">
+            <button type="button" class="btn-photo-action btn-photo-delete" data-id="${photo.photoId}" title="Delete Photo">
               🗑️ Delete
             </button>
           </div>
