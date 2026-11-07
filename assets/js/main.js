@@ -490,29 +490,36 @@ function renderHomepageGallery() {
   const grid = document.getElementById("homepage-customers-grid");
   if (!grid) return;
 
-  const displayPhotos = homepageCustomerPhotos.slice(0, 6);
+  // Filter for photos marked as featured on homepage (fallback to all if none marked)
+  const featuredOnly = homepageCustomerPhotos.filter(p => p.isFeatured !== false);
+  const displayPhotos = (featuredOnly.length > 0 ? featuredOnly : homepageCustomerPhotos).slice(0, 6);
 
   if (displayPhotos.length === 0) {
     grid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: #FFF; border-radius: 16px; border: 1px dashed var(--color-border);">
-        <div style="font-size: 2.5rem; margin-bottom: 8px;">📸</div>
-        <h4 style="font-family: var(--font-brand); color: var(--color-choco-dark);">No Photos Yet</h4>
-        <p style="color: var(--color-text-muted); font-size: 0.88rem;">Customer photos will appear here!</p>
+      <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: #FFF; border-radius: 16px; border: 1px dashed var(--color-border);">
+        <div style="font-size: 2.8rem; margin-bottom: 10px;">📸</div>
+        <h4 style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.25rem;">Wall of Jammy Smiles</h4>
+        <p style="color: var(--color-text-muted); font-size: 0.9rem; max-width: 460px; margin: 0 auto 16px;">
+          Live customer moments from our Firebase database will appear here!
+        </p>
+        <a href="customers.html" class="btn btn-primary" style="padding: 10px 24px; font-size: 0.88rem;">
+          Visit Customer Gallery
+        </a>
       </div>
     `;
     return;
   }
 
   grid.innerHTML = displayPhotos.map(photo => {
-    const caption = photo.caption || photo.comment || "Happy JammyRolls Customers ✨";
-    const safeCaption = caption.replace(/"/g, '&quot;');
+    const caption = photo.caption || photo.comment || "Happy JammyRolls Customer ✨";
+    const safeCaption = caption.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const safeUrl = (photo.photoUrl || "").replace(/"/g, '&quot;');
 
     return `
       <div class="customer-photo-card" data-id="${photo.photoId}">
         <div class="customer-photo-img-wrap" onclick="window.openCustomerLightbox('${safeUrl}', '${safeCaption}')">
-          <img src="${photo.photoUrl}" alt="${safeCaption}" class="customer-photo-img" loading="lazy">
-          <div class="customer-photo-zoom-hint" title="Click to view photo">🔍</div>
+          <img src="${photo.photoUrl}" alt="${safeCaption}" class="customer-photo-img" loading="lazy" onerror="this.onerror=null;this.src='assets/images/jammyrolls-logo.png';this.style.objectFit='contain';this.style.padding='24px';">
+          <div class="customer-photo-zoom-hint" title="Click to view photo">🔍 View</div>
         </div>
         <div class="customer-photo-body">
           <p class="customer-photo-caption">${caption}</p>

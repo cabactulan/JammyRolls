@@ -390,6 +390,7 @@
       <button class="admin-bnav-btn" data-section="gallery">
         <span class="bnav-icon">📸</span>
         <span>Photos</span>
+        <span class="admin-bnav-badge" id="bnav-photos-badge" style="display: none;">0</span>
       </button>
       <button class="admin-bnav-btn" data-section="founders">
         <span class="bnav-icon">👥</span>
@@ -474,21 +475,26 @@
 
       <!-- SECTION 6: CUSTOMER PHOTOS & WALL OF SMILES -->
       <section class="admin-section" id="section-gallery" style="display: none;">
-        <div class="admin-section-header">
+        <div class="admin-section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
           <div>
             <h2 class="admin-section-title">Customer Photos & Wall of Smiles</h2>
-            <p class="admin-section-sub">Showcase satisfied dessert lovers on the storefront and dedicated photo gallery</p>
+            <p class="admin-section-sub">Manage real customer moments stored live in Firebase Realtime Database</p>
+          </div>
+          <div>
+            <a href="../customers.html" target="_blank" class="btn-status-act" style="background: #FFF; color: #1F130B; text-decoration: none; padding: 8px 16px; font-weight: 700; border: 1px solid var(--admin-border); border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <span>🌐</span> <span>View Live Customer Gallery</span> ↗
+            </a>
           </div>
         </div>
 
-        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-label">Total Customer Photos</span>
+              <span class="metric-label">Total Gallery Photos</span>
               <div class="metric-icon-wrap" style="background: #E0E7FF; color: #4F46E5;">📸</div>
             </div>
             <div class="metric-val" id="kpi-photos-total">0</div>
-            <div class="metric-sub">Satisfied customers</div>
+            <div class="metric-sub" id="kpi-photos-total-sub">Stored in Firebase RTDB</div>
           </div>
 
           <div class="metric-card">
@@ -497,81 +503,113 @@
               <div class="metric-icon-wrap" style="background: #FEF3C7; color: #D97706;">⭐</div>
             </div>
             <div class="metric-val" id="kpi-photos-featured">0</div>
-            <div class="metric-sub">Active highlights</div>
+            <div class="metric-sub">Highlighted on storefront</div>
           </div>
 
           <div class="metric-card">
             <div class="metric-header">
-              <span class="metric-label">Average Rating</span>
-              <div class="metric-icon-wrap" style="background: #ECFDF5; color: #059669;">✨</div>
+              <span class="metric-label">Database Status</span>
+              <div class="metric-icon-wrap" style="background: #ECFDF5; color: #059669;">⚡</div>
             </div>
-            <div class="metric-val" id="kpi-photos-avg">5.0</div>
-            <div class="metric-sub">★★★★★ Verified</div>
+            <div class="metric-val" style="font-size: 1.35rem; color: #059669; display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-block; width: 10px; height: 10px; background: #10B981; border-radius: 50%; box-shadow: 0 0 8px #10B981;"></span>
+              <span>Live Cloud Sync</span>
+            </div>
+            <div class="metric-sub">Firebase Realtime Database</div>
           </div>
         </div>
 
         <!-- Add Customer Photo Form Card -->
         <div class="admin-card" style="margin-bottom: 28px;">
-          <div class="admin-card-header">
-            <h3 style="font-family: 'Fredoka', cursive; font-size: 1.15rem;">Add New Customer Photo</h3>
+          <div class="admin-card-header" style="border-bottom: 1px solid var(--admin-border); padding-bottom: 14px; margin-bottom: 18px;">
+            <h3 style="font-family: 'Fredoka', cursive; font-size: 1.25rem; color: #1F130B; margin-bottom: 4px;">Add New Customer Photo</h3>
+            <p style="font-size: 0.84rem; color: var(--admin-text-muted); margin: 0;">
+              Upload a photo from your computer or phone, or paste an image URL. Photos are saved directly into Firebase Realtime Database.
+            </p>
           </div>
           
           <form id="admin-add-photo-form" style="padding: 4px 0;">
-            <!-- Photo URL & Presets -->
-            <div class="login-input-group" style="margin-bottom: 14px;">
-              <label class="login-input-label">Photo (Upload local file OR enter image URL) *</label>
-              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
-                <input type="file" id="new-photo-file" accept="image/*" class="login-input" style="padding: 10px; max-width: 280px;">
-                <input type="url" id="new-photo-url" class="login-input" placeholder="Or paste image URL: https://..." style="flex: 1; min-width: 240px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <!-- Upload local file -->
+              <div class="photo-input-tile">
+                <label class="login-input-label" style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                  <span>📁</span> <strong>Upload Local Photo</strong>
+                </label>
+                <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-bottom: 10px;">
+                  Automatic client compression keeps Firebase sync fast & lean.
+                </div>
+                <input type="file" id="new-photo-file" accept="image/*" class="photo-file-input">
               </div>
-              <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-bottom: 8px;">
-                Or select one of our curated customer photo presets:
+
+              <!-- Or Paste Image URL -->
+              <div class="photo-input-tile">
+                <label class="login-input-label" style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                  <span>🔗</span> <strong>Or Paste Image Web URL</strong>
+                </label>
+                <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-bottom: 10px;">
+                  Paste a direct link to any hosted photo (https://...).
+                </div>
+                <input type="text" id="new-photo-url" class="login-input" placeholder="https://images.unsplash.com/photo-..." style="background: #FFF;">
               </div>
-              <div class="photo-preset-selector" id="photo-preset-selector">
-                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg" title="Satisfied Customer 1">
-                  <img src="../assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg" alt="Customer 1">
+            </div>
+
+            <!-- Live Image Preview Card -->
+            <div id="admin-photo-preview-container" style="display: none; margin-bottom: 18px;">
+              <div class="photo-preview-card">
+                <div class="photo-preview-img-wrap">
+                  <img id="admin-photo-preview-img" src="" alt="Selected Preview">
                 </div>
-                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/5499b286-58ef-4e68-afc7-26c4ed4f8d33.jpg" title="Satisfied Customer 2">
-                  <img src="../assets/images/Satisfied Customers/5499b286-58ef-4e68-afc7-26c4ed4f8d33.jpg" alt="Customer 2">
-                </div>
-                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/7cd13e61-0aa1-4d21-8c37-a7fde6e08f72.jpg" title="Satisfied Customer 3">
-                  <img src="../assets/images/Satisfied Customers/7cd13e61-0aa1-4d21-8c37-a7fde6e08f72.jpg" alt="Customer 3">
-                </div>
-                <div class="photo-preset-item" data-url="assets/images/Satisfied Customers/f8744009-622c-41a0-b265-f1599bbef780.jpg" title="Satisfied Customer 4">
-                  <img src="../assets/images/Satisfied Customers/f8744009-622c-41a0-b265-f1599bbef780.jpg" alt="Customer 4">
+                <div class="photo-preview-info">
+                  <div style="font-weight: 700; color: #1F130B; font-size: 0.92rem;" id="photo-preview-title">Photo Ready</div>
+                  <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-top: 2px;" id="photo-preview-meta">Image selected</div>
+                  <button type="button" class="btn-status-act" id="btn-clear-photo-preview" style="margin-top: 8px; padding: 4px 12px; font-size: 0.78rem; color: #DC2626; border-color: #FCA5A5; background: #FFF;">
+                    ✕ Clear & Choose Another
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- General Caption -->
+            <!-- Photo Caption -->
             <div class="login-input-group" style="margin-bottom: 18px;">
-              <label class="login-input-label">General Caption (optional)</label>
-              <input type="text" id="new-photo-caption" class="login-input" placeholder="e.g. Fresh JammyRolls shared with great friends ✨">
+              <label class="login-input-label" for="new-photo-caption">Photo Caption *</label>
+              <input type="text" id="new-photo-caption" class="login-input" placeholder="e.g. Fresh JammyRolls merienda shared with awesome friends ✨" required>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <!-- Submit Row -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding-top: 14px; border-top: 1px solid var(--admin-border);">
               <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
-                <input type="checkbox" id="new-photo-featured" checked style="width: 18px; height: 18px; accent-color: #D97706;">
+                <input type="checkbox" id="new-photo-featured" checked style="width: 18px; height: 18px; accent-color: #D97706; cursor: pointer;">
                 <span style="font-weight: 600; color: #1F130B;">Feature on Homepage (Wall of Smiles)</span>
               </label>
 
               <button type="submit" class="btn-login-submit" id="btn-submit-photo" style="width: auto; padding: 12px 28px; font-size: 0.95rem;">
-                <span>Add Customer Photo</span>
-                <span>✨</span>
+                <span>Save to Firebase Gallery</span>
+                <span>☁️</span>
               </button>
             </div>
           </form>
         </div>
 
-        <!-- Customer Photos Grid -->
+        <!-- Customer Photos Grid Card -->
         <div class="admin-card">
-          <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-family: 'Fredoka', cursive; font-size: 1.15rem;">Current Customer Photos Gallery</h3>
-            <span style="font-size: 0.82rem; color: var(--admin-text-muted);" id="admin-photos-count-label">0 photos</span>
+          <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--admin-border); padding-bottom: 14px;">
+            <div>
+              <h3 style="font-family: 'Fredoka', cursive; font-size: 1.25rem;">Live Customer Photos</h3>
+              <span style="font-size: 0.82rem; color: var(--admin-text-muted);" id="admin-photos-count-label">0 photos in Firebase</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <div class="filter-pills-row" id="photo-filter-pills">
+                <button class="filter-pill photo-filter-pill active" data-filter="all">All Photos</button>
+                <button class="filter-pill photo-filter-pill" data-filter="featured">⭐ Featured Only</button>
+                <button class="filter-pill photo-filter-pill" data-filter="unfeatured">☆ Hidden</button>
+              </div>
+              <input type="text" id="admin-photos-search" placeholder="Search caption..." style="padding: 6px 14px; border: 1px solid var(--admin-border); border-radius: 9999px; font-size: 0.82rem; min-width: 160px; outline: none;">
+            </div>
           </div>
 
-          <div class="admin-photos-grid" id="admin-photos-list" style="margin-top: 14px;">
-            <!-- Rendered dynamically -->
+          <div class="admin-photos-grid" id="admin-photos-list" style="margin-top: 18px;">
+            <!-- Rendered dynamically from Firebase RTDB -->
           </div>
         </div>
       </section>
@@ -609,6 +647,23 @@
       </div>
       <div class="admin-modal-body" id="admin-order-modal-body">
         <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Photo Lightbox Modal -->
+  <div class="admin-modal-backdrop" id="admin-photo-lightbox-modal">
+    <div class="admin-modal" style="max-width: 680px; padding: 0; overflow: hidden; border-radius: 16px;">
+      <div style="position: relative; background: #000; display: flex; align-items: center; justify-content: center; min-height: 280px; max-height: 520px; overflow: hidden;">
+        <button class="btn-status-act" id="btn-close-photo-lightbox" style="position: absolute; top: 12px; right: 12px; z-index: 10; background: rgba(0,0,0,0.65); color: #FFF; border: none; font-size: 1.1rem; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</button>
+        <img id="admin-lightbox-img" src="" alt="Customer Photo" style="max-width: 100%; max-height: 520px; object-fit: contain; display: block;">
+      </div>
+      <div style="padding: 16px 22px; background: #FFF; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+          <p id="admin-lightbox-caption" style="font-size: 0.95rem; font-weight: 700; color: #1F130B; margin: 0; line-height: 1.4;"></p>
+          <span id="admin-lightbox-date" style="font-size: 0.78rem; color: var(--admin-text-muted);"></span>
+        </div>
+        <span id="admin-lightbox-badge" class="badge badge-yellow">⭐ Featured on Home</span>
       </div>
     </div>
   </div>

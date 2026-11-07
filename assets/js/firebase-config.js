@@ -1,4 +1,3 @@
-import { satisfiedCustomersFromFolder } from "./satisfied-customers-data.js";
 // Live Cloud Synchronization & Store Service
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -30,7 +29,7 @@ const CACHE_KEYS = {
   PRODUCT: "jammyrolls_product_v3",
   ORDERS: "jammyrolls_orders_v3",
   REVIEWS: "jammyrolls_reviews_v3",
-  CUSTOMER_PHOTOS: "jammyrolls_customer_photos_v6"
+  CUSTOMER_PHOTOS: "jammyrolls_customer_photos_rtdb"
 };
 
 // Subscriber Registries for instant real-time UI updates
@@ -81,6 +80,12 @@ window.addEventListener("storage", (e) => {
     try {
       const updatedReviews = JSON.parse(e.newValue);
       reviewsSubscribers.forEach(cb => cb(updatedReviews));
+    } catch (err) {}
+  }
+  if (e.key === CACHE_KEYS.CUSTOMER_PHOTOS && e.newValue) {
+    try {
+      const updatedPhotos = JSON.parse(e.newValue);
+      photosSubscribers.forEach(cb => cb(updatedPhotos));
     } catch (err) {}
   }
 });
@@ -433,49 +438,46 @@ export async function deleteReview(reviewId) {
 
 
 /**
- * Default Curated Customer Photos (Satisfied Customers)
+ * Customer Photos Catalog (Synchronized with Firebase Realtime Database)
+ * No hardcoded pictures: the cloud database node `customerPhotos` is the sole source of truth.
  */
-export const DEFAULT_CUSTOMER_PHOTOS = satisfiedCustomersFromFolder;
+export const DEFAULT_CUSTOMER_PHOTOS = {};
 
 /**
- * Subscribe to Customer Photos (Live Feed)
+ * Subscribe to Customer Photos (Live Feed from Firebase Realtime Database)
  */
 export function subscribeToCustomerPhotos(callback) {
   photosSubscribers.add(callback);
   
-  // Deliver current cached or default photos immediately
-  const rawCached = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, null);
-  const initialPhotos = (rawCached && Object.keys(rawCached).length > 0) ? rawCached : DEFAULT_CUSTOMER_PHOTOS;
-  callback(initialPhotos);
+  // Deliver current cached photos immediately (defaults to empty object, NOT hardcoded photos)
+  const cachedPhotos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
+  callback(cachedPhotos);
 
   if (liveSyncReady && db) {
     try {
       const photosRef = ref(db, "customerPhotos");
       onValue(photosRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const cloudPhotos = snapshot.val() || {};
-          setStored(CACHE_KEYS.CUSTOMER_PHOTOS, cloudPhotos);
-          photosSubscribers.forEach(cb => cb(cloudPhotos));
-        } else {
-          // If no cloud photos yet, keep defaults in local cache
-          const current = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, DEFAULT_CUSTOMER_PHOTOS);
-          photosSubscribers.forEach(cb => cb(current));
-        }
+        // Firebase RTDB is the single source of truth
+        const cloudPhotos = snapshot.exists() ? (snapshot.val() || {}) : {};
+        setStored(CACHE_KEYS.CUSTOMER_PHOTOS, cloudPhotos);
+        photosSubscribers.forEach(cb => cb(cloudPhotos));
       }, (err) => {
         console.warn("Live customer photos sync notice:", err);
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn("Customer photos listener error:", e);
+    }
   }
 
   window.addEventListener("store-sync-update", (e) => {
     if (e.detail.key === CACHE_KEYS.CUSTOMER_PHOTOS) {
-      callback(e.detail.val);
+      callback(e.detail.val || {});
     }
   });
 }
 
 /**
- * Create / Add Customer Photo (Admin or Customer)
+ * Create / Add Customer Photo directly to Firebase Realtime Database
  */
 export async function createCustomerPhoto(photoData) {
   const photoId = "PHOTO-" + Date.now() + "-" + Math.floor(100 + Math.random() * 900);
@@ -483,22 +485,26 @@ export async function createCustomerPhoto(photoData) {
 
   const finalPhoto = {
     photoId,
-    caption: photoData.caption ? photoData.caption.trim() : (photoData.comment ? photoData.comment.trim() : "Satisfied JammyRolls customer ✨"),
-    photoUrl: photoData.photoUrl || "assets/images/Satisfied Customers/40565b46-2885-4cbf-a0ca-f281ae68456f.jpg",
+    caption: photoData.caption ? photoData.caption.trim() : "Happy JammyRolls customer ✨",
+    customerName: photoData.customerName ? photoData.customerName.trim() : "",
+    photoUrl: photoData.photoUrl || "",
     isFeatured: photoData.isFeatured !== undefined ? !!photoData.isFeatured : true,
     createdAt: now
   };
 
-  const photos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, { ...DEFAULT_CUSTOMER_PHOTOS });
+  // 1. Optimistic update in local cache
+  const photos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
   photos[photoId] = finalPhoto;
   setStored(CACHE_KEYS.CUSTOMER_PHOTOS, photos);
   photosSubscribers.forEach(cb => cb(photos));
 
+  // 2. Persist to Firebase Realtime Database
   if (liveSyncReady && db) {
     try {
       await set(ref(db, `customerPhotos/${photoId}`), finalPhoto);
     } catch (err) {
       console.warn("Cloud photo write notice:", err);
+      throw err;
     }
   }
 
@@ -506,30 +512,35 @@ export async function createCustomerPhoto(photoData) {
 }
 
 /**
- * Delete Customer Photo (Admin action)
+ * Delete Customer Photo from Firebase Realtime Database
  */
 export async function deleteCustomerPhoto(photoId) {
   if (!photoId) return;
-  const photos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, { ...DEFAULT_CUSTOMER_PHOTOS });
+
+  // 1. Remove from local cache
+  const photos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
   delete photos[photoId];
   setStored(CACHE_KEYS.CUSTOMER_PHOTOS, photos);
   photosSubscribers.forEach(cb => cb(photos));
 
+  // 2. Remove permanently from Firebase Realtime Database
   if (liveSyncReady && db) {
     try {
       await set(ref(db, `customerPhotos/${photoId}`), null);
     } catch (e) {
       console.warn("Cloud delete photo notice:", e);
+      throw e;
     }
   }
 }
 
 /**
- * Toggle Customer Photo Featured Status
+ * Toggle Customer Photo Featured Status in Firebase Realtime Database
  */
 export async function toggleCustomerPhotoFeatured(photoId) {
   if (!photoId) return;
-  const photos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, { ...DEFAULT_CUSTOMER_PHOTOS });
+
+  const photos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
   if (photos[photoId]) {
     photos[photoId].isFeatured = !photos[photoId].isFeatured;
     setStored(CACHE_KEYS.CUSTOMER_PHOTOS, photos);
@@ -537,9 +548,12 @@ export async function toggleCustomerPhotoFeatured(photoId) {
 
     if (liveSyncReady && db) {
       try {
-        await update(ref(db, `customerPhotos/${photoId}`), { isFeatured: photos[photoId].isFeatured });
+        await update(ref(db, `customerPhotos/${photoId}`), { 
+          isFeatured: photos[photoId].isFeatured 
+        });
       } catch (e) {
         console.warn("Cloud feature photo notice:", e);
+        throw e;
       }
     }
   }

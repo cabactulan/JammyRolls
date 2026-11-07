@@ -1599,35 +1599,166 @@ body {
   background: #FECACA;
 }
 
-/* Preset Photo Picker in Admin */
-.photo-preset-selector {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 8px 0;
-  margin-bottom: 12px;
+/* Enhanced Photo Upload & Preview in Admin */
+.photo-input-tile {
+  background: #FAF7F2;
+  border: 1px dashed var(--admin-border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.photo-preset-item {
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-.photo-preset-item:hover,
-.photo-preset-item.selected {
+.photo-input-tile:focus-within,
+.photo-input-tile:hover {
   border-color: #D97706;
-  transform: scale(1.05);
+  background: #FFFDF8;
 }
 
-.photo-preset-item img {
+.photo-file-input {
+  width: 100%;
+  font-size: 0.85rem;
+  padding: 8px 0;
+  cursor: pointer;
+  color: #4B5563;
+}
+
+.photo-file-input::-webkit-file-upload-button {
+  background: #1F130B;
+  color: #FFF;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background 0.2s ease;
+}
+
+.photo-file-input::-webkit-file-upload-button:hover {
+  background: #D97706;
+}
+
+.photo-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #FFFDF8;
+  border: 1px solid #FDE68A;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.photo-preview-img-wrap {
+  width: 90px;
+  height: 90px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #FDE68A;
+  background: #1F130B;
+  flex-shrink: 0;
+}
+
+.photo-preview-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.photo-preview-info {
+  flex: 1;
+}
+
+.admin-photo-badge-hidden {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(31, 19, 11, 0.75);
+  color: #D1D5DB;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
+}
+
+.admin-photo-thumb-wrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #1F130B;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.admin-photo-zoom-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #FFF;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.admin-photo-thumb-wrap:hover .admin-photo-zoom-hint {
+  opacity: 1;
+}
+
+.admin-photo-thumb-wrap:hover .admin-photo-thumb {
+  transform: scale(1.05);
+}
+
+.admin-photo-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.admin-photo-date {
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+  margin-top: 4px;
+}
+
+.photo-filter-pill {
+  background: #FFF;
+  border: 1px solid var(--admin-border);
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4B5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.photo-filter-pill:hover {
+  background: #F3F4F6;
+  border-color: #D1D5DB;
+}
+
+.photo-filter-pill.active {
+  background: #1F130B;
+  color: #FBBF24;
+  border-color: #1F130B;
+}
+
+@media (max-width: 640px) {
+  .photo-preview-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .photo-preview-img-wrap {
+    width: 100%;
+    height: 140px;
+  }
 }

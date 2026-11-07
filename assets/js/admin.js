@@ -23,6 +23,9 @@ let allCustomerPhotosAdmin = {};
 let liveProduct = null;
 let currentOrderFilter = "all";
 let currentReviewFilter = "all";
+let currentPhotoFilter = "all";
+let photoSearchQuery = "";
+let pendingPhotoData = "";
 let soundAlertEnabled = true;
 let previousOrderCount = null;
 let salesChart = null;
@@ -1040,50 +1043,147 @@ function renderReviewsTable() {
 // ==========================================================================
 // Customer Photos & Wall of Smiles Management (Admin)
 // ==========================================================================
-function initCustomerPhotosAdmin() {
-  // Preset selector
-  document.querySelectorAll("#photo-preset-selector .photo-preset-item").forEach(item => {
-    item.addEventListener("click", () => {
-      document.querySelectorAll("#photo-preset-selector .photo-preset-item").forEach(i => i.classList.remove("selected"));
-      item.classList.add("selected");
-      const url = item.getAttribute("data-url");
-      const urlInput = document.getElementById("new-photo-url");
-      if (urlInput) urlInput.value = url;
-    });
-  });
 
-  // Local File Upload reader (converts to DataURL)
-  const fileInput = document.getElementById("new-photo-file");
-  fileInput?.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const urlInput = document.getElementById("new-photo-url");
-        if (urlInput) urlInput.value = event.target.result;
-        showAdminNotification("Local photo selected! Ready to add. 📸");
+/**
+ * Client-side Canvas Image Compression
+ * Downscales large device photos (5-12MB) to max 1024px JPEG (~70-120KB)
+ * for fast, reliable Firebase Realtime Database storage within RTDB payload limits.
+ */
+function compressImageFile(file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        const approxSizeKb = Math.round((dataUrl.length * 3) / 4 / 1024);
+        resolve({
+          dataUrl,
+          width,
+          height,
+          sizeKb: approxSizeKb
+        });
       };
-      reader.readAsDataURL(file);
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function initCustomerPhotosAdmin() {
+  setupAdminPhotoLightbox();
+
+  const fileInput = document.getElementById("new-photo-file");
+  const urlInput = document.getElementById("new-photo-url");
+  const previewBox = document.getElementById("admin-photo-preview-container");
+  const previewImg = document.getElementById("admin-photo-preview-img");
+  const previewTitle = document.getElementById("photo-preview-title");
+  const previewMeta = document.getElementById("photo-preview-meta");
+  const clearPreviewBtn = document.getElementById("btn-clear-photo-preview");
+
+  function setPhotoPreview(dataUrl, title, meta) {
+    pendingPhotoData = dataUrl;
+    if (previewImg) previewImg.src = dataUrl;
+    if (previewTitle) previewTitle.textContent = title || "Photo Selected";
+    if (previewMeta) previewMeta.textContent = meta || "Ready to upload";
+    if (previewBox) previewBox.style.display = "block";
+  }
+
+  function clearPhotoPreview() {
+    pendingPhotoData = "";
+    if (fileInput) fileInput.value = "";
+    if (urlInput) urlInput.value = "";
+    if (previewImg) previewImg.src = "";
+    if (previewBox) previewBox.style.display = "none";
+  }
+
+  clearPreviewBtn?.addEventListener("click", clearPhotoPreview);
+
+  // 1. File Upload with auto-compression
+  fileInput?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showAdminNotification("Please select an image file (PNG, JPG, WebP)!");
+      fileInput.value = "";
+      return;
+    }
+
+    try {
+      showAdminNotification("Compressing image for fast cloud sync... ⏳");
+      const compressed = await compressImageFile(file);
+      setPhotoPreview(
+        compressed.dataUrl,
+        file.name,
+        `Optimized: ~${compressed.sizeKb} KB (${compressed.width}×${compressed.height} px)`
+      );
+      if (urlInput) urlInput.value = "";
+      showAdminNotification("Photo ready! Fill in the caption and click Save. 📸");
+    } catch (err) {
+      console.error("Compression error:", err);
+      showAdminNotification("Could not process image file. Please try another.");
     }
   });
 
-  // Form Submit
+  // 2. Direct Image URL Input
+  urlInput?.addEventListener("input", () => {
+    const val = urlInput.value.trim();
+    if (val) {
+      if (fileInput) fileInput.value = "";
+      setPhotoPreview(val, "Web Image URL", val);
+    } else if (!fileInput?.files?.length) {
+      clearPhotoPreview();
+    }
+  });
+
+  // 3. Form Submit to Firebase RTDB
   const form = document.getElementById("admin-add-photo-form");
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const photoUrl = document.getElementById("new-photo-url")?.value.trim();
-    const caption = document.getElementById("new-photo-caption")?.value.trim() || "Happy JammyRolls Customers ✨";
+
+    const photoUrl = pendingPhotoData || urlInput?.value.trim();
+    const captionInput = document.getElementById("new-photo-caption");
+    const caption = captionInput?.value.trim();
     const isFeatured = document.getElementById("new-photo-featured")?.checked ?? true;
 
     if (!photoUrl) {
-      showAdminNotification("Please upload a photo or choose a preset!");
+      showAdminNotification("Please upload a photo file or enter an image URL!");
+      fileInput?.focus();
+      return;
+    }
+
+    if (!caption) {
+      showAdminNotification("Please write a short caption for the photo!");
+      captionInput?.focus();
       return;
     }
 
     const submitBtn = document.getElementById("btn-submit-photo");
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>Saving...</span> <span>⏳</span>`;
+      submitBtn.innerHTML = `<span>Saving to Firebase...</span> <span>⏳</span>`;
     }
 
     try {
@@ -1093,44 +1193,97 @@ function initCustomerPhotosAdmin() {
         isFeatured
       });
 
-      showAdminNotification("Customer photo added successfully! 📸");
+      showAdminNotification("Photo saved to Firebase Realtime Database! 📸");
       form.reset();
-      document.querySelectorAll("#photo-preset-selector .photo-preset-item").forEach(i => i.classList.remove("selected"));
+      clearPhotoPreview();
     } catch (err) {
-      showAdminNotification("Could not save photo. Please try again.");
+      console.error("Cloud photo save error:", err);
+      showAdminNotification("Could not save photo to Firebase. Please try again.");
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>Add Customer Photo</span> <span>✨</span>`;
+        submitBtn.innerHTML = `<span>Save to Firebase Gallery</span> <span>☁️</span>`;
       }
     }
   });
 
-  // Action clicks (Toggle Featured, Delete)
+  // 4. Photo Actions (Toggle Featured, Delete, Click to Preview)
   const photosListEl = document.getElementById("admin-photos-list");
   photosListEl?.addEventListener("click", async (e) => {
     const toggleBtn = e.target.closest(".btn-photo-toggle-featured");
     const deleteBtn = e.target.closest(".btn-photo-delete");
+    const thumbWrap = e.target.closest(".admin-photo-thumb-wrap");
 
+    // Toggle Featured
     if (toggleBtn) {
+      e.stopPropagation();
       const id = toggleBtn.getAttribute("data-id");
       if (id) {
-        await toggleCustomerPhotoFeatured(id);
-        showAdminNotification("Homepage featured status updated! ⭐");
+        try {
+          await toggleCustomerPhotoFeatured(id);
+          showAdminNotification("Homepage featured status updated! ⭐");
+        } catch (err) {
+          showAdminNotification("Could not update featured status.");
+        }
       }
+      return;
     }
 
+    // Delete Photo with 2-step confirmation
     if (deleteBtn) {
+      e.stopPropagation();
       const id = deleteBtn.getAttribute("data-id");
-      const name = deleteBtn.getAttribute("data-name") || "this photo";
-      if (confirm("Are you sure you want to delete this customer photo?")) {
+      const confirmed = deleteBtn.getAttribute("data-confirmed") === "true";
+
+      if (!confirmed) {
+        deleteBtn.setAttribute("data-confirmed", "true");
+        deleteBtn.textContent = "Confirm Delete 🗑️";
+        deleteBtn.style.background = "#FCA5A5";
+        setTimeout(() => {
+          deleteBtn.setAttribute("data-confirmed", "false");
+          deleteBtn.textContent = "Delete 🗑️";
+          deleteBtn.style.background = "#FEE2E2";
+        }, 3500);
+        return;
+      }
+
+      try {
         await deleteCustomerPhoto(id);
-        showAdminNotification("Customer photo deleted. 🗑️");
+        showAdminNotification("Photo deleted permanently from Firebase. 🗑️");
+      } catch (err) {
+        showAdminNotification("Could not delete photo from Firebase.");
+      }
+      return;
+    }
+
+    // Click thumbnail to open Admin Lightbox
+    if (thumbWrap) {
+      const card = thumbWrap.closest(".admin-photo-card");
+      const id = card?.getAttribute("data-id");
+      const photo = allCustomerPhotosAdmin[id];
+      if (photo) {
+        openAdminPhotoLightbox(photo);
       }
     }
   });
 
-  // Subscribe to live customer photos
+  // 5. Filter Pills & Search Input
+  document.querySelectorAll("#photo-filter-pills .photo-filter-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll("#photo-filter-pills .photo-filter-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentPhotoFilter = pill.getAttribute("data-filter") || "all";
+      renderAdminPhotosList();
+    });
+  });
+
+  const searchInput = document.getElementById("admin-photos-search");
+  searchInput?.addEventListener("input", (e) => {
+    photoSearchQuery = (e.target.value || "").trim().toLowerCase();
+    renderAdminPhotosList();
+  });
+
+  // 6. Subscribe to live customer photos directly from Firebase RTDB
   subscribeToCustomerPhotos((photosObj) => {
     allCustomerPhotosAdmin = photosObj || {};
     updatePhotosKPIs();
@@ -1141,28 +1294,35 @@ function initCustomerPhotosAdmin() {
 function updatePhotosKPIs() {
   const photosList = Object.values(allCustomerPhotosAdmin || {});
   const total = photosList.length;
-  const featured = photosList.filter(p => p.isFeatured).length;
-  const avg = total > 0 
-    ? (photosList.reduce((acc, p) => acc + (p.rating || 5), 0) / total).toFixed(1) 
-    : "5.0";
+  const featured = photosList.filter(p => p.isFeatured !== false).length;
 
   const totalEl = document.getElementById("kpi-photos-total");
   const featEl = document.getElementById("kpi-photos-featured");
-  const avgEl = document.getElementById("kpi-photos-avg");
   const countLabel = document.getElementById("admin-photos-count-label");
   const sidebarBadge = document.getElementById("sidebar-photos-badge");
+  const bnavBadge = document.getElementById("bnav-photos-badge");
 
   if (totalEl) totalEl.textContent = total;
   if (featEl) featEl.textContent = featured;
-  if (avgEl) avgEl.textContent = avg;
-  if (countLabel) countLabel.textContent = `${total} photo${total === 1 ? '' : 's'}`;
+  if (countLabel) countLabel.textContent = `${total} photo${total === 1 ? '' : 's'} in Firebase`;
 
+  // Desktop sidebar badge
   if (sidebarBadge) {
     if (total > 0) {
       sidebarBadge.textContent = total;
       sidebarBadge.style.display = "inline-flex";
     } else {
       sidebarBadge.style.display = "none";
+    }
+  }
+
+  // Mobile bottom navigation badge
+  if (bnavBadge) {
+    if (total > 0) {
+      bnavBadge.textContent = total;
+      bnavBadge.style.display = "inline-flex";
+    } else {
+      bnavBadge.style.display = "none";
     }
   }
 }
@@ -1175,34 +1335,73 @@ function renderAdminPhotosList() {
     return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
   });
 
-  if (photosList.length === 0) {
+  // Apply Filter (all / featured / unfeatured)
+  let filtered = photosList;
+  if (currentPhotoFilter === "featured") {
+    filtered = filtered.filter(p => p.isFeatured !== false);
+  } else if (currentPhotoFilter === "unfeatured") {
+    filtered = filtered.filter(p => p.isFeatured === false);
+  }
+
+  // Apply Search Query
+  if (photoSearchQuery) {
+    filtered = filtered.filter(p => {
+      const captionText = (p.caption || p.comment || "").toLowerCase();
+      const idText = (p.photoId || "").toLowerCase();
+      return captionText.includes(photoSearchQuery) || idText.includes(photoSearchQuery);
+    });
+  }
+
+  if (filtered.length === 0) {
+    const isFiltered = currentPhotoFilter !== "all" || photoSearchQuery;
     container.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align: center; padding: 36px 20px; color: var(--admin-text-muted);">
-        <div style="font-size: 2.2rem; margin-bottom: 8px;">📸</div>
-        <p>No customer photos added yet. Add one above to showcase on your site!</p>
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: #FFFDF8; border-radius: 14px; border: 1px dashed var(--admin-border); color: var(--admin-text-muted);">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;">📸</div>
+        <h4 style="font-family: 'Fredoka', cursive; font-size: 1.25rem; color: #1F130B; margin-bottom: 6px;">
+          ${isFiltered ? 'No Photos Match Your Filter' : 'No Customer Photos in Firebase Yet'}
+        </h4>
+        <p style="font-size: 0.88rem; max-width: 460px; margin: 0 auto;">
+          ${isFiltered 
+            ? 'Try clearing the search or changing the filter pill to see more photos.' 
+            : 'Add your first customer photo using the form above to showcase it live on the storefront!'
+          }
+        </p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = photosList.map(photo => {
-    const caption = photo.caption || photo.comment || "Happy JammyRolls Customers ✨";
+  container.innerHTML = filtered.map(photo => {
+    const caption = photo.caption || photo.comment || "Happy JammyRolls Customer ✨";
     const safeCaption = caption.replace(/"/g, '&quot;');
-    const isFeat = !!photo.isFeatured;
+    const isFeat = photo.isFeatured !== false;
+    const dateFormatted = photo.createdAt 
+      ? new Date(photo.createdAt).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : "Recently added";
+
+    // Safely resolve image URL
+    const imgSrc = photo.photoUrl && photo.photoUrl.startsWith('assets/') 
+      ? '../' + photo.photoUrl 
+      : (photo.photoUrl || '');
 
     return `
-      <div class="admin-photo-card" id="admin-photo-${photo.photoId}">
-        <div class="admin-photo-thumb-wrap">
-          <img src="${photo.photoUrl && photo.photoUrl.startsWith('assets/') ? '../' + photo.photoUrl : photo.photoUrl}" alt="${safeCaption}" class="admin-photo-thumb" loading="lazy">
-          ${isFeat ? `<span class="admin-photo-badge-featured">⭐ Featured</span>` : ''}
+      <div class="admin-photo-card" data-id="${photo.photoId}">
+        <div class="admin-photo-thumb-wrap" title="Click to view full photo">
+          <img src="${imgSrc}" alt="${safeCaption}" class="admin-photo-thumb" loading="lazy" onerror="this.onerror=null;this.src='../assets/images/jammyrolls-logo.png';this.style.objectFit='contain';this.style.padding='20px';">
+          ${isFeat 
+            ? `<span class="admin-photo-badge-featured">⭐ Featured</span>` 
+            : `<span class="admin-photo-badge-hidden">☆ Hidden</span>`
+          }
+          <div class="admin-photo-zoom-hint">🔍 View Full</div>
         </div>
         <div class="admin-photo-body">
-          <p class="admin-photo-caption">${caption}</p>
+          <p class="admin-photo-caption" title="${safeCaption}">${caption}</p>
+          <div class="admin-photo-date">📅 ${dateFormatted}</div>
           <div class="admin-photo-actions">
             <button type="button" class="btn-photo-action btn-photo-toggle-featured" data-id="${photo.photoId}" title="Toggle Homepage Feature">
-              ${isFeat ? '★ Featured' : '☆ Feature on Home'}
+              ${isFeat ? '★ Featured on Home' : '☆ Feature on Home'}
             </button>
-            <button type="button" class="btn-photo-action btn-photo-delete" data-id="${photo.photoId}" title="Delete Photo">
+            <button type="button" class="btn-photo-action btn-photo-delete" data-id="${photo.photoId}" title="Delete Photo Permanently">
               🗑️ Delete
             </button>
           </div>
@@ -1210,4 +1409,54 @@ function renderAdminPhotosList() {
       </div>
     `;
   }).join("");
+}
+
+function setupAdminPhotoLightbox() {
+  const modal = document.getElementById("admin-photo-lightbox-modal");
+  const closeBtn = document.getElementById("btn-close-photo-lightbox");
+
+  window.openAdminPhotoLightbox = function(photo) {
+    if (!modal || !photo) return;
+    const imgEl = document.getElementById("admin-lightbox-img");
+    const captionEl = document.getElementById("admin-lightbox-caption");
+    const dateEl = document.getElementById("admin-lightbox-date");
+    const badgeEl = document.getElementById("admin-lightbox-badge");
+
+    const imgSrc = photo.photoUrl && photo.photoUrl.startsWith('assets/') 
+      ? '../' + photo.photoUrl 
+      : (photo.photoUrl || '');
+
+    if (imgEl) imgEl.src = imgSrc;
+    if (captionEl) captionEl.textContent = photo.caption || photo.comment || "Happy JammyRolls Customer ✨";
+    if (dateEl) {
+      dateEl.textContent = photo.createdAt 
+        ? "Added " + new Date(photo.createdAt).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : "";
+    }
+    if (badgeEl) {
+      const isFeat = photo.isFeatured !== false;
+      badgeEl.className = isFeat ? "badge badge-yellow" : "badge badge-choco";
+      badgeEl.textContent = isFeat ? "⭐ Featured on Home" : "☆ Hidden from Home";
+    }
+
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+  };
+
+  function closeLightbox() {
+    if (modal) {
+      modal.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  }
+
+  closeBtn?.addEventListener("click", closeLightbox);
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal?.classList.contains("active")) {
+      closeLightbox();
+    }
+  });
 }
