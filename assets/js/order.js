@@ -5,11 +5,13 @@ import {
 } from "./firebase-config.js";
 
 import { 
-  jammyProduct 
+  jammyProduct, 
+  jammyProducts 
 } from "./products-data.js";
 
 // State
-let liveProduct = jammyProduct;
+let liveProducts = { ...jammyProducts };
+let selectedSize = "large";
 let orderQty = 1;
 let fulfillmentType = "delivery";
 
@@ -45,17 +47,22 @@ function showToast(message, type = "info") {
 }
 
 function initOrderPage() {
-  // Read quantity from URL query (?qty=X)
+  // Read size and quantity from URL query (?size=small&qty=X)
   const urlParams = new URLSearchParams(window.location.search);
+  const paramSize = (urlParams.get("size") || "").toLowerCase();
+  if (paramSize === "small" || paramSize === "large") {
+    selectedSize = paramSize;
+  }
+
   const parsedQty = parseInt(urlParams.get("qty"));
   if (parsedQty && parsedQty > 0) {
     orderQty = parsedQty;
   }
 
-  // Subscribe to live product stock and price
-  subscribeToProduct((prod) => {
-    if (prod) {
-      liveProduct = { ...jammyProduct, ...prod };
+  // Subscribe to live products stock and price
+  subscribeToProduct((prods) => {
+    if (prods) {
+      liveProducts = prods;
       updateOrderCalculations();
     }
   });
@@ -66,8 +73,10 @@ function initOrderPage() {
 }
 
 function updateOrderCalculations() {
-  const pricePerRoll = liveProduct?.price || 15;
-  const maxStock = typeof liveProduct?.stock === "number" ? liveProduct.stock : 150;
+  const currentItem = liveProducts?.[selectedSize] || jammyProducts[selectedSize] || jammyProducts.large;
+  const defaultPrice = selectedSize === "small" ? 10 : 15;
+  const pricePerRoll = currentItem.price || defaultPrice;
+  const maxStock = typeof currentItem.stock === "number" ? currentItem.stock : 100;
 
   if (orderQty > maxStock && maxStock > 0) {
     orderQty = maxStock;
@@ -77,28 +86,55 @@ function updateOrderCalculations() {
   const deliveryFee = fulfillmentType === "delivery" ? 49 : 0;
   const grandTotal = subtotal + deliveryFee;
 
+  // Update Size Selector Cards Active State
+  document.querySelectorAll(".order-size-card").forEach(card => {
+    if (card.getAttribute("data-size") === selectedSize) {
+      card.classList.add("active");
+    } else {
+      card.classList.remove("active");
+    }
+  });
+
+  // Display prices in selector cards
+  const smallPriceEl = document.getElementById("display-price-small");
+  const largePriceEl = document.getElementById("display-price-large");
+  if (smallPriceEl) smallPriceEl.textContent = `₱${liveProducts?.small?.price || 10}`;
+  if (largePriceEl) largePriceEl.textContent = `₱${liveProducts?.large?.price || 15}`;
+
+  // Update stock hints
+  const smallHint = document.getElementById("stock-hint-small");
+  const largeHint = document.getElementById("stock-hint-large");
+  if (smallHint && liveProducts?.small) {
+    smallHint.textContent = `${liveProducts.small.stock} available`;
+  }
+  if (largeHint && liveProducts?.large) {
+    largeHint.textContent = `${liveProducts.large.stock} available`;
+  }
+
   // Update Summary Elements
+  const titleEl = document.getElementById("summary-item-title");
+  const unitDescEl = document.getElementById("summary-unit-price-desc");
   const qtyValEl = document.getElementById("summary-qty-val");
-  const unitPriceEl = document.getElementById("summary-unit-price");
+  const itemTotalEl = document.getElementById("summary-item-total");
   const subtotalEl = document.getElementById("summary-subtotal");
   const deliveryEl = document.getElementById("summary-delivery-fee");
   const totalEl = document.getElementById("summary-grand-total");
-  const itemTotalEl = document.getElementById("summary-item-total");
   const stockNoticeEl = document.getElementById("summary-stock-notice");
 
+  if (titleEl) titleEl.textContent = currentItem.name || `JammyRolls (${selectedSize.toUpperCase()})`;
+  if (unitDescEl) unitDescEl.textContent = `₱${pricePerRoll} per roll • Hot & Fresh`;
   if (qtyValEl) qtyValEl.textContent = orderQty;
-  if (unitPriceEl) unitPriceEl.textContent = `₱${pricePerRoll}`;
   if (itemTotalEl) itemTotalEl.textContent = `₱${subtotal}`;
   if (subtotalEl) subtotalEl.textContent = `₱${subtotal}`;
   if (deliveryEl) deliveryEl.textContent = `₱${deliveryFee}`;
   if (totalEl) totalEl.textContent = `₱${grandTotal}`;
 
   if (stockNoticeEl) {
-    if (liveProduct?.stock <= 0) {
-      stockNoticeEl.textContent = "Sold Out Today";
+    if (currentItem.stock <= 0) {
+      stockNoticeEl.textContent = `${selectedSize.toUpperCase()} Sold Out`;
       stockNoticeEl.style.color = "#DC2626";
     } else {
-      stockNoticeEl.textContent = `${liveProduct.stock} Available`;
+      stockNoticeEl.textContent = `${currentItem.stock} Available`;
       stockNoticeEl.style.color = "#059669";
     }
   }
@@ -115,6 +151,21 @@ function updateOrderCalculations() {
 }
 
 function setupOrderControls() {
+  // Size selection cards
+  document.querySelectorAll(".order-size-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const size = card.getAttribute("data-size");
+      if (size && (size === "small" || size === "large")) {
+        selectedSize = size;
+        const currentItem = liveProducts?.[selectedSize] || jammyProducts[selectedSize];
+        if (orderQty > (currentItem.stock || 0) && currentItem.stock > 0) {
+          orderQty = currentItem.stock;
+        }
+        updateOrderCalculations();
+      }
+    });
+  });
+
   // Quantity Minus
   document.getElementById("btn-summary-minus")?.addEventListener("click", () => {
     if (orderQty > 1) {
@@ -125,12 +176,13 @@ function setupOrderControls() {
 
   // Quantity Plus
   document.getElementById("btn-summary-plus")?.addEventListener("click", () => {
-    const maxStock = typeof liveProduct?.stock === "number" ? liveProduct.stock : 150;
+    const currentItem = liveProducts?.[selectedSize] || jammyProducts[selectedSize];
+    const maxStock = typeof currentItem?.stock === "number" ? currentItem.stock : 100;
     if (orderQty < maxStock) {
       orderQty++;
       updateOrderCalculations();
     } else {
-      showToast(`Only ${maxStock} available!`, "warning");
+      showToast(`Only ${maxStock} available for ${selectedSize.toUpperCase()}!`, "warning");
     }
   });
 
@@ -152,11 +204,13 @@ function setupFormSubmit() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const pricePerRoll = liveProduct?.price || 15;
-    const maxStock = typeof liveProduct?.stock === "number" ? liveProduct.stock : 150;
+    const currentItem = liveProducts?.[selectedSize] || jammyProducts[selectedSize] || jammyProducts.large;
+    const defaultPrice = selectedSize === "small" ? 10 : 15;
+    const pricePerRoll = currentItem.price || defaultPrice;
+    const maxStock = typeof currentItem?.stock === "number" ? currentItem.stock : 100;
 
     if (maxStock <= 0) {
-      showToast("JammyRolls are currently sold out!", "warning");
+      showToast(`JammyRolls (${selectedSize.toUpperCase()}) are currently sold out!`, "warning");
       return;
     }
 
@@ -200,8 +254,9 @@ function setupFormSubmit() {
       paymentRef,
       notes,
       items: [{
-        id: liveProduct?.id || "jammyrolls-single",
-        name: liveProduct?.name || "JammyRolls (Banana Churros Roll)",
+        id: currentItem.id || `jammyrolls-${selectedSize}`,
+        size: selectedSize,
+        name: currentItem.name || `JammyRolls (${selectedSize.toUpperCase()})`,
         price: pricePerRoll,
         quantity: orderQty,
         selectedDip: "Warm Belgian Choco Ganache",

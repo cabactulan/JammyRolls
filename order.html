@@ -163,19 +163,40 @@
 
         <!-- Right Column: Order Summary Card -->
         <div class="order-summary-card">
-          <h3 style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.25rem; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 1px dashed var(--color-border); display: flex; align-items: center; justify-content: space-between;">
+          <h3 style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.25rem; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--color-border); display: flex; align-items: center; justify-content: space-between;">
             <span>Order Summary 🧺</span>
             <span id="summary-stock-notice" style="font-size: 0.78rem; font-weight: 700; color: #059669;">In Stock</span>
           </h3>
 
-          <!-- Item Box -->
+          <!-- Size Choices (Small ₱10 vs Large ₱15) -->
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--color-choco-dark); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+              Select Size Option:
+            </div>
+            <div class="order-size-selector">
+              <div class="order-size-card" id="size-card-small" data-size="small">
+                <div class="size-check-badge">✓</div>
+                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark);">Small</div>
+                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.15rem; color: #D97706;" id="display-price-small">₱10</div>
+                <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 4px;" id="stock-hint-small">Snack size</div>
+              </div>
+              <div class="order-size-card active" id="size-card-large" data-size="large">
+                <div class="size-check-badge">✓</div>
+                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark);">Large</div>
+                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.15rem; color: #D97706;" id="display-price-large">₱15</div>
+                <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 4px;" id="stock-hint-large">Original signature</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Item Box -->
           <div style="display: flex; gap: 14px; align-items: center; background: var(--color-surface-soft); padding: 14px; border-radius: var(--radius-md); margin-bottom: 18px;">
             <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls" style="width: 54px; height: 54px; object-fit: contain; background: #FFF; border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--color-border);">
             <div style="flex: 1;">
-              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-choco-dark); line-height: 1.3;">
-                JammyRolls (Banana Churros Roll)
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-choco-dark); line-height: 1.3;" id="summary-item-title">
+                JammyRolls (Large)
               </h4>
-              <div style="font-size: 0.8rem; color: var(--color-text-muted);">
+              <div style="font-size: 0.8rem; color: var(--color-text-muted);" id="summary-unit-price-desc">
                 ₱15 per roll • Hot & Fresh
               </div>
             </div>
@@ -193,7 +214,6 @@
               <button class="qty-btn" type="button" id="btn-summary-plus">+</button>
             </div>
           </div>
-
 
           <!-- Price Calculations -->
           <div style="border-top: 1px dashed var(--color-border); padding-top: 14px; margin-bottom: 18px;">

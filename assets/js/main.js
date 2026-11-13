@@ -9,14 +9,15 @@ import {
 
 import { 
   jammyProduct,
+  jammyProducts,
   dipOptions, 
   extraToppings, 
   foundersInfo 
 } from "./products-data.js";
 
 // App State
-let liveProduct = null;
-let currentOrderQty = 1;
+let liveProducts = { ...jammyProducts };
+let heroQtys = { small: 1, large: 1 };
 
 function playSweetChime() {
   try {
@@ -135,140 +136,143 @@ function setupMobileNav() {
 }
 
 function initProductSubscriptions() {
-  subscribeToProduct((prod) => {
-    liveProduct = prod;
-    renderProductSection();
+  subscribeToProduct((prods) => {
+    if (prods) {
+      liveProducts = prods;
+      renderProductSection();
+    }
   });
 }
 
 /**
- * Render the Single Product Showcase (₱15 each)
- * Customer orders directly from here.
+ * Render the Two Product Options: Small (₱10) & Large (₱15)
  */
 function renderProductSection() {
   const container = document.getElementById("product-showcase-container");
   if (!container) return;
 
-  const prod = liveProduct || jammyProduct;
-  const prodName = prod.name || jammyProduct.name;
-  const prodTagline = prod.tagline || jammyProduct.tagline;
-  const prodDesc = prod.description || jammyProduct.description;
-  const pricePerRoll = prod.price || 15;
-  const stockCount = typeof prod.stock === "number" ? prod.stock : (jammyProduct.stock || 150);
-  const isSoldOut = !prod.isAvailable || (stockCount <= 0);
-  const isLowStock = !isSoldOut && (stockCount <= (prod.minStockAlert || 20));
-
-  let stockClass = "in-stock";
-  let stockText = `${stockCount} Available`;
-  if (isSoldOut) {
-    stockClass = "sold-out";
-    stockText = "Sold Out";
-  } else if (isLowStock) {
-    stockClass = "low-stock";
-    stockText = `Only ${stockCount} Available`;
-  }
+  const prods = [
+    { key: "small", data: liveProducts?.small || jammyProducts.small },
+    { key: "large", data: liveProducts?.large || jammyProducts.large }
+  ];
 
   container.innerHTML = `
-    <div class="product-hero-card">
-      <div class="product-hero-left">
-        <div class="product-hero-visual">
-          <div class="product-hero-glow"></div>
-          <img src="assets/images/jammyrolls-logo.png" alt="${prodName}" class="product-hero-img">
-        </div>
-      </div>
+    <div class="menu-products-grid">
+      ${prods.map(({ key, data }) => {
+        const stockCount = typeof data.stock === "number" ? data.stock : 100;
+        const isSoldOut = !data.isAvailable || (stockCount <= 0);
+        const isLowStock = !isSoldOut && (stockCount <= (data.minStockAlert || 15));
+        const price = data.price || (key === "small" ? 10 : 15);
+        const currentQty = heroQtys[key] || 1;
 
-      <div class="product-hero-right">
-        <div class="product-stock-pill ${stockClass}" id="product-stock-badge" style="position: static; display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin-bottom: 12px; font-size: 0.82rem; padding: 5px 12px;">
-          <span class="product-stock-dot"></span>
-          <span>${stockText}</span>
-        </div>
+        let stockClass = "in-stock";
+        let stockText = `${stockCount} Available`;
+        if (isSoldOut) {
+          stockClass = "sold-out";
+          stockText = "Sold Out";
+        } else if (isLowStock) {
+          stockClass = "low-stock";
+          stockText = `Only ${stockCount} Available`;
+        }
 
-        <h2 style="font-size: 2.2rem; color: var(--color-choco-dark); margin-bottom: 6px;">
-          ${prodName}
-        </h2>
-        <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;">
-          <span style="font-family: var(--font-brand); font-size: 2.2rem; font-weight: 700; color: #D97706;">
-            ₱${pricePerRoll}
-          </span>
-          <span style="font-size: 1rem; color: var(--color-text-muted); font-weight: 600;">per roll</span>
-        </div>
-
-        <p style="font-size: 1rem; color: var(--color-cinnamon); font-weight: 700; margin-bottom: 12px;">
-          ${prodTagline}
-        </p>
-        <p style="font-size: 0.95rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 24px;">
-          ${prodDesc}
-        </p>
-
-        <!-- Quick Quantity & Total Calculation -->
-        <div style="background: var(--color-surface-soft); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div>
-              <span style="font-weight: 700; color: var(--color-choco-dark);">Quantity:</span>
-              <div style="font-size: 0.8rem; color: var(--color-text-muted);">₱${pricePerRoll} per roll</div>
+        return `
+          <div class="product-showcase-card ${key === 'large' ? 'featured-card' : ''}" data-size="${key}">
+            <div class="product-showcase-visual">
+              <span class="badge ${key === 'large' ? 'badge-yellow' : 'badge-choco'}" style="position: absolute; top: 16px; left: 16px; z-index: 2;">
+                ${data.badge || (key === 'large' ? 'Bestseller 🔥' : 'Snack Size ✨')}
+              </span>
+              <div class="product-stock-pill ${stockClass}" style="position: absolute; top: 16px; right: 16px; z-index: 2;">
+                <span class="product-stock-dot"></span>
+                <span>${stockText}</span>
+              </div>
+              <img src="assets/images/jammyrolls-logo.png" alt="${data.name}">
             </div>
-            <div class="quantity-control-wrap">
-              <button class="qty-btn" id="hero-qty-minus">-</button>
-              <span class="qty-val" id="hero-qty-val">1</span>
-              <button class="qty-btn" id="hero-qty-plus">+</button>
+
+            <div class="product-showcase-body">
+              <div class="product-showcase-header">
+                <h3 class="product-showcase-title">${data.name}</h3>
+                <div class="product-showcase-price">₱${price}<span style="font-size: 0.85rem; font-weight: 500; color: var(--color-text-muted);">/pc</span></div>
+              </div>
+
+              <p style="font-size: 0.82rem; font-weight: 700; color: var(--color-cinnamon); margin-bottom: 8px;">
+                ${data.tagline || ''}
+              </p>
+
+              <p class="product-showcase-desc">
+                ${data.description || ''}
+              </p>
+
+              <div class="product-showcase-action-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <div>
+                    <span style="font-weight: 700; font-size: 0.88rem; color: var(--color-choco-dark);">Quantity:</span>
+                    <div style="font-size: 0.78rem; color: var(--color-text-muted);">₱${price} each</div>
+                  </div>
+                  <div class="quantity-control-wrap">
+                    <button class="qty-btn btn-qty-minus" data-size="${key}">-</button>
+                    <span class="qty-val" id="qty-val-${key}">${currentQty}</span>
+                    <button class="qty-btn btn-qty-plus" data-size="${key}">+</button>
+                  </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--color-border); padding-top: 10px; margin-bottom: 14px;">
+                  <span style="font-size: 0.85rem; color: var(--color-text-muted);">Item Total:</span>
+                  <span style="font-family: var(--font-brand); font-size: 1.3rem; font-weight: 700; color: var(--color-choco-dark);" id="calc-price-${key}">
+                    ₱${currentQty * price}
+                  </span>
+                </div>
+
+                <button class="btn btn-primary btn-order-size" data-size="${key}" ${isSoldOut ? 'disabled' : ''} style="width: 100%; justify-content: center; padding: 12px; font-size: 0.95rem;">
+                  ${isSoldOut ? 'Sold Out ✕' : `Order ${data.sizeLabel || key.toUpperCase()} 🔥`}
+                </button>
+              </div>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--color-border); padding-top: 10px;">
-            <span style="font-size: 0.9rem; color: var(--color-text-muted);">Total:</span>
-            <span style="font-family: var(--font-brand); font-size: 1.5rem; font-weight: 700; color: var(--color-choco-dark);" id="hero-calc-price">
-              ₱${pricePerRoll}
-            </span>
-          </div>
-        </div>
-
-        <!-- Call to Action Buttons -->
-        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-          <button class="btn btn-primary" id="btn-open-order" ${isSoldOut ? 'disabled' : ''} style="padding: 14px 36px; font-size: 1.05rem; width: 100%; max-width: 320px; justify-content: center;">
-            ${isSoldOut ? 'Sold Out ✕' : 'Order Now 🔥'}
-          </button>
-        </div>
-      </div>
+        `;
+      }).join("")}
     </div>
   `;
 
-  // Quantity controls on hero
-  let heroQty = 1;
-  const heroQtyVal = document.getElementById("hero-qty-val");
-  const heroCalcPrice = document.getElementById("hero-calc-price");
+  // Attach Quantity Listeners for each size
+  prods.forEach(({ key, data }) => {
+    const stockCount = typeof data.stock === "number" ? data.stock : 100;
+    const price = data.price || (key === "small" ? 10 : 15);
+    const qtyValEl = document.getElementById(`qty-val-${key}`);
+    const calcPriceEl = document.getElementById(`calc-price-${key}`);
 
-  function updateHeroCalc() {
-    if (heroQtyVal) heroQtyVal.textContent = heroQty;
-    if (heroCalcPrice) heroCalcPrice.textContent = `₱${heroQty * pricePerRoll}`;
-  }
-
-  document.getElementById("hero-qty-minus")?.addEventListener("click", () => {
-    if (heroQty > 1) {
-      heroQty--;
-      updateHeroCalc();
+    function updateCardCalc() {
+      if (qtyValEl) qtyValEl.textContent = heroQtys[key];
+      if (calcPriceEl) calcPriceEl.textContent = `₱${heroQtys[key] * price}`;
     }
-  });
 
-  document.getElementById("hero-qty-plus")?.addEventListener("click", () => {
-    if (heroQty < stockCount) {
-      heroQty++;
-      updateHeroCalc();
-    } else {
-      showToast(`Only ${stockCount} available!`, "warning");
-    }
-  });
+    container.querySelector(`.btn-qty-minus[data-size="${key}"]`)?.addEventListener("click", () => {
+      if ((heroQtys[key] || 1) > 1) {
+        heroQtys[key]--;
+        updateCardCalc();
+      }
+    });
 
-  // Direct Order Button navigates to Order Details page
-  document.getElementById("btn-open-order")?.addEventListener("click", () => {
-    if (isSoldOut) {
-      showToast("Sorry, JammyRolls are currently sold out!", "warning");
-      return;
-    }
-    window.location.href = `order.html?qty=${heroQty}`;
+    container.querySelector(`.btn-qty-plus[data-size="${key}"]`)?.addEventListener("click", () => {
+      if ((heroQtys[key] || 1) < stockCount) {
+        heroQtys[key] = (heroQtys[key] || 1) + 1;
+        updateCardCalc();
+      } else {
+        showToast(`Only ${stockCount} available for ${key.toUpperCase()}!`, "warning");
+      }
+    });
+
+    container.querySelector(`.btn-order-size[data-size="${key}"]`)?.addEventListener("click", () => {
+      if (!data.isAvailable || stockCount <= 0) {
+        showToast(`Sorry, ${data.name} is currently sold out!`, "warning");
+        return;
+      }
+      window.location.href = `order.html?size=${key}&qty=${heroQtys[key] || 1}`;
+    });
   });
 }
 
-export function openDirectCheckout(quantity = 1) {
-  window.location.href = `order.html?qty=${quantity}`;
+export function openDirectCheckout(quantity = 1, size = "large") {
+  window.location.href = `order.html?size=${size}&qty=${quantity}`;
 }
 
 function renderFounders() {

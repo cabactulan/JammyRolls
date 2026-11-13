@@ -269,82 +269,135 @@
         </div>
       </section>
 
-      <!-- SECTION 3: DAILY STOCK & PRICE (SINGLE PRODUCT AT 15 PESOS) -->
+      <!-- SECTION 3: DAILY STOCK & PRICE (TWO PRODUCT SIZES: SMALL & LARGE) -->
       <section class="admin-section" id="section-inventory" style="display: none;">
         <div class="panel-card" style="padding: 28px;">
           <div style="margin-bottom: 24px;">
             <h2 style="font-family: 'Fredoka', cursive; font-size: 1.5rem;">JammyRolls Stock & Price Management</h2>
             <p style="font-size: 0.88rem; color: var(--admin-text-muted);">
-              Manage the total available fresh pieces of JammyRolls (Banana Churros Roll) and product pricing.
+              Manage individual daily stock counts and pricing for both Small (₱10) and Large (₱15) sizes.
             </p>
           </div>
 
-          <!-- Product Details & Status Card -->
-          <div style="background: linear-gradient(135deg, #FFFDF8 0%, #FEF3C7 100%); border: 2px solid #FDE68A; border-radius: 16px; padding: 28px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1.3fr; gap: 30px; align-items: center;">
-            <div>
-              <span class="badge badge-choco" style="margin-bottom: 8px;">Single Flagship Product</span>
-              <h3 style="font-family: 'Fredoka', cursive; font-size: 1.8rem; color: #1F130B; margin-bottom: 6px;">
-                JammyRolls (Banana Churros Roll)
+          <!-- Dual Products Inventory Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+            
+            <!-- 1. Small Size Card -->
+            <div style="background: linear-gradient(135deg, #FFFDF8 0%, #FEF3C7 100%); border: 2px solid #FDE68A; border-radius: 16px; padding: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="badge badge-choco">Snack Size</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <input type="checkbox" id="stock-avail-small" style="width: 18px; height: 18px; accent-color: #10B981; cursor: pointer;">
+                  <label for="stock-avail-small" style="font-size: 0.82rem; font-weight: 700; cursor: pointer;">Available</label>
+                </div>
+              </div>
+
+              <h3 style="font-family: 'Fredoka', cursive; font-size: 1.5rem; color: #1F130B; margin-bottom: 4px;">
+                JammyRolls (Small)
               </h3>
-              <p style="font-size: 0.88rem; color: var(--admin-text-muted); margin-bottom: 14px;">
-                Crispy Golden Cinnamon Churro Crust • Sweet Ripe Saba Banana • Molten Chocolate Lava
+              <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin-bottom: 14px;">
+                Snack-sized banana churros roll with Belgian chocolate.
               </p>
 
-              <!-- Price Control -->
-              <div style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+              <!-- Small Price Edit -->
+              <div style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
                 <div>
-                  <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted);">Current Product Price:</span>
-                  <div style="font-family: 'Fredoka', cursive; font-size: 1.5rem; color: #D97706; font-weight: 700;" id="display-product-price">
-                    ₱15 / roll
-                  </div>
+                  <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted);">Price:</div>
+                  <div style="font-family: 'Fredoka', cursive; font-size: 1.4rem; color: #D97706; font-weight: 700;" id="display-price-small-admin">₱10 / pc</div>
                 </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 0.82rem; font-weight: 600;">Edit:</span>
+                  <input type="number" id="input-price-small" value="10" min="1" style="width: 65px; padding: 4px 6px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;">
+                  <button class="btn-status-act btn-save-price-size" data-size="small" style="background: #D97706; color: #FFF; padding: 6px 10px;">Save</button>
+                </div>
+              </div>
+
+              <!-- Small Stock Count -->
+              <div style="background: #FFF; border-radius: 12px; padding: 16px; border: 1px solid #E5E7EB;">
+                <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted); margin-bottom: 2px;">
+                  Available Stock
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;">
+                  <span style="font-family: 'Fredoka', cursive; font-size: 2.5rem; font-weight: 700; line-height: 1;" id="stock-display-small">100</span>
+                  <span style="font-size: 0.88rem; color: var(--admin-text-muted); font-weight: 600;">rolls</span>
+                </div>
+
+                <!-- Quick Adjust Small -->
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px;">
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="-10" style="padding: 4px 8px; font-size: 0.78rem;">-10</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="-5" style="padding: 4px 8px; font-size: 0.78rem;">-5</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="5" style="padding: 4px 8px; font-size: 0.78rem;">+5</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="10" style="padding: 4px 8px; font-size: 0.78rem;">+10</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="30" style="padding: 4px 8px; font-size: 0.78rem;">+30 Batch</button>
+                </div>
+
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 0.85rem; font-weight: 600;">Edit (₱):</span>
-                  <input type="number" id="input-edit-price" value="15" min="1" style="width: 70px; padding: 6px 8px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;">
-                  <button class="btn-status-act" id="btn-save-price" style="background: #D97706; color: #FFF;">Save</button>
+                  <input type="number" id="stock-input-small" style="width: 80px; padding: 6px 10px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;" min="0">
+                  <button class="btn-status-act btn-save-stock-size" data-size="small" style="background: #1F130B; color: #FFF; padding: 6px 12px;">
+                    Set Stock
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Large Size Card -->
+            <div style="background: linear-gradient(135deg, #FFFDF8 0%, #FEF3C7 100%); border: 2px solid #F59E0B; border-radius: 16px; padding: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="badge badge-yellow">Bestseller Size</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <input type="checkbox" id="stock-avail-large" style="width: 18px; height: 18px; accent-color: #10B981; cursor: pointer;">
+                  <label for="stock-avail-large" style="font-size: 0.82rem; font-weight: 700; cursor: pointer;">Available</label>
                 </div>
               </div>
 
-              <!-- Store Status Availability Toggle -->
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="checkbox" id="stock-availability-toggle" style="width: 20px; height: 20px; accent-color: #10B981; cursor: pointer;">
-                <label for="stock-availability-toggle" id="stock-availability-label" style="font-weight: 700; font-size: 0.95rem; color: #1F130B; cursor: pointer;">
-                  Store Status: Open & Frying Fresh Batches
-                </label>
+              <h3 style="font-family: 'Fredoka', cursive; font-size: 1.5rem; color: #1F130B; margin-bottom: 4px;">
+                JammyRolls (Large)
+              </h3>
+              <p style="font-size: 0.82rem; color: var(--admin-text-muted); margin-bottom: 14px;">
+                Signature full-sized banana churros roll with molten lava core.
+              </p>
+
+              <!-- Large Price Edit -->
+              <div style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted);">Price:</div>
+                  <div style="font-family: 'Fredoka', cursive; font-size: 1.4rem; color: #D97706; font-weight: 700;" id="display-price-large-admin">₱15 / pc</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 0.82rem; font-weight: 600;">Edit:</span>
+                  <input type="number" id="input-price-large" value="15" min="1" style="width: 65px; padding: 4px 6px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;">
+                  <button class="btn-status-act btn-save-price-size" data-size="large" style="background: #D97706; color: #FFF; padding: 6px 10px;">Save</button>
+                </div>
+              </div>
+
+              <!-- Large Stock Count -->
+              <div style="background: #FFF; border-radius: 12px; padding: 16px; border: 1px solid #E5E7EB;">
+                <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted); margin-bottom: 2px;">
+                  Available Stock
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;">
+                  <span style="font-family: 'Fredoka', cursive; font-size: 2.5rem; font-weight: 700; line-height: 1;" id="stock-display-large">150</span>
+                  <span style="font-size: 0.88rem; color: var(--admin-text-muted); font-weight: 600;">rolls</span>
+                </div>
+
+                <!-- Quick Adjust Large -->
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px;">
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="-10" style="padding: 4px 8px; font-size: 0.78rem;">-10</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="-5" style="padding: 4px 8px; font-size: 0.78rem;">-5</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="5" style="padding: 4px 8px; font-size: 0.78rem;">+5</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="10" style="padding: 4px 8px; font-size: 0.78rem;">+10</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="50" style="padding: 4px 8px; font-size: 0.78rem;">+50 Batch</button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <input type="number" id="stock-input-large" style="width: 80px; padding: 6px 10px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;" min="0">
+                  <button class="btn-status-act btn-save-stock-size" data-size="large" style="background: #1F130B; color: #FFF; padding: 6px 12px;">
+                    Set Stock
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Stock Count & Adjustments -->
-            <div style="background: #FFF; border-radius: 14px; padding: 22px; border: 1px solid #E5E7EB; box-shadow: var(--shadow-card);">
-              <div style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted); margin-bottom: 4px;">
-                Current Batch Available Today
-              </div>
-              <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px;">
-                <span style="font-family: 'Fredoka', cursive; font-size: 3rem; font-weight: 700; line-height: 1;" id="stock-current-display">150</span>
-                <span style="font-size: 1rem; color: var(--admin-text-muted); font-weight: 600;">rolls remaining</span>
-              </div>
-
-              <!-- Quick Increment / Decrement Buttons -->
-              <div style="font-size: 0.82rem; font-weight: 700; color: #4B5563; margin-bottom: 8px;">Quick Adjust Batch:</div>
-              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
-                <button class="btn-stock-adjust btn-batch-adjust" data-change="-20" style="width: auto; padding: 6px 12px;">-20</button>
-                <button class="btn-stock-adjust btn-batch-adjust" data-change="-10" style="width: auto; padding: 6px 12px;">-10</button>
-                <button class="btn-stock-adjust btn-batch-adjust" data-change="-5" style="width: auto; padding: 6px 12px;">-5</button>
-                <button class="btn-stock-adjust btn-batch-adjust" data-change="5" style="width: auto; padding: 6px 12px;">+5</button>
-                <button class="btn-stock-adjust btn-batch-adjust" data-change="10" style="width: auto; padding: 6px 12px;">+10</button>
-                <button class="btn-stock-adjust btn-batch-adjust" data-change="20" style="width: auto; padding: 6px 12px;">+20</button>
-                <button class="btn-stock-adjust btn-batch-adjust" data-change="50" style="width: auto; padding: 6px 12px;">+50 Fresh Batch</button>
-              </div>
-
-              <!-- Manual Stock Set Input -->
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 0.85rem; font-weight: 600;">Set Exact Count:</span>
-                <input type="number" id="stock-manual-input" style="width: 100px; padding: 8px 12px; border: 1px solid var(--admin-border); border-radius: 8px; font-weight: 700; font-size: 1rem;" min="0">
-                <button class="btn-status-act" id="btn-save-manual-stock" style="background: #1F130B; color: #FFF; padding: 8px 16px;">
-                  Update Stock
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </section>

@@ -8,7 +8,7 @@ import {
   update, 
   onValue 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { jammyProduct } from "./products-data.js";
+import { jammyProduct, jammyProducts } from "./products-data.js";
 
 // Cloud Store Configuration
 const cloudConfig = {
@@ -26,7 +26,7 @@ let db = null;
 let liveSyncReady = false;
 
 const CACHE_KEYS = {
-  PRODUCT: "jammyrolls_product_v3",
+  PRODUCT: "jammyrolls_products_v4",
   ORDERS: "jammyrolls_orders_v3",
   REVIEWS: "jammyrolls_reviews_v3",
   CUSTOMER_PHOTOS: "jammyrolls_customer_photos_rtdb"
@@ -90,24 +90,51 @@ window.addEventListener("storage", (e) => {
   }
 });
 
-// Seed product only if completely uninitialized (never overwrite admin-configured price)
-const cachedProd = getStored(CACHE_KEYS.PRODUCT, null);
-if (!cachedProd) {
-  setStored(CACHE_KEYS.PRODUCT, jammyProduct);
+// Helper to merge stored/cloud product map with defaults
+function normalizeProducts(storedMap) {
+  if (!storedMap || typeof storedMap !== "object") {
+    return { ...jammyProducts };
+  }
+  // Check if legacy single product format
+  if (storedMap.id && !storedMap.small && !storedMap.large) {
+    return {
+      small: { ...jammyProducts.small },
+      large: { ...jammyProducts.large, ...storedMap }
+    };
+  }
+  return {
+    small: { ...jammyProducts.small, ...(storedMap.small || {}) },
+    large: { ...jammyProducts.large, ...(storedMap.large || {}) }
+  };
 }
 
-// On startup, pull product info from cloud if available (read-only, never auto-write)
+// Seed products map
+const cachedProd = getStored(CACHE_KEYS.PRODUCT, null);
+if (!cachedProd) {
+  setStored(CACHE_KEYS.PRODUCT, jammyProducts);
+}
+
+// On startup, pull product info from cloud if available
 async function initCloudSync() {
   if (!liveSyncReady || !db) return;
   try {
-    const prodRef = ref(db, "store/product");
-    const snap = await get(prodRef);
+    const prodsRef = ref(db, "store/products");
+    const snap = await get(prodsRef);
     if (snap.exists()) {
-      const cloudProd = snap.val();
-      if (cloudProd) {
-        const mergedProd = { ...jammyProduct, ...cloudProd };
-        setStored(CACHE_KEYS.PRODUCT, mergedProd);
-        prodSubscribers.forEach(cb => cb(mergedProd));
+      const cloudProds = snap.val();
+      if (cloudProds) {
+        const mergedProds = normalizeProducts(cloudProds);
+        setStored(CACHE_KEYS.PRODUCT, mergedProds);
+        prodSubscribers.forEach(cb => cb(mergedProds));
+      }
+    } else {
+      // Check legacy single product
+      const legacyRef = ref(db, "store/product");
+      const legSnap = await get(legacyRef);
+      if (legSnap.exists() && legSnap.val()) {
+        const merged = normalizeProducts(legSnap.val());
+        setStored(CACHE_KEYS.PRODUCT, merged);
+        prodSubscribers.forEach(cb => cb(merged));
       }
     }
   } catch (err) {
@@ -117,33 +144,34 @@ async function initCloudSync() {
 initCloudSync();
 
 /**
- * Subscribe to Product & Stock updates
+ * Subscribe to Products (Small & Large) & Stock updates
+ * Delivers { small: {...}, large: {...} }
  */
 export function subscribeToProduct(callback) {
   prodSubscribers.add(callback);
-  const rawCached = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
-  const cached = { ...jammyProduct, ...rawCached };
+  const rawCached = getStored(CACHE_KEYS.PRODUCT, jammyProducts);
+  const cached = normalizeProducts(rawCached);
   callback(cached);
 
   if (liveSyncReady && db) {
     try {
-      const prodRef = ref(db, "store/product");
-      onValue(prodRef, (snapshot) => {
+      const prodsRef = ref(db, "store/products");
+      onValue(prodsRef, (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.val() || {};
-          const mergedProd = { ...jammyProduct, ...data };
-          setStored(CACHE_KEYS.PRODUCT, mergedProd);
-          prodSubscribers.forEach(cb => cb(mergedProd));
+          const merged = normalizeProducts(data);
+          setStored(CACHE_KEYS.PRODUCT, merged);
+          prodSubscribers.forEach(cb => cb(merged));
         }
       }, (err) => {
-        console.warn("Product sync notice:", err);
+        console.warn("Products sync notice:", err);
       });
     } catch (e) {}
   }
 
   window.addEventListener("store-sync-update", (e) => {
     if (e.detail.key === CACHE_KEYS.PRODUCT) {
-      callback(e.detail.val);
+      callback(normalizeProducts(e.detail.val));
     }
   });
 }
@@ -232,26 +260,37 @@ export async function createOrder(orderData) {
   orders[orderId] = finalOrder;
   setStored(CACHE_KEYS.ORDERS, orders);
 
-  // 2. Reduce product stock
-  const currentProd = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
-  const totalRollsOrdered = orderData.items.reduce((s, i) => s + (i.quantity || 1), 0);
-  const nextStock = Math.max(0, (currentProd.stock || 0) - totalRollsOrdered);
-  currentProd.stock = nextStock;
-  currentProd.isAvailable = nextStock > 0;
-  setStored(CACHE_KEYS.PRODUCT, currentProd);
+  // 2. Reduce independent product stocks for each ordered size
+  const rawCurrent = getStored(CACHE_KEYS.PRODUCT, jammyProducts);
+  const currentProds = normalizeProducts(rawCurrent);
+
+  const updatesCloud = {};
+
+  (orderData.items || []).forEach(item => {
+    const size = (item.size || (item.name && item.name.toLowerCase().includes("small") ? "small" : "large")).toLowerCase();
+    const qty = parseInt(item.quantity) || 1;
+    if (currentProds[size]) {
+      const nextStock = Math.max(0, (currentProds[size].stock || 0) - qty);
+      currentProds[size].stock = nextStock;
+      currentProds[size].isAvailable = nextStock > 0;
+      updatesCloud[`store/products/${size}/stock`] = nextStock;
+      updatesCloud[`store/products/${size}/isAvailable`] = nextStock > 0;
+    }
+  });
+
+  setStored(CACHE_KEYS.PRODUCT, currentProds);
 
   // Notify active listeners
   ordersSubscribers.forEach(cb => cb(orders));
-  prodSubscribers.forEach(cb => cb(currentProd));
+  prodSubscribers.forEach(cb => cb(currentProds));
 
   // 3. Sync to Cloud Database
   if (liveSyncReady && db) {
     try {
       await set(ref(db, `orders/${orderId}`), finalOrder);
-      await update(ref(db, "store/product"), {
-        stock: nextStock,
-        isAvailable: nextStock > 0
-      });
+      if (Object.keys(updatesCloud).length > 0) {
+        await update(ref(db), updatesCloud);
+      }
     } catch (err) {
       console.warn("Cloud order write notice:", err);
     }
@@ -311,21 +350,24 @@ export async function deleteOrder(orderId) {
 }
 
 /**
- * Update Inventory Stock (Admin action)
+ * Update Inventory Stock for a specific product size (small / large)
  */
-export async function updateInventoryStock(newStockCount, isAvailable = true) {
+export async function updateInventoryStock(newStockCount, isAvailable = true, sizeKey = "large") {
   const stockNum = Math.max(0, parseInt(newStockCount) || 0);
   const available = isAvailable && stockNum > 0;
+  const size = (sizeKey || "large").toLowerCase();
 
-  const currentProd = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
-  currentProd.stock = stockNum;
-  currentProd.isAvailable = available;
-  setStored(CACHE_KEYS.PRODUCT, currentProd);
-  prodSubscribers.forEach(cb => cb(currentProd));
+  const currentProds = normalizeProducts(getStored(CACHE_KEYS.PRODUCT, jammyProducts));
+  if (currentProds[size]) {
+    currentProds[size].stock = stockNum;
+    currentProds[size].isAvailable = available;
+  }
+  setStored(CACHE_KEYS.PRODUCT, currentProds);
+  prodSubscribers.forEach(cb => cb(currentProds));
 
   if (liveSyncReady && db) {
     try {
-      await update(ref(db, "store/product"), {
+      await update(ref(db, `store/products/${size}`), {
         stock: stockNum,
         isAvailable: available
       });
@@ -336,18 +378,23 @@ export async function updateInventoryStock(newStockCount, isAvailable = true) {
 }
 
 /**
- * Update Product Price (Admin action)
+ * Update Product Price for a specific product size (small / large)
  */
-export async function updateProductPrice(newPrice) {
-  const priceNum = Math.max(1, parseFloat(newPrice) || 15);
-  const currentProd = getStored(CACHE_KEYS.PRODUCT, jammyProduct);
-  currentProd.price = priceNum;
-  setStored(CACHE_KEYS.PRODUCT, currentProd);
-  prodSubscribers.forEach(cb => cb(currentProd));
+export async function updateProductPrice(newPrice, sizeKey = "large") {
+  const size = (sizeKey || "large").toLowerCase();
+  const defaultPrice = size === "small" ? 10 : 15;
+  const priceNum = Math.max(1, parseFloat(newPrice) || defaultPrice);
+
+  const currentProds = normalizeProducts(getStored(CACHE_KEYS.PRODUCT, jammyProducts));
+  if (currentProds[size]) {
+    currentProds[size].price = priceNum;
+  }
+  setStored(CACHE_KEYS.PRODUCT, currentProds);
+  prodSubscribers.forEach(cb => cb(currentProds));
 
   if (liveSyncReady && db) {
     try {
-      await update(ref(db, "store/product"), {
+      await update(ref(db, `store/products/${size}`), {
         price: priceNum
       });
     } catch (e) {

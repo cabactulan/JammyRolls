@@ -1,21 +1,43 @@
 // JammyRolls Product Catalog & Configuration
-// Single Flagship Product: JammyRolls (Banana Churros Roll) at 15 Pesos each
+// Two Product Sizes: Small (₱10) & Large (₱15)
 
-export const jammyProduct = {
-  id: "jammyrolls-single",
-  name: "JammyRolls (Banana Churros Roll)",
-  tagline: "Crispy Golden Churro Crust • Sweet Saba Banana • Molten Chocolate Lava",
-  badge: "Original Recipe ✨",
-  description: "Freshly deep-fried artisan cinnamon-sugar churros pastry rolled with sweet ripe Saba banana and bursting with rich, molten chocolate lava. Handcrafted fresh on every order!",
-  price: 15, // Exactly 15 Pesos
-  stock: 150, // Available pieces in today's fresh batch
-  minStockAlert: 20,
-  rating: 4.98,
-  reviewsCount: 1520,
-  isAvailable: true,
-  imageBg: "linear-gradient(135deg, #3E1F11 0%, #783C1C 50%, #2B150A 100%)",
-  flavorCore: "Belgian Dark Chocolate & Saba Banana"
+export const jammyProducts = {
+  "small": {
+    id: "jammyrolls-small",
+    sizeKey: "small",
+    name: "JammyRolls (Small)",
+    sizeLabel: "Small",
+    tagline: "Crispy Golden Churro Crust • Sweet Saba Banana • Molten Chocolate Lava",
+    badge: "Snack Size ✨",
+    description: "Crispy cinnamon-sugar churros crust rolled with ripe Saba banana and melted Belgian chocolate. Perfect light snack!",
+    price: 10,
+    stock: 100,
+    minStockAlert: 15,
+    rating: 4.98,
+    reviewsCount: 840,
+    isAvailable: true,
+    flavorCore: "Belgian Dark Chocolate & Saba Banana"
+  },
+  "large": {
+    id: "jammyrolls-large",
+    sizeKey: "large",
+    name: "JammyRolls (Large)",
+    sizeLabel: "Large",
+    tagline: "Extra Crisp • Extra Banana & Belgian Chocolate Lava Core",
+    badge: "Bestseller 🔥",
+    description: "Our signature full-sized artisan banana churros roll bursting with rich, molten Belgian chocolate lava. Handcrafted fresh to order!",
+    price: 15,
+    stock: 150,
+    minStockAlert: 20,
+    rating: 4.99,
+    reviewsCount: 1520,
+    isAvailable: true,
+    flavorCore: "Belgian Dark Chocolate & Saba Banana"
+  }
 };
+
+// Backward-compatible single default product referencing Large
+export const jammyProduct = jammyProducts["large"];
 
 // Gourmet Dipping Sauces (Optional complementary or add-on choices)
 export const dipOptions = [

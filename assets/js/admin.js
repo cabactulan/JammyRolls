@@ -20,7 +20,7 @@ import { foundersInfo } from "./products-data.js";
 let allOrders = {};
 let allReviews = {};
 let allCustomerPhotosAdmin = {};
-let liveProduct = null;
+let liveProducts = null;
 let currentOrderFilter = "all";
 let currentReviewFilter = "all";
 let currentPhotoFilter = "all";
@@ -269,9 +269,10 @@ function updateAnalytics() {
   if (totalOrdersEl) totalOrdersEl.textContent = ordersList.length;
 
   const stockBadge = document.getElementById("kpi-stock-status-badge");
-  if (stockBadge && liveProduct) {
-    const isLow = (liveProduct.stock || 0) <= (liveProduct.minStockAlert || 20);
-    stockBadge.textContent = `${liveProduct.stock} rolls in batch`;
+  if (stockBadge && liveProducts) {
+    const totalStock = (liveProducts.small?.stock || 0) + (liveProducts.large?.stock || 0);
+    const isLow = (liveProducts.small?.stock || 0) <= 15 || (liveProducts.large?.stock || 0) <= 20;
+    stockBadge.textContent = `${totalStock} rolls total (S: ${liveProducts.small?.stock || 0}, L: ${liveProducts.large?.stock || 0})`;
     stockBadge.style.color = isLow ? "var(--color-danger)" : "var(--color-success)";
   }
 
@@ -317,7 +318,7 @@ function renderOrdersTable() {
       ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
       : '--:--';
 
-    const itemsSummary = (order.items || []).map(i => `${i.quantity}x JammyRolls`).join(", ");
+    const itemsSummary = (order.items || []).map(i => `${i.quantity}x ${i.name || 'JammyRolls'}`).join(", ");
 
     return `
       <tr data-order-id="${order.orderId}">
@@ -502,7 +503,7 @@ function openOrderTicketModal(order) {
         ${order.items.map(item => `
           <div class="receipt-item-row">
             <div style="flex: 1;">
-              <div class="receipt-item-name">${item.name || 'JammyRolls'} (₱${item.price || liveProduct?.price || 15}/pc)</div>
+              <div class="receipt-item-name">${item.name || 'JammyRolls'} (₱${item.price || (item.name && item.name.includes('Small') ? 10 : 15)}/pc)</div>
               <div class="receipt-item-meta">
                 ${item.selectedDip ? `• Dip: ${item.selectedDip}` : ''}
                 ${item.selectedToppings?.length ? `• ${item.selectedToppings.join(', ')}` : ''}
@@ -622,72 +623,80 @@ function openOrderTicketModal(order) {
 }
 
 function renderStockManagement() {
-  if (!liveProduct) return;
+  if (!liveProducts) return;
 
-  const currentCountEl = document.getElementById("stock-current-display");
-  const stockInputEl = document.getElementById("stock-manual-input");
-  const availToggle = document.getElementById("stock-availability-toggle");
-  const availLabel = document.getElementById("stock-availability-label");
-  const displayPriceEl = document.getElementById("display-product-price");
-  const inputEditPrice = document.getElementById("input-edit-price");
+  const sizes = ["small", "large"];
+  sizes.forEach(size => {
+    const data = liveProducts[size];
+    if (!data) return;
 
-  if (currentCountEl) {
-    currentCountEl.textContent = liveProduct.stock;
-    currentCountEl.style.color = (liveProduct.stock <= (liveProduct.minStockAlert || 20)) ? "var(--color-danger)" : "#1F130B";
-  }
+    const stockDisplay = document.getElementById(`stock-display-${size}`);
+    const stockInput = document.getElementById(`stock-input-${size}`);
+    const availToggle = document.getElementById(`stock-avail-${size}`);
+    const priceDisplay = document.getElementById(`display-price-${size}-admin`);
+    const priceInput = document.getElementById(`input-price-${size}`);
 
-  if (stockInputEl) stockInputEl.value = liveProduct.stock;
+    if (stockDisplay) {
+      stockDisplay.textContent = data.stock;
+      stockDisplay.style.color = (data.stock <= (data.minStockAlert || 15)) ? "var(--color-danger)" : "#1F130B";
+    }
 
-  if (displayPriceEl) displayPriceEl.textContent = `₱${liveProduct.price || 15} / roll`;
-  if (inputEditPrice) inputEditPrice.value = liveProduct.price || 15;
-
-  if (availToggle && availLabel) {
-    availToggle.checked = liveProduct.isAvailable && liveProduct.stock > 0;
-    availLabel.textContent = liveProduct.isAvailable && liveProduct.stock > 0 
-      ? "Store Status: Open & Frying Fresh Batches" 
-      : "Store Status: Sold Out for Today";
-  }
+    if (stockInput) stockInput.value = data.stock;
+    if (priceDisplay) priceDisplay.textContent = `₱${data.price} / pc`;
+    if (priceInput) priceInput.value = data.price;
+    if (availToggle) availToggle.checked = data.isAvailable && data.stock > 0;
+  });
 }
 
 function setupAdminControls() {
-  // Quick Stock Adjustments
-  document.querySelectorAll(".btn-batch-adjust").forEach(btn => {
+  // Quick Stock Adjustments for each size
+  document.querySelectorAll(".btn-batch-adjust-size").forEach(btn => {
     btn.addEventListener("click", () => {
+      const size = btn.getAttribute("data-size");
       const change = parseInt(btn.getAttribute("data-change"));
-      const current = liveProduct?.stock || 0;
+      const current = liveProducts?.[size]?.stock || 0;
       const nextStock = Math.max(0, current + change);
-      updateInventoryStock(nextStock, nextStock > 0);
-      showAdminNotification(`Stock adjusted to ${nextStock} rolls.`);
+      updateInventoryStock(nextStock, nextStock > 0, size);
+      showAdminNotification(`${size.toUpperCase()} stock adjusted to ${nextStock} rolls.`);
     });
   });
 
-  // Manual stock update
-  document.getElementById("btn-save-manual-stock")?.addEventListener("click", () => {
-    const input = document.getElementById("stock-manual-input");
-    if (input) {
-      const newStock = Math.max(0, parseInt(input.value) || 0);
-      updateInventoryStock(newStock, newStock > 0);
-      showAdminNotification(`Stock set to ${newStock} rolls.`);
-    }
+  // Manual stock update for each size
+  document.querySelectorAll(".btn-save-stock-size").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const size = btn.getAttribute("data-size");
+      const input = document.getElementById(`stock-input-${size}`);
+      if (input) {
+        const newStock = Math.max(0, parseInt(input.value) || 0);
+        updateInventoryStock(newStock, newStock > 0, size);
+        showAdminNotification(`${size.toUpperCase()} stock set to ${newStock} rolls.`);
+      }
+    });
   });
 
-  // Save product price (₱15)
-  document.getElementById("btn-save-price")?.addEventListener("click", () => {
-    const input = document.getElementById("input-edit-price");
-    if (input) {
-      const newPrice = Math.max(1, parseFloat(input.value) || 15);
-      updateProductPrice(newPrice);
-      showAdminNotification(`Product price updated to ₱${newPrice}!`);
-    }
+  // Save product price for each size
+  document.querySelectorAll(".btn-save-price-size").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const size = btn.getAttribute("data-size");
+      const input = document.getElementById(`input-price-${size}`);
+      if (input) {
+        const defaultPrice = size === "small" ? 10 : 15;
+        const newPrice = Math.max(1, parseFloat(input.value) || defaultPrice);
+        updateProductPrice(newPrice, size);
+        showAdminNotification(`${size.toUpperCase()} price updated to ₱${newPrice}!`);
+      }
+    });
   });
 
-  // Availability Switch
-  document.getElementById("stock-availability-toggle")?.addEventListener("change", (e) => {
-    const isAvail = e.target.checked;
-    const current = liveProduct?.stock || 0;
-    const newStock = isAvail && current <= 0 ? 50 : current;
-    updateInventoryStock(newStock, isAvail);
-    showAdminNotification(isAvail ? "Store opened: taking orders!" : "Store marked as Sold Out.");
+  // Availability Switch for each size
+  ["small", "large"].forEach(size => {
+    document.getElementById(`stock-avail-${size}`)?.addEventListener("change", (e) => {
+      const isAvail = e.target.checked;
+      const current = liveProducts?.[size]?.stock || 0;
+      const newStock = isAvail && current <= 0 ? 50 : current;
+      updateInventoryStock(newStock, isAvail, size);
+      showAdminNotification(isAvail ? `${size.toUpperCase()} marked as available.` : `${size.toUpperCase()} marked as Sold Out.`);
+    });
   });
 
   // Live Clock
