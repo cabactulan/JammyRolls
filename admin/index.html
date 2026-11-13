@@ -280,7 +280,7 @@
           </div>
 
           <!-- Dual Products Inventory Grid -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+          <div class="inventory-dual-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             
             <!-- 1. Small Size Card -->
             <div style="background: linear-gradient(135deg, #FFFDF8 0%, #FEF3C7 100%); border: 2px solid #FDE68A; border-radius: 16px; padding: 24px;">
@@ -300,7 +300,7 @@
               </p>
 
               <!-- Small Price Edit -->
-              <div style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+              <div class="inventory-price-edit-row" style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
                 <div>
                   <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted);">Price:</div>
                   <div style="font-family: 'Fredoka', cursive; font-size: 1.4rem; color: #D97706; font-weight: 700;" id="display-price-small-admin">₱10 / pc</div>
@@ -323,15 +323,15 @@
                 </div>
 
                 <!-- Quick Adjust Small -->
-                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px;">
+                <div class="inventory-quick-adjust-row" style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px;">
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="-10" style="padding: 4px 8px; font-size: 0.78rem;">-10</button>
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="-5" style="padding: 4px 8px; font-size: 0.78rem;">-5</button>
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="5" style="padding: 4px 8px; font-size: 0.78rem;">+5</button>
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="10" style="padding: 4px 8px; font-size: 0.78rem;">+10</button>
-                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="30" style="padding: 4px 8px; font-size: 0.78rem;">+30 Batch</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="small" data-change="30" style="padding: 4px 8px; font-size: 0.78rem;">+30</button>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="inventory-set-stock-row" style="display: flex; align-items: center; gap: 8px;">
                   <input type="number" id="stock-input-small" style="width: 80px; padding: 6px 10px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;" min="0">
                   <button class="btn-status-act btn-save-stock-size" data-size="small" style="background: #1F130B; color: #FFF; padding: 6px 12px;">
                     Set Stock
@@ -358,7 +358,7 @@
               </p>
 
               <!-- Large Price Edit -->
-              <div style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+              <div class="inventory-price-edit-row" style="background: #FFF; border: 1px solid var(--admin-border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
                 <div>
                   <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--admin-text-muted);">Price:</div>
                   <div style="font-family: 'Fredoka', cursive; font-size: 1.4rem; color: #D97706; font-weight: 700;" id="display-price-large-admin">₱15 / pc</div>
@@ -381,15 +381,15 @@
                 </div>
 
                 <!-- Quick Adjust Large -->
-                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px;">
+                <div class="inventory-quick-adjust-row" style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px;">
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="-10" style="padding: 4px 8px; font-size: 0.78rem;">-10</button>
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="-5" style="padding: 4px 8px; font-size: 0.78rem;">-5</button>
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="5" style="padding: 4px 8px; font-size: 0.78rem;">+5</button>
                   <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="10" style="padding: 4px 8px; font-size: 0.78rem;">+10</button>
-                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="50" style="padding: 4px 8px; font-size: 0.78rem;">+50 Batch</button>
+                  <button class="btn-stock-adjust btn-batch-adjust-size" data-size="large" data-change="50" style="padding: 4px 8px; font-size: 0.78rem;">+50</button>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="inventory-set-stock-row" style="display: flex; align-items: center; gap: 8px;">
                   <input type="number" id="stock-input-large" style="width: 80px; padding: 6px 10px; border: 1px solid var(--admin-border); border-radius: 6px; font-weight: 700;" min="0">
                   <button class="btn-status-act btn-save-stock-size" data-size="large" style="background: #1F130B; color: #FFF; padding: 6px 12px;">
                     Set Stock

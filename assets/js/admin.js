@@ -322,15 +322,15 @@ function renderOrdersTable() {
 
     return `
       <tr data-order-id="${order.orderId}">
-        <td>
+        <td data-label="Order #">
           <span class="order-id-badge">#${order.orderId}</span>
           <div style="font-size: 0.75rem; color: var(--admin-text-muted);">${dateFormatted}</div>
         </td>
-        <td>
+        <td data-label="Customer">
           <div class="order-customer-name">${order.customerName}</div>
           <div class="order-customer-phone">📞 ${order.phone}</div>
         </td>
-        <td>
+        <td data-label="Fulfillment">
           <span class="badge ${order.fulfillment === 'delivery' ? 'badge-yellow' : 'badge-choco'}" style="font-size: 0.72rem;">
             ${order.fulfillment === 'delivery' ? '🛵 Delivery' : '🛍️ Pickup'}
           </span>
@@ -338,21 +338,21 @@ function renderOrdersTable() {
             ${order.fulfillment === 'delivery' ? order.address : 'Store Counter'}
           </div>
         </td>
-        <td>
+        <td data-label="Items">
           <div style="font-size: 0.85rem; font-weight: 500; max-width: 220px;" title="${itemsSummary}">
             ${itemsSummary}
           </div>
         </td>
-        <td>
+        <td data-label="Total">
           <div style="font-weight: 700; color: #1F130B;">₱${order.total}</div>
           <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${order.paymentMethod}</div>
         </td>
-        <td>
+        <td data-label="Status">
           <span class="order-status-badge badge-${order.status}">
             ● ${order.status}
           </span>
         </td>
-        <td>
+        <td data-label="Actions">
           <div class="order-action-btns">
             ${renderStatusButtons(order)}
             <button class="btn-status-act btn-view-order" data-id="${order.orderId}" title="View Order Receipt">
@@ -997,25 +997,25 @@ function renderReviewsTable() {
 
     return `
       <tr data-review-id="${r.reviewId}">
-        <td>
+        <td data-label="Date">
           <div style="font-size: 0.82rem; font-weight: 600; color: #1F130B;">${formattedDate}</div>
           <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${r.reviewId}</div>
         </td>
-        <td>
+        <td data-label="Customer">
           <div style="font-weight: 700; color: #1F130B;">${r.customerName}</div>
         </td>
-        <td>
+        <td data-label="Rating">
           <div style="display: inline-flex; align-items: center; gap: 1px; font-size: 1.2rem; letter-spacing: 2px; line-height: 1;">
             <span style="color: #F59E0B;">${starGold}</span><span style="color: #D1D5DB;">${starEmpty}</span>
           </div>
           <div style="font-size: 0.72rem; color: var(--admin-text-muted); margin-top: 3px;">${ratingNum} out of 5</div>
         </td>
-        <td>
+        <td data-label="Feedback">
           <div style="font-size: 0.88rem; color: #374151; max-width: 480px; line-height: 1.5;">
             "${r.comment}"
           </div>
         </td>
-        <td style="text-align: right;">
+        <td data-label="Actions" style="text-align: right;">
           <button class="btn-status-act btn-delete-review" data-id="${r.reviewId}" style="color: #991B1B; background: #FEE2E2; border-color: #F87171; padding: 6px 12px; font-size: 0.82rem;">
             Delete 🗑️
           </button>

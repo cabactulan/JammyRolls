@@ -1762,3 +1762,386 @@ body {
     height: 140px;
   }
 }
+
+/* ==========================================================================
+   Comprehensive Mobile Responsiveness Overhaul (Admin Panel)
+   ========================================================================== */
+
+/* ── Prevent horizontal overflow & ensure clean touch scrolling ── */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Bottom Navigation - Fixed Bottom Bar on Mobile */
+  .admin-bottom-nav {
+    display: block !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 64px !important;
+    background: linear-gradient(180deg, #241208 0%, #170A04 100%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
+    z-index: 1000 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  }
+
+  .admin-bottom-nav-inner {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    height: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .admin-bnav-btn {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: 6px 2px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    font-size: 0.68rem !important;
+    position: relative !important;
+    background: transparent !important;
+    border: none !important;
+    color: #9CA3AF !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .admin-bnav-btn.active {
+    color: #FBBF24 !important;
+  }
+
+  .admin-bnav-btn .bnav-icon {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  /* Admin Main Container Mobile Spacing */
+  .admin-main {
+    margin-left: 0 !important;
+    padding: 14px 12px 80px !important; /* extra bottom padding for fixed nav */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Topbar Mobile Layout */
+  .admin-topbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .topbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none !important;
+  }
+
+  .topbar-actions::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .topbar-actions .btn-topbar-act,
+  .topbar-actions button {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+    min-height: 38px !important;
+  }
+
+  /* KPI Metrics Cards Grid */
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .metric-card {
+    padding: 14px 12px !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .metric-val {
+    font-size: 1.4rem !important;
+    word-break: break-word !important;
+  }
+
+  .metric-label {
+    font-size: 0.75rem !important;
+  }
+
+  /* Panel Cards Padding */
+  .panel-card {
+    padding: 18px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Orders & Feedback Tables Card View */
+  .orders-table-wrapper {
+    overflow-x: visible !important;
+  }
+
+  .admin-table thead {
+    display: none !important;
+  }
+
+  .admin-table, 
+  .admin-table tbody, 
+  .admin-table tr, 
+  .admin-table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .admin-table tbody tr {
+    border: 1px solid var(--admin-border) !important;
+    border-radius: 12px !important;
+    margin-bottom: 14px !important;
+    background: #FFF !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+    overflow: hidden !important;
+  }
+
+  .admin-table td {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #F3F4F6 !important;
+    font-size: 0.85rem !important;
+    gap: 12px !important;
+    min-height: auto !important;
+  }
+
+  .admin-table td:last-child {
+    border-bottom: none !important;
+    background: #FAF8F5 !important;
+    padding: 12px 14px !important;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label) !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    color: var(--admin-text-muted) !important;
+    letter-spacing: 0.5px !important;
+    min-width: 85px !important;
+    max-width: 100px !important;
+    flex-shrink: 0 !important;
+    padding-top: 2px !important;
+  }
+
+  .admin-table td:not([data-label])::before,
+  .admin-table td[data-label=""]::before {
+    display: none !important;
+  }
+
+  .order-action-btns {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .order-action-btns .btn-status-act {
+    flex: 1 1 auto !important;
+    min-height: 40px !important;
+    font-size: 0.8rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Dual Inventory Section (Small + Large) */
+  .inventory-dual-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .inventory-price-edit-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .inventory-price-edit-row > div:last-child {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .inventory-quick-adjust-row {
+    display: flex !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .inventory-quick-adjust-row button {
+    flex: 1 1 calc(20% - 6px) !important;
+    min-width: 44px !important;
+    min-height: 38px !important;
+    padding: 6px 4px !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .inventory-set-stock-row {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .inventory-set-stock-row input {
+    flex: 1 !important;
+    min-width: 70px !important;
+    height: 40px !important;
+    font-size: 1rem !important;
+  }
+
+  .inventory-set-stock-row button {
+    flex: 1 !important;
+    min-height: 40px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Admin Modals - Bottom Sheet on Mobile */
+  .admin-modal-backdrop {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .admin-modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .admin-modal-body {
+    max-height: calc(92vh - 70px) !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .receipt-container {
+    max-width: 100% !important;
+    padding: 16px 12px !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .receipt-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .receipt-actions button,
+  .receipt-actions a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* ── 480px and below (Smartphones) ── */
+@media (max-width: 480px) {
+  .admin-main {
+    padding: 10px 8px 74px !important;
+  }
+
+  .admin-bottom-nav {
+    height: 58px !important;
+  }
+
+  .admin-bnav-btn {
+    font-size: 0.6rem !important;
+    gap: 2px !important;
+  }
+
+  .admin-bnav-btn .bnav-icon {
+    font-size: 1.15rem !important;
+  }
+
+  .admin-bnav-badge {
+    top: 2px !important;
+    right: 4px !important;
+    font-size: 0.58rem !important;
+    padding: 1px 4px !important;
+    min-width: 14px !important;
+    height: 14px !important;
+  }
+
+  .admin-table td::before {
+    min-width: 75px !important;
+    max-width: 85px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .admin-founders-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  .admin-founder-card {
+    padding: 14px !important;
+  }
+
+  .filter-pills-row,
+  .order-filter-pills {
+    padding-bottom: 6px !important;
+  }
+
+  .filter-pill,
+  .order-filter-pill {
+    padding: 6px 12px !important;
+    font-size: 0.78rem !important;
+  }
+}
+
+/* ── 360px and below (Small Phones: iPhone SE, Galaxy Fold) ── */
+@media (max-width: 360px) {
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .admin-bnav-btn span:not(.bnav-icon):not(.admin-bnav-badge) {
+    display: none !important; /* Icon-only on very tight screens */
+  }
+
+  .admin-bnav-btn .bnav-icon {
+    font-size: 1.35rem !important;
+  }
+
+  .inventory-quick-adjust-row button {
+    flex: 1 1 calc(33.333% - 6px) !important;
+  }
+}
