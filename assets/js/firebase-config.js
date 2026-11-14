@@ -486,17 +486,23 @@ export async function deleteReview(reviewId) {
 
 /**
  * Customer Photos Catalog (Synchronized with Firebase Realtime Database)
- * No hardcoded pictures: the cloud database node `customerPhotos` is the sole source of truth.
+ * Cloud database node `customerPhotos` is the sole source of truth (no hardcoded images).
  */
 export const DEFAULT_CUSTOMER_PHOTOS = {};
 
 /**
  * Subscribe to Customer Photos (Live Feed from Firebase Realtime Database)
  */
+export function normalizePhotoUrl(url) {
+  if (!url) return "assets/images/jammyrolls-logo.png";
+  if (url.startsWith("data:")) return url;
+  return url.replace(/ /g, "%20");
+}
+
 export function subscribeToCustomerPhotos(callback) {
   photosSubscribers.add(callback);
   
-  // Deliver current cached photos immediately (defaults to empty object, NOT hardcoded photos)
+  // Deliver current cached photos from Firebase RTDB (or empty object if none cached yet)
   const cachedPhotos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
   callback(cachedPhotos);
 
@@ -504,7 +510,6 @@ export function subscribeToCustomerPhotos(callback) {
     try {
       const photosRef = ref(db, "customerPhotos");
       onValue(photosRef, (snapshot) => {
-        // Firebase RTDB is the single source of truth
         const cloudPhotos = snapshot.exists() ? (snapshot.val() || {}) : {};
         setStored(CACHE_KEYS.CUSTOMER_PHOTOS, cloudPhotos);
         photosSubscribers.forEach(cb => cb(cloudPhotos));
@@ -604,4 +609,188 @@ export async function toggleCustomerPhotoFeatured(photoId) {
       }
     }
   }
+}
+
+/* ==========================================================================
+   Customer Accounts & Live Profile Management
+   ========================================================================== */
+
+/**
+ * Normalize Philippine phone numbers to standard 11 digits (e.g. 09171234567)
+ */
+export function normalizePhone(rawPhone) {
+  if (!rawPhone) return "";
+  let digits = rawPhone.toString().replace(/\D/g, "");
+  if (digits.startsWith("63") && digits.length === 12) {
+    digits = "0" + digits.slice(2);
+  }
+  return digits;
+}
+
+/**
+ * Register / Create a Customer Account
+ */
+export async function registerCustomerAccount({ name, phone, pin, address, landmark }) {
+  const normPhone = normalizePhone(phone);
+  if (!normPhone || normPhone.length < 10) {
+    throw new Error("Please enter a valid Philippine mobile number (e.g. 0917-123-4567).");
+  }
+  if (!name || name.trim().length < 2) {
+    throw new Error("Please enter your full name.");
+  }
+  if (!pin || pin.toString().trim().length < 4) {
+    throw new Error("Please enter a 4-digit security PIN for your account.");
+  }
+
+  const now = new Date().toISOString();
+  const customerData = {
+    name: name.trim(),
+    phone: normPhone,
+    pin: pin.toString().trim(),
+    address: address ? address.trim() : "",
+    landmark: landmark ? landmark.trim() : "",
+    createdAt: now,
+    updatedAt: now
+  };
+
+  // Check if exists in Firebase RTDB
+  if (liveSyncReady && db) {
+    try {
+      const snap = await get(ref(db, `customers/${normPhone}`));
+      if (snap.exists()) {
+        throw new Error("An account with this phone number already exists! Please sign in with your PIN.");
+      }
+      await set(ref(db, `customers/${normPhone}`), customerData);
+    } catch (e) {
+      if (e.message && e.message.includes("already exists")) throw e;
+      console.warn("Cloud customer save warning:", e);
+    }
+  }
+
+  // Cache in localStorage
+  setStored(`jammy_customer_${normPhone}`, customerData);
+  setStored("jammy_current_customer", customerData);
+  window.dispatchEvent(new CustomEvent("customer-auth-changed", { detail: customerData }));
+
+  return customerData;
+}
+
+/**
+ * Login Customer Account with Phone + PIN
+ */
+export async function loginCustomerAccount(phone, pin) {
+  const normPhone = normalizePhone(phone);
+  if (!normPhone) throw new Error("Please enter your registered phone number.");
+  if (!pin) throw new Error("Please enter your 4-digit account PIN.");
+
+  let account = null;
+
+  // 1. Try Firebase RTDB
+  if (liveSyncReady && db) {
+    try {
+      const snap = await get(ref(db, `customers/${normPhone}`));
+      if (snap.exists()) {
+        account = snap.val();
+      }
+    } catch (e) {
+      console.warn("Cloud login check notice:", e);
+    }
+  }
+
+  // 2. Fallback to localStorage
+  if (!account) {
+    account = getStored(`jammy_customer_${normPhone}`, null);
+  }
+
+  if (!account) {
+    throw new Error("No account found with this phone number. Please create an account first!");
+  }
+
+  if (account.pin && account.pin.toString() !== pin.toString().trim()) {
+    throw new Error("Incorrect 4-digit PIN. Please try again.");
+  }
+
+  // Update last login
+  account.lastLogin = new Date().toISOString();
+  if (liveSyncReady && db) {
+    try {
+      await update(ref(db, `customers/${normPhone}`), { lastLogin: account.lastLogin });
+    } catch (e) {}
+  }
+
+  setStored(`jammy_customer_${normPhone}`, account);
+  setStored("jammy_current_customer", account);
+  window.dispatchEvent(new CustomEvent("customer-auth-changed", { detail: account }));
+
+  return account;
+}
+
+/**
+ * Get Currently Logged In Customer
+ */
+export function getCurrentCustomer() {
+  return getStored("jammy_current_customer", null);
+}
+
+/**
+ * Logout Currently Logged In Customer
+ */
+export function logoutCustomer() {
+  localStorage.removeItem("jammy_current_customer");
+  window.dispatchEvent(new CustomEvent("customer-auth-changed", { detail: null }));
+}
+
+/**
+ * Update Customer Profile
+ */
+export async function updateCustomerProfile(updates) {
+  const current = getCurrentCustomer();
+  if (!current) throw new Error("No user is currently signed in.");
+
+  const normPhone = normalizePhone(current.phone);
+  const updated = {
+    ...current,
+    ...updates,
+    updatedAt: new Date().toISOString()
+  };
+
+  setStored(`jammy_customer_${normPhone}`, updated);
+  setStored("jammy_current_customer", updated);
+
+  if (liveSyncReady && db) {
+    try {
+      await update(ref(db, `customers/${normPhone}`), updated);
+    } catch (e) {}
+  }
+
+  window.dispatchEvent(new CustomEvent("customer-auth-changed", { detail: updated }));
+  return updated;
+}
+
+/**
+ * Get Orders for a Customer Phone
+ */
+export async function getOrdersForCustomer(phone) {
+  const normPhone = normalizePhone(phone);
+  if (!normPhone) return [];
+
+  const allLocal = getStored(CACHE_KEYS.ORDERS, {});
+  let allOrders = { ...allLocal };
+
+  if (liveSyncReady && db) {
+    try {
+      const snap = await get(ref(db, "orders"));
+      if (snap.exists()) {
+        allOrders = { ...allOrders, ...snap.val() };
+      }
+    } catch (e) {}
+  }
+
+  const matching = Object.values(allOrders).filter(o => {
+    return normalizePhone(o.phone) === normPhone;
+  });
+
+  // Sort newest first
+  matching.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  return matching;
 }

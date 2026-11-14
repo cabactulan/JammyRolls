@@ -3561,3 +3561,202 @@ img {
     gap: 6px !important;
   }
 }
+
+/* ==========================================================================
+   Customer Account & Live Order Tracking Component Styles
+   ========================================================================== */
+
+/* Navbar Buttons */
+.customer-account-nav-btn {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-choco-dark);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-family: var(--font-brand);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.customer-account-nav-btn:hover {
+  border-color: var(--color-choco-dark);
+  background-color: var(--color-surface-soft);
+}
+
+.customer-account-nav-btn.logged-in {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-color: #F59E0B;
+  color: #1F130B;
+  font-weight: 700;
+}
+
+/* Account Modal Styling */
+.account-modal-card {
+  max-width: 520px;
+  width: 100%;
+}
+
+.account-modal-header {
+  padding: 22px 24px;
+  background: var(--color-surface-soft);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.account-avatar-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-brand);
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.2);
+}
+
+.account-modal-title {
+  font-family: var(--font-brand);
+  font-size: 1.35rem;
+  color: var(--color-choco-dark);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.account-modal-sub {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 3px 0 0;
+}
+
+.account-tabs-nav {
+  display: flex;
+  background: #FFF;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 24px;
+  gap: 16px;
+}
+
+.account-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 6px;
+  font-family: var(--font-brand);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.account-tab-btn:hover {
+  color: var(--color-choco-dark);
+}
+
+.account-tab-btn.active {
+  color: #D97706;
+  border-bottom-color: #D97706;
+  font-weight: 700;
+}
+
+.account-modal-body {
+  padding: 20px 24px;
+  max-height: 68vh;
+  overflow-y: auto;
+}
+
+/* Account Order Card */
+.account-order-card {
+  background: #FFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.account-order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: #D97706;
+}
+
+/* Order Form Auth Banner */
+.order-auth-banner {
+  background: linear-gradient(135deg, #FFFDF8 0%, #FEF3C7 100%);
+  border: 1px solid #FDE68A;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+/* Live Order Tracker Modal */
+.tracker-modal-card {
+  max-width: 560px;
+  width: 100%;
+}
+
+.tracker-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+}
+
+.tracker-search-box {
+  padding: 16px 24px;
+  background: #FFF;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tracker-modal-body {
+  padding: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.tracker-quick-pill:hover {
+  border-color: #D97706 !important;
+  background: #FFFDF8 !important;
+}
+
+/* Mobile specific styling for Account & Tracker */
+@media (max-width: 768px) {
+  .customer-account-nav-btn {
+    padding: 7px 12px;
+    font-size: 0.82rem;
+  }
+
+  .account-modal-header,
+  .tracker-modal-header {
+    padding: 16px 18px;
+  }
+
+  .account-tabs-nav {
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .account-tab-btn {
+    font-size: 0.88rem;
+    padding: 10px 4px;
+  }
+
+  .account-modal-body,
+  .tracker-modal-body {
+    padding: 16px;
+    max-height: 75vh;
+  }
+
+  .tracker-search-box {
+    padding: 12px 16px;
+  }
+}

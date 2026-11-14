@@ -1,3 +1,4 @@
+import { initCustomerAuth } from "./customer-auth.js";
 // JammyRolls — Dedicated Satisfied Customers Photo Gallery Page Controller
 import { 
   subscribeToCustomerPhotos 
@@ -6,6 +7,7 @@ import {
 let allCustomerPhotos = [];
 
 function initCustomersPage() {
+  initCustomerAuth();
   setupLightboxControls();
   setupMobileNav();
 
@@ -42,6 +44,7 @@ function renderGallery() {
     const caption = photo.caption || photo.comment || "Happy JammyRolls Customer ✨";
     const safeCaption = caption.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     const safeUrl = (photo.photoUrl || "").replace(/"/g, '&quot;');
+    const displayUrl = photo.photoUrl ? photo.photoUrl.replace(/ /g, '%20') : 'assets/images/jammyrolls-logo.png';
     const dateFormatted = photo.createdAt 
       ? new Date(photo.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
       : "";
@@ -49,7 +52,7 @@ function renderGallery() {
     return `
       <div class="customer-photo-card" data-id="${photo.photoId}">
         <div class="customer-photo-img-wrap" onclick="window.openCustomerLightbox('${safeUrl}', '${safeCaption}', '${dateFormatted}')">
-          <img src="${photo.photoUrl}" alt="${safeCaption}" class="customer-photo-img" loading="lazy" onerror="this.onerror=null;this.src='assets/images/jammyrolls-logo.png';this.style.objectFit='contain';this.style.padding='24px';">
+          <img src="${displayUrl}" alt="${safeCaption}" class="customer-photo-img" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src=this.src.replace('Satisfied%20Customers','satisfied-customers').replace('Satisfied Customers','satisfied-customers');}else{this.onerror=null;this.src='assets/images/jammyrolls-logo.png';this.style.objectFit='contain';this.style.padding='24px';}">
           <div class="customer-photo-zoom-hint" title="Click to view photo">🔍 View</div>
         </div>
         <div class="customer-photo-body">

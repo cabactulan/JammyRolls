@@ -1,7 +1,9 @@
+import { initCustomerAuth, openTrackerModal } from "./customer-auth.js";
 // JammyRolls — Order Details Page Controller
 import { 
   subscribeToProduct, 
-  createOrder 
+  createOrder,
+  getCurrentCustomer
 } from "./firebase-config.js";
 
 import { 
@@ -47,6 +49,7 @@ function showToast(message, type = "info") {
 }
 
 function initOrderPage() {
+  initCustomerAuth();
   // Read size and quantity from URL query (?size=small&qty=X)
   const urlParams = new URLSearchParams(window.location.search);
   const paramSize = (urlParams.get("size") || "").toLowerCase();
@@ -351,16 +354,25 @@ function renderConfirmationView(createdOrder, orderData) {
         </div>
       </div>
 
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px;">
+        <button type="button" class="btn btn-primary" id="btn-live-track-now" style="padding: 14px 32px; font-size: 1.05rem; justify-content: center; width: 100%; max-width: 320px;">
+          <span>Track Order Live in Kitchen</span> <span>🛵</span>
+        </button>
+      </div>
       <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
-        <a href="index.html#menu" class="btn btn-primary" style="padding: 12px 28px;">
+        <a href="index.html#menu" class="btn btn-choco" style="padding: 10px 22px; font-size: 0.9rem;">
           Order More Rolls 🔥
         </a>
-        <a href="index.html" class="btn btn-choco" style="padding: 12px 28px;">
+        <a href="index.html" class="btn" style="padding: 10px 22px; font-size: 0.9rem; background: var(--color-surface-soft); border: 1px solid var(--color-border); color: var(--color-choco-dark);">
           Return to Home 🍌
         </a>
       </div>
     </div>
   `;
+
+  document.getElementById("btn-live-track-now")?.addEventListener("click", () => {
+    openTrackerModal(createdOrder.orderId);
+  });
 }
 
 if (document.readyState === 'loading') {
