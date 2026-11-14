@@ -6,7 +6,8 @@ import {
   set, 
   get, 
   update, 
-  onValue 
+  onValue,
+  off
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { jammyProduct, jammyProducts } from "./products-data.js";
 
@@ -206,36 +207,55 @@ export function subscribeToOrders(callback) {
 }
 
 /**
- * Subscribe to Single Order (Customer Tracker)
+ * Subscribe to Single Order (Customer Tracker) — real-time Firebase onValue listener.
+ * Returns an unsubscribe function that properly detaches the Firebase listener.
  */
 export function subscribeToSingleOrder(orderId, callback) {
-  if (!orderId) return;
+  if (!orderId) return () => {};
 
+  // Deliver from cache immediately so UI shows instantly
   const all = getStored(CACHE_KEYS.ORDERS, {});
   if (all[orderId]) {
     callback(all[orderId]);
   }
 
+  let firebaseRef = null;
+  let firebaseHandler = null;
+
   if (liveSyncReady && db) {
     try {
-      const singleRef = ref(db, `orders/${orderId}`);
-      onValue(singleRef, (snapshot) => {
+      firebaseRef = ref(db, `orders/${orderId}`);
+      firebaseHandler = (snapshot) => {
         if (snapshot.exists()) {
           const order = snapshot.val();
           const current = getStored(CACHE_KEYS.ORDERS, {});
           current[orderId] = order;
           setStored(CACHE_KEYS.ORDERS, current);
           callback(order);
+        } else {
+          // Order exists locally but was removed from cloud — still deliver null
+          callback(null);
         }
-      }, (err) => {});
+      };
+      onValue(firebaseRef, firebaseHandler, () => {});
     } catch (e) {}
   }
 
-  window.addEventListener("store-sync-update", (e) => {
+  // Cross-tab updates
+  const storeSyncHandler = (e) => {
     if (e.detail.key === CACHE_KEYS.ORDERS && e.detail.val && e.detail.val[orderId]) {
       callback(e.detail.val[orderId]);
     }
-  });
+  };
+  window.addEventListener("store-sync-update", storeSyncHandler);
+
+  // Return cleanup function
+  return function unsubscribe() {
+    if (firebaseRef && firebaseHandler) {
+      try { off(firebaseRef, "value", firebaseHandler); } catch (e) {}
+    }
+    window.removeEventListener("store-sync-update", storeSyncHandler);
+  };
 }
 
 /**

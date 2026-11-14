@@ -13,6 +13,9 @@ import {
 let activeTrackerUnsub = null;
 let currentTrackingOrderId = null;
 
+// Inline tracker unsubscribe (used by order confirmation page)
+let inlineTrackerUnsub = null;
+
 /**
  * Initialize Customer Account & Tracking across all public pages
  */
@@ -686,9 +689,12 @@ export function closeTrackerModal() {
     modal.classList.remove("active");
     document.body.style.overflow = "";
   }
+  // Properly unsubscribe the Firebase listener when modal closes
   if (activeTrackerUnsub) {
+    try { activeTrackerUnsub(); } catch(e) {}
     activeTrackerUnsub = null;
   }
+  currentTrackingOrderId = null;
 }
 
 /**
@@ -736,22 +742,30 @@ async function renderRecentOrderPills() {
 }
 
 /**
- * Subscribe and track a specific Order ID in real-time
+ * Subscribe and track a specific Order ID in real-time (modal)
+ * Uses Firebase onValue — updates auto-fire without any user interaction.
  */
 export function trackOrderById(orderId) {
   const body = document.getElementById("tracker-modal-body");
   if (!body || !orderId) return;
 
+  // Unsubscribe previous listener before starting a new one
+  if (activeTrackerUnsub) {
+    try { activeTrackerUnsub(); } catch(e) {}
+    activeTrackerUnsub = null;
+  }
+
   currentTrackingOrderId = orderId;
 
   body.innerHTML = `
     <div style="text-align: center; padding: 40px 20px; color: var(--color-text-muted);">
-      <div style="font-size: 2.5rem; margin-bottom: 10px; animation: spin 1s infinite linear;">⏳</div>
+      <div style="font-size: 2.5rem; margin-bottom: 10px;">⏳</div>
       <p style="font-weight: 600;">Connecting to kitchen live feed for #${orderId}...</p>
     </div>
   `;
 
-  subscribeToSingleOrder(orderId, (order) => {
+  // subscribeToSingleOrder now returns an unsubscribe function
+  activeTrackerUnsub = subscribeToSingleOrder(orderId, (order) => {
     if (currentTrackingOrderId !== orderId) return;
 
     if (!order) {
@@ -769,26 +783,19 @@ export function trackOrderById(orderId) {
       return;
     }
 
-    renderTrackerDisplay(order);
+    body.innerHTML = buildTrackerHTML(order);
   });
 }
 
 /**
- * Render the full live progress stepper & order card
+ * Build the full live tracker HTML for a given order.
+ * Returns an HTML string — can be used in the modal body or any inline container.
+ * This is the single source of truth for the tracker UI rendering.
  */
-function renderTrackerDisplay(order) {
-  const body = document.getElementById("tracker-modal-body");
-  if (!body) return;
-
+export function buildTrackerHTML(order) {
   const rawStatus = (order.status || "Pending").toLowerCase();
   const isDelivery = (order.fulfillment === "delivery");
 
-  // Determine active step index (0 to 4)
-  // Step 0: Received / Pending
-  // Step 1: Confirmed
-  // Step 2: Preparing (In Fryer)
-  // Step 3: Out for Delivery / Ready for Pickup
-  // Step 4: Completed
   let stepIndex = 0;
   let statusBadgeText = "Order Received & Pending";
   let statusBadgeClass = "status-Pending";
@@ -812,8 +819,8 @@ function renderTrackerDisplay(order) {
     statusBadgeText = isDelivery ? "Out for Delivery 🛵" : "Ready for Pick Up 🛍️";
     statusBadgeClass = "status-Ready";
     statusIcon = isDelivery ? "🛵" : "🛍️";
-    statusDesc = isDelivery 
-      ? "Our delivery rider is en route with your piping hot rolls!" 
+    statusDesc = isDelivery
+      ? "Our delivery rider is en route with your piping hot rolls!"
       : "Your order is hot and ready at the store counter in Panabo City!";
   } else if (rawStatus.includes("prepar") || rawStatus.includes("fry") || rawStatus.includes("cook")) {
     stepIndex = 2;
@@ -846,7 +853,14 @@ function renderTrackerDisplay(order) {
     </div>
   `).join("");
 
-  body.innerHTML = `
+  return `
+    <!-- LIVE badge -->
+    <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 14px;">
+      <span class="live-pulse-dot"></span>
+      <span style="font-size: 0.72rem; font-weight: 800; color: #DC2626; letter-spacing: 0.08em; text-transform: uppercase;">Live Update</span>
+      <span style="font-size: 0.72rem; color: var(--color-text-muted);">— auto-syncing via Firebase</span>
+    </div>
+
     <!-- Top Status Box -->
     <div class="tracker-status-box" style="margin-bottom: 20px;">
       <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); margin-bottom: 6px;">
@@ -925,6 +939,44 @@ function renderTrackerDisplay(order) {
       Store Location: Panabo City, Davao del Norte
     </div>
   `;
+}
+
+/**
+ * Attach a real-time inline tracker to a DOM element (outside the modal).
+ * Used by the order confirmation page — auto-starts, no button click needed.
+ * Returns an unsubscribe function to stop the listener later.
+ */
+export function attachInlineTracker(orderId, containerEl) {
+  if (!orderId || !containerEl) return () => {};
+
+  // Show connecting state
+  containerEl.innerHTML = `
+    <div style="text-align: center; padding: 30px 20px; color: var(--color-text-muted);">
+      <div style="font-size: 2rem; margin-bottom: 8px;">📡</div>
+      <p style="font-weight: 600; font-size: 0.9rem;">Connecting to live kitchen feed…</p>
+    </div>
+  `;
+
+  // Unsubscribe any previous inline tracker
+  if (inlineTrackerUnsub) {
+    try { inlineTrackerUnsub(); } catch(e) {}
+    inlineTrackerUnsub = null;
+  }
+
+  // Subscribe — Firebase onValue fires every time admin changes the status
+  inlineTrackerUnsub = subscribeToSingleOrder(orderId, (order) => {
+    if (!order) {
+      containerEl.innerHTML = `
+        <div style="text-align: center; padding: 24px; color: var(--color-text-muted); font-size: 0.88rem;">
+          Waiting for kitchen to confirm your order…
+        </div>
+      `;
+      return;
+    }
+    containerEl.innerHTML = buildTrackerHTML(order);
+  });
+
+  return inlineTrackerUnsub;
 }
 
 /**

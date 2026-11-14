@@ -1,4 +1,4 @@
-import { initCustomerAuth, openTrackerModal } from "./customer-auth.js";
+import { initCustomerAuth, openTrackerModal, attachInlineTracker } from "./customer-auth.js";
 // JammyRolls — Order Details Page Controller
 import { 
   subscribeToProduct, 
@@ -300,66 +300,44 @@ function renderConfirmationView(createdOrder, orderData) {
     <div class="order-confirmed-card">
       <div style="font-size: 3.5rem; margin-bottom: 12px; animation: bounce 1s infinite alternate;">🎉</div>
       <span class="badge badge-yellow" style="margin-bottom: 10px;">Order Placed Successfully</span>
-      <h1 style="color: var(--color-choco-dark); font-size: 2.2rem; margin-bottom: 6px;">
+      <h1 style="color: var(--color-choco-dark); font-size: 2rem; margin-bottom: 4px;">
         Order Confirmed!
       </h1>
-      <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 28px;">
-        Your hot & fresh JammyRolls have been sent to our kitchen team.
+      <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+        Your hot &amp; fresh JammyRolls have been sent to our kitchen team.
       </p>
 
-      <div style="background: var(--color-surface-soft); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 28px; border: 1px solid var(--color-border); text-align: center;">
-        <div style="font-size: 0.85rem; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); margin-bottom: 4px;">Your Order Reference</div>
-        <div style="font-family: var(--font-brand); font-size: 2.4rem; font-weight: 700; color: #D97706;">
+      <!-- Order reference pill -->
+      <div style="background: var(--color-surface-soft); padding: 16px 20px; border-radius: var(--radius-lg); margin-bottom: 24px; border: 1px solid var(--color-border); text-align: center;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); margin-bottom: 4px;">Your Order Reference</div>
+        <div style="font-family: var(--font-brand); font-size: 2.2rem; font-weight: 700; color: #D97706;">
           #${createdOrder.orderId}
         </div>
-        <div style="display: inline-flex; align-items: center; gap: 6px; background: #ECFDF5; color: #065F46; font-size: 0.82rem; font-weight: 700; padding: 4px 12px; border-radius: 9999px; margin-top: 8px;">
-          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
-          Kitchen Status: Received / Pending
-        </div>
       </div>
 
-      <div style="text-align: left; background: #FFF; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 28px;">
-        <h3 style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.15rem; margin-bottom: 14px; border-bottom: 1px dashed var(--color-border); padding-bottom: 8px;">
-          Order Details Summary
-        </h3>
-        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; margin-bottom: 8px;">
-          <span style="color: var(--color-text-muted);">Customer:</span>
-          <strong>${orderData.customerName}</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; margin-bottom: 8px;">
-          <span style="color: var(--color-text-muted);">Contact:</span>
-          <strong>${orderData.phone}</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; margin-bottom: 8px;">
-          <span style="color: var(--color-text-muted);">Fulfillment:</span>
-          <strong>${orderData.fulfillment === 'delivery' ? '🛵 Delivery' : '🛍️ Store Pick Up'}</strong>
-        </div>
-        ${orderData.fulfillment === 'delivery' ? `
-          <div style="display: flex; justify-content: space-between; font-size: 0.92rem; margin-bottom: 8px;">
-            <span style="color: var(--color-text-muted);">Address:</span>
-            <strong style="text-align: right; max-width: 60%;">${orderData.address}</strong>
+      <!-- === INLINE LIVE TRACKER — auto-starts immediately, no click needed === -->
+      <div style="
+        background: #FFF;
+        border: 2px solid #D97706;
+        border-radius: var(--radius-lg);
+        padding: 20px 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 20px rgba(217,119,6,0.10);
+      ">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px; border-bottom: 1px dashed var(--color-border); padding-bottom: 10px;">
+          <span style="font-size: 1.3rem;">🛵</span>
+          <div>
+            <div style="font-family: var(--font-brand); font-size: 1rem; color: var(--color-choco-dark); font-weight: 700;">Live Kitchen Tracker</div>
+            <div style="font-size: 0.74rem; color: var(--color-text-muted);">Updates automatically — no refresh needed</div>
           </div>
-        ` : ''}
-        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; margin-bottom: 8px;">
-          <span style="color: var(--color-text-muted);">Payment:</span>
-          <strong>${orderData.paymentMethod}</strong>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.92rem; margin-bottom: 8px;">
-          <span style="color: var(--color-text-muted);">Item:</span>
-          <strong>${orderData.items[0].quantity}x JammyRolls (₱${orderData.items[0].price}/pc)</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: 700; color: var(--color-choco-dark); border-top: 1px dashed var(--color-border); padding-top: 12px; margin-top: 12px;">
-          <span>Total Payable:</span>
-          <span style="color: #D97706;">₱${orderData.total}</span>
+        <div id="inline-live-tracker-body">
+          <!-- Firebase onValue listener will fill this in real-time -->
         </div>
       </div>
 
-      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px;">
-        <button type="button" class="btn btn-primary" id="btn-live-track-now" style="padding: 14px 32px; font-size: 1.05rem; justify-content: center; width: 100%; max-width: 320px;">
-          <span>Track Order Live in Kitchen</span> <span>🛵</span>
-        </button>
-      </div>
-      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+      <!-- Bottom action buttons -->
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
         <a href="index.html#menu" class="btn btn-choco" style="padding: 10px 22px; font-size: 0.9rem;">
           Order More Rolls 🔥
         </a>
@@ -370,9 +348,11 @@ function renderConfirmationView(createdOrder, orderData) {
     </div>
   `;
 
-  document.getElementById("btn-live-track-now")?.addEventListener("click", () => {
-    openTrackerModal(createdOrder.orderId);
-  });
+  // Start the inline real-time tracker — subscribes to Firebase immediately
+  const trackerBody = document.getElementById("inline-live-tracker-body");
+  if (trackerBody) {
+    attachInlineTracker(createdOrder.orderId, trackerBody);
+  }
 }
 
 if (document.readyState === 'loading') {

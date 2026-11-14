@@ -1410,6 +1410,24 @@ img {
   margin-bottom: 24px;
 }
 
+/* Live pulse dot — shown in real-time tracker panels */
+.live-pulse-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #DC2626;
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
+  animation: live-pulse-ring 1.4s ease infinite;
+  flex-shrink: 0;
+}
+
+@keyframes live-pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
 .tracker-badge {
   display: inline-flex;
   align-items: center;
