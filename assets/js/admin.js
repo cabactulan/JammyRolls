@@ -32,7 +32,7 @@ let salesChart = null;
 let statusChart = null;
 
 // Founder Admin Usernames
-const VALID_ADMINS = ["admin", "jamaica", "lara", "glaisa", "prince"];
+const VALID_ADMINS = ["admin", "jamaica", "lara", "glaisa", "prince", "filjohn"];
 const ADMIN_PASS = "jammy2026";
 
 function playKitchenNotification() {

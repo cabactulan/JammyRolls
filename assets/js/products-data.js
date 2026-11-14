@@ -81,5 +81,11 @@ export const foundersInfo = [
     role: "Supply Chain & Logistics Specialist",
     quote: "Sourcing only top-grade bananas, Belgian chocolate, and premium ingredients delivered fresh daily.",
     avatar: "PL"
+  },
+  {
+    name: "Filjohn Bert M. Bagay",
+    role: "Marketing & Business Development Lead",
+    quote: "Dedicated to sharing the sweet warmth and irresistible crunch of JammyRolls with communities everywhere.",
+    avatar: "FB"
   }
 ];
