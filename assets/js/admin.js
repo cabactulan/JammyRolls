@@ -831,13 +831,55 @@ function renderAdminFounders() {
 }
 
 function setupNavigation() {
+  const sidebar = document.querySelector(".admin-sidebar");
+  const sidebarBackdrop = document.getElementById("admin-sidebar-backdrop");
+  const sidebarToggle = document.getElementById("btn-admin-sidebar-toggle");
+  const sidebarClose = document.getElementById("btn-close-admin-sidebar");
+  const mainTitle = document.getElementById("topbar-main-title");
+  const sectionDesc = document.getElementById("topbar-section-desc");
+
+  const sectionMeta = {
+    analytics: { title: "Store Operations Hub", desc: "Today's store overview & sales metrics" },
+    orders: { title: "Kitchen & Delivery Orders", desc: "Live order queue and ticket management" },
+    inventory: { title: "Inventory & Stock Pricing", desc: "Independent stock counts and unit pricing" },
+    reviews: { title: "Customer Reviews & Ratings", desc: "Real feedback submitted from the online storefront" },
+    gallery: { title: "Customer Photos Gallery", desc: "Wall of Jammy Smiles showcase management" },
+    founders: { title: "Founders & Team Showcase", desc: "Meet the makers behind JammyRolls" }
+  };
+
+  function toggleSidebar(open) {
+    const shouldOpen = (open !== undefined) ? open : !sidebar?.classList.contains("open");
+    if (sidebar) sidebar.classList.toggle("open", shouldOpen);
+    if (sidebarBackdrop) sidebarBackdrop.classList.toggle("active", shouldOpen);
+    document.body.style.overflow = shouldOpen ? "hidden" : "";
+  }
+
+  sidebarToggle?.addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleSidebar(true);
+  });
+
+  sidebarClose?.addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleSidebar(false);
+  });
+
+  sidebarBackdrop?.addEventListener("click", () => {
+    toggleSidebar(false);
+  });
+
   function activateSection(sectionId) {
-    // Update sidebar nav
+    if (!sectionId || sectionId === "logout") return;
+
+    // Close mobile sidebar drawer if open
+    toggleSidebar(false);
+
+    // Update sidebar nav buttons
     document.querySelectorAll(".nav-item-btn").forEach(b => b.classList.remove("active"));
     const sidebarBtn = document.querySelector(`.nav-item-btn[data-section="${sectionId}"]`);
     if (sidebarBtn) sidebarBtn.classList.add("active");
 
-    // Update bottom nav
+    // Update bottom nav buttons
     document.querySelectorAll(".admin-bnav-btn:not(.btn-trigger-logout)").forEach(b => b.classList.remove("active"));
     const bnavBtn = document.querySelector(`.admin-bnav-btn[data-section="${sectionId}"]`);
     if (bnavBtn) bnavBtn.classList.add("active");
@@ -847,17 +889,24 @@ function setupNavigation() {
     const targetSec = document.getElementById(`section-${sectionId}`);
     if (targetSec) targetSec.style.display = "block";
 
+    // Update Topbar Title & Description
+    if (sectionMeta[sectionId]) {
+      if (mainTitle) mainTitle.textContent = sectionMeta[sectionId].title;
+      if (sectionDesc) sectionDesc.textContent = sectionMeta[sectionId].desc;
+    }
+
     if (sectionId === "analytics") {
       setTimeout(updateCharts, 100);
     }
 
-    // Scroll to top on mobile
+    // Scroll smoothly to top
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   // Sidebar nav buttons
   document.querySelectorAll(".nav-item-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
       const sectionId = btn.getAttribute("data-section");
       if (sectionId) activateSection(sectionId);
     });
@@ -865,10 +914,30 @@ function setupNavigation() {
 
   // Bottom nav buttons (excluding logout)
   document.querySelectorAll(".admin-bnav-btn:not(.btn-trigger-logout)").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
       const sectionId = btn.getAttribute("data-section");
       if (sectionId) activateSection(sectionId);
     });
+  });
+
+  // Global click delegation for any in-dashboard links with data-section or data-goto
+  document.addEventListener("click", (e) => {
+    const trigger = e.target.closest("[data-section]:not(.nav-item-btn):not(.admin-bnav-btn), [data-goto]");
+    if (trigger) {
+      const sec = trigger.getAttribute("data-section") || trigger.getAttribute("data-goto");
+      if (sec && sec !== "logout" && document.getElementById(`section-${sec}`)) {
+        e.preventDefault();
+        activateSection(sec);
+      }
+    }
+  });
+
+  // Close sidebar drawer on ESC key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && sidebar?.classList.contains("open")) {
+      toggleSidebar(false);
+    }
   });
 
   // Show bottom nav after login

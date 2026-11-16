@@ -75,10 +75,11 @@
     <aside class="admin-sidebar">
       <div class="sidebar-header">
         <img src="../assets/images/jammyrolls-logo.png" alt="JammyRolls Logo" class="sidebar-logo">
-        <div>
+        <div style="flex: 1;">
           <div class="sidebar-brand-name">JammyRolls</div>
           <div class="sidebar-brand-sub">Operations Hub</div>
         </div>
+        <button class="sidebar-close-btn" id="btn-close-admin-sidebar" aria-label="Close Sidebar">✕</button>
       </div>
 
       <nav class="sidebar-nav">
@@ -127,15 +128,24 @@
       </div>
     </aside>
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="admin-sidebar-backdrop" id="admin-sidebar-backdrop"></div>
+
     <!-- Main Content Area -->
     <main class="admin-main">
       <!-- Topbar -->
       <header class="admin-topbar">
-        <div class="topbar-title-wrap">
-          <h1>Store Operations Hub</h1>
-          <p class="topbar-subtitle">
-            Logged in as <strong id="topbar-user-name" style="color: #D97706;">Store Admin</strong> • Today's store overview
-          </p>
+        <div class="topbar-left-wrap">
+          <!-- Mobile Sidebar Toggle -->
+          <button class="admin-sidebar-toggle" id="btn-admin-sidebar-toggle" aria-label="Toggle Sidebar Menu">
+            <span>☰</span>
+          </button>
+          <div class="topbar-title-wrap">
+            <h1 id="topbar-main-title">Store Operations Hub</h1>
+            <p class="topbar-subtitle">
+              Logged in as <strong id="topbar-user-name" style="color: #D97706;">Store Admin</strong> • <span id="topbar-section-desc">Today's store overview</span>
+            </p>
+          </div>
         </div>
 
         <div class="topbar-actions">
@@ -416,45 +426,7 @@
           </div>
         </div>
       </section>
-    
-    
 
-  <!-- Mobile Bottom Navigation Bar (shown on mobile only) -->
-  <nav class="admin-bottom-nav" id="admin-bottom-nav" >
-    <div class="admin-bottom-nav-inner">
-      <button class="admin-bnav-btn active" data-section="analytics">
-        <span class="bnav-icon">📊</span>
-        <span>Analytics</span>
-      </button>
-      <button class="admin-bnav-btn" data-section="orders">
-        <span class="bnav-icon">🍳</span>
-        <span>Orders</span>
-        <span class="admin-bnav-badge" id="bnav-pending-badge" >0</span>
-      </button>
-      <button class="admin-bnav-btn" data-section="inventory">
-        <span class="bnav-icon">📦</span>
-        <span>Stock</span>
-      </button>
-      <button class="admin-bnav-btn" data-section="reviews">
-        <span class="bnav-icon">💬</span>
-        <span>Reviews</span>
-        <span class="admin-bnav-badge" id="bnav-reviews-badge" style="display: none;">0</span>
-      </button>
-      <button class="admin-bnav-btn" data-section="gallery">
-        <span class="bnav-icon">📸</span>
-        <span>Photos</span>
-        <span class="admin-bnav-badge" id="bnav-photos-badge" style="display: none;">0</span>
-      </button>
-      <button class="admin-bnav-btn" data-section="founders">
-        <span class="bnav-icon">👥</span>
-        <span>Team</span>
-      </button>
-      <button class="admin-bnav-btn btn-trigger-logout" data-section="logout">
-        <span class="bnav-icon">🚪</span>
-        <span>Sign Out</span>
-      </button>
-    </div>
-  </nav>
       <!-- SECTION 5: CUSTOMER REVIEWS & FEEDBACK -->
       <section class="admin-section" id="section-reviews" style="display: none;">
         <div class="admin-section-header">
@@ -668,6 +640,43 @@
       </section>
 
     </main>
+
+    <!-- Mobile Bottom Navigation Bar (Fixed bottom navigation for mobile) -->
+    <nav class="admin-bottom-nav" id="admin-bottom-nav">
+      <div class="admin-bottom-nav-inner">
+        <button class="admin-bnav-btn active" data-section="analytics">
+          <span class="bnav-icon">📊</span>
+          <span>Analytics</span>
+        </button>
+        <button class="admin-bnav-btn" data-section="orders">
+          <span class="bnav-icon">🍳</span>
+          <span>Orders</span>
+          <span class="admin-bnav-badge" id="bnav-pending-badge" style="display: none;">0</span>
+        </button>
+        <button class="admin-bnav-btn" data-section="inventory">
+          <span class="bnav-icon">📦</span>
+          <span>Stock</span>
+        </button>
+        <button class="admin-bnav-btn" data-section="reviews">
+          <span class="bnav-icon">💬</span>
+          <span>Reviews</span>
+          <span class="admin-bnav-badge" id="bnav-reviews-badge" style="display: none;">0</span>
+        </button>
+        <button class="admin-bnav-btn" data-section="gallery">
+          <span class="bnav-icon">📸</span>
+          <span>Photos</span>
+          <span class="admin-bnav-badge" id="bnav-photos-badge" style="display: none;">0</span>
+        </button>
+        <button class="admin-bnav-btn" data-section="founders">
+          <span class="bnav-icon">👥</span>
+          <span>Team</span>
+        </button>
+        <button class="admin-bnav-btn btn-trigger-logout" data-section="logout">
+          <span class="bnav-icon">🚪</span>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </nav>
   </div>
 
   <!-- ==========================================================================
