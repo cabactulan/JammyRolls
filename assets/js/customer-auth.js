@@ -23,6 +23,7 @@ export function initCustomerAuth() {
   injectAccountAndTrackerModals();
   setupNavbarAuthButtons();
   setupModalEvents();
+  setupGlobalClickDelegation();
   checkUrlParams();
 
   // Listen for auth state changes
@@ -38,35 +39,84 @@ export function initCustomerAuth() {
 }
 
 /**
+ * Setup Global Click Delegation so any sign-in or track button works anytime
+ */
+function setupGlobalClickDelegation() {
+  document.addEventListener("click", (e) => {
+    const trackTarget = e.target.closest("#nav-track-btn, .track-order-nav-btn, .btn-trigger-track, [data-action='track-order']");
+    if (trackTarget) {
+      e.preventDefault();
+      const orderId = trackTarget.getAttribute("data-order-id") || null;
+      openTrackerModal(orderId);
+      return;
+    }
+
+    const accountTarget = e.target.closest("#nav-account-btn, .customer-account-nav-btn, .btn-trigger-account, [data-action='open-account'], [data-action='open-signin']");
+    if (accountTarget) {
+      e.preventDefault();
+      openAccountModal();
+      return;
+    }
+  });
+}
+
+/**
  * Setup Navbar Auth & Tracker buttons
  */
 function setupNavbarAuthButtons() {
   const navActions = document.querySelector(".nav-actions");
-  if (!navActions) return;
 
-  // 1. Add Track Order button if not present
-  if (!document.getElementById("nav-track-btn")) {
-    const trackBtn = document.createElement("button");
+  // 1. Ensure Track Order button exists and has click listener
+  let trackBtn = document.getElementById("nav-track-btn");
+  if (!trackBtn && navActions) {
+    trackBtn = document.createElement("button");
     trackBtn.type = "button";
     trackBtn.className = "track-order-nav-btn";
     trackBtn.id = "nav-track-btn";
     trackBtn.setAttribute("aria-label", "Track Order");
     trackBtn.innerHTML = `<span>🛵</span> <span>Track Order</span>`;
-    trackBtn.addEventListener("click", () => openTrackerModal());
     navActions.prepend(trackBtn);
   }
+  if (trackBtn) {
+    trackBtn.onclick = (e) => {
+      e.preventDefault();
+      openTrackerModal();
+    };
+  }
 
-  // 2. Add Customer Account button if not present
-  if (!document.getElementById("nav-account-btn")) {
-    const accountBtn = document.createElement("button");
+  // 2. Ensure Customer Account button exists and has click listener
+  let accountBtn = document.getElementById("nav-account-btn");
+  if (!accountBtn && navActions) {
+    accountBtn = document.createElement("button");
     accountBtn.type = "button";
     accountBtn.className = "customer-account-nav-btn";
     accountBtn.id = "nav-account-btn";
     accountBtn.setAttribute("aria-label", "Customer Account");
-    accountBtn.innerHTML = `<span>👤</span> <span id="nav-account-label">Account</span>`;
-    accountBtn.addEventListener("click", () => openAccountModal());
+    accountBtn.innerHTML = `<span>👤</span> <span id="nav-account-label">Sign In</span>`;
     navActions.prepend(accountBtn);
   }
+  if (accountBtn) {
+    accountBtn.onclick = (e) => {
+      e.preventDefault();
+      openAccountModal();
+    };
+  }
+
+  // Also bind any other track / account triggers across the document
+  document.querySelectorAll(".btn-trigger-track, [data-action='track-order']").forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const id = btn.getAttribute("data-order-id") || null;
+      openTrackerModal(id);
+    };
+  });
+
+  document.querySelectorAll(".btn-trigger-account, [data-action='open-account'], [data-action='open-signin']").forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      openAccountModal();
+    };
+  });
 
   updateNavbarState();
 }
@@ -662,21 +712,26 @@ export function openTrackerModal(orderId = null) {
   // Render recent orders quick pills
   renderRecentOrderPills();
 
+  const input = document.getElementById("tracker-input-id");
+
   if (orderId) {
-    const input = document.getElementById("tracker-input-id");
     if (input) input.value = orderId;
     trackOrderById(orderId);
   } else {
-    // Check if there is an active order in recent orders
+    // If input already has an ID, track it; otherwise auto-detect last order
+    const lastId = localStorage.getItem("jammy_last_order_id");
     const customer = getCurrentCustomer();
-    if (customer && customer.phone) {
+
+    if (input && input.value.trim()) {
+      trackOrderById(input.value.trim());
+    } else if (lastId) {
+      if (input) input.value = lastId;
+      trackOrderById(lastId);
+    } else if (customer && customer.phone) {
       getOrdersForCustomer(customer.phone).then(orders => {
-        if (orders.length > 0) {
-          const input = document.getElementById("tracker-input-id");
-          if (input && !input.value) {
-            input.value = orders[0].orderId;
-            trackOrderById(orders[0].orderId);
-          }
+        if (orders.length > 0 && input && !input.value) {
+          input.value = orders[0].orderId;
+          trackOrderById(orders[0].orderId);
         }
       });
     }
@@ -704,50 +759,132 @@ async function renderRecentOrderPills() {
   const container = document.getElementById("tracker-recent-pills");
   if (!container) return;
 
+  let orderIds = [];
+
+  // 1. From logged in customer
   const customer = getCurrentCustomer();
-  if (!customer || !customer.phone) {
+  if (customer && customer.phone) {
+    try {
+      const orders = await getOrdersForCustomer(customer.phone);
+      orders.forEach(o => {
+        if (o.orderId && !orderIds.includes(o.orderId)) orderIds.push(o.orderId);
+      });
+    } catch (e) {}
+  }
+
+  // 2. From device local history
+  try {
+    const deviceRecent = JSON.parse(localStorage.getItem("jammy_recent_order_ids") || "[]");
+    deviceRecent.forEach(id => {
+      if (id && !orderIds.includes(id)) orderIds.push(id);
+    });
+    const lastId = localStorage.getItem("jammy_last_order_id");
+    if (lastId && !orderIds.includes(lastId)) orderIds.unshift(lastId);
+  } catch (e) {}
+
+  if (orderIds.length === 0) {
     container.innerHTML = "";
     return;
   }
 
-  try {
-    const orders = await getOrdersForCustomer(customer.phone);
-    const topOrders = orders.slice(0, 3);
+  const topOrders = orderIds.slice(0, 4);
 
-    if (topOrders.length === 0) {
-      container.innerHTML = "";
-      return;
-    }
+  container.innerHTML = `
+    <span style="font-size: 0.75rem; color: var(--color-text-muted); align-self: center;">Recent Orders:</span>
+    ${topOrders.map(id => `
+      <button type="button" class="tracker-quick-pill" data-id="${id}" style="background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: 9999px; padding: 4px 12px; font-size: 0.75rem; font-weight: 700; color: var(--color-choco-dark); cursor: pointer; transition: all 0.2s;">
+        #${id}
+      </button>
+    `).join("")}
+  `;
 
-    container.innerHTML = `
-      <span style="font-size: 0.75rem; color: var(--color-text-muted); align-self: center;">Recent:</span>
-      ${topOrders.map(o => `
-        <button type="button" class="tracker-quick-pill" data-id="${o.orderId}" style="background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: 9999px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; color: var(--color-choco-dark); cursor: pointer;">
-          #${o.orderId}
-        </button>
-      `).join("")}
-    `;
-
-    container.querySelectorAll(".tracker-quick-pill").forEach(pill => {
-      pill.addEventListener("click", () => {
-        const id = pill.getAttribute("data-id");
-        const input = document.getElementById("tracker-input-id");
-        if (input) input.value = id;
-        trackOrderById(id);
-      });
+  container.querySelectorAll(".tracker-quick-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const id = pill.getAttribute("data-id");
+      const input = document.getElementById("tracker-input-id");
+      if (input) input.value = id;
+      trackOrderById(id);
     });
-  } catch (e) {
-    container.innerHTML = "";
-  }
+  });
 }
 
 /**
- * Subscribe and track a specific Order ID in real-time (modal)
- * Uses Firebase onValue — updates auto-fire without any user interaction.
+ * Subscribe and track a specific Order ID or Phone in real-time (modal)
+ * Supports Order ID (with or without JR- prefix) as well as customer Phone Number!
  */
-export function trackOrderById(orderId) {
+export async function trackOrderById(query) {
   const body = document.getElementById("tracker-modal-body");
-  if (!body || !orderId) return;
+  if (!body || !query) return;
+
+  let cleanQuery = query.toString().trim();
+  if (cleanQuery.startsWith("#")) cleanQuery = cleanQuery.substring(1).trim();
+
+  // Check if user entered a phone number
+  const digitsOnly = cleanQuery.replace(/\D/g, "");
+  const isPhoneSearch = (digitsOnly.length >= 10 && digitsOnly.length <= 12) && !cleanQuery.toUpperCase().startsWith("JR-");
+
+  if (isPhoneSearch) {
+    body.innerHTML = `
+      <div style="text-align: center; padding: 36px 20px; color: var(--color-text-muted);">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">🔍</div>
+        <p style="font-weight: 600;">Searching orders placed with phone ${cleanQuery}...</p>
+      </div>
+    `;
+
+    try {
+      const matching = await getOrdersForCustomer(cleanQuery);
+      if (matching.length > 0) {
+        const topOrder = matching[0];
+        const input = document.getElementById("tracker-input-id");
+        if (input) input.value = topOrder.orderId;
+
+        // Populate found order pills
+        const pillsContainer = document.getElementById("tracker-recent-pills");
+        if (pillsContainer) {
+          pillsContainer.innerHTML = `
+            <span style="font-size: 0.75rem; color: var(--color-text-muted); align-self: center;">Found for phone:</span>
+            ${matching.slice(0, 4).map(o => `
+              <button type="button" class="tracker-quick-pill" data-id="${o.orderId}" style="background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 9999px; padding: 4px 12px; font-size: 0.75rem; font-weight: 700; color: #1F130B; cursor: pointer;">
+                #${o.orderId}
+              </button>
+            `).join("")}
+          `;
+          pillsContainer.querySelectorAll(".tracker-quick-pill").forEach(pill => {
+            pill.addEventListener("click", () => {
+              const id = pill.getAttribute("data-id");
+              if (input) input.value = id;
+              trackOrderById(id);
+            });
+          });
+        }
+
+        // Track the top order
+        cleanQuery = topOrder.orderId;
+      } else {
+        body.innerHTML = `
+          <div style="text-align: center; padding: 36px 20px; background: #FEF2F2; border-radius: 16px; border: 1px solid #FCA5A5;">
+            <div style="font-size: 2.8rem; margin-bottom: 8px;">📱</div>
+            <h4 style="font-family: var(--font-brand); color: #991B1B; font-size: 1.2rem; margin-bottom: 6px;">
+              No Orders Found
+            </h4>
+            <p style="font-size: 0.88rem; color: #7F1D1D; max-width: 380px; margin: 0 auto 16px;">
+              We couldn't find any orders placed under <strong>${cleanQuery}</strong>.<br>
+              Please verify your phone number or enter your 6-digit Order Reference (e.g. JR-123456).
+            </p>
+          </div>
+        `;
+        return;
+      }
+    } catch(err) {
+      console.warn("Phone order lookup error:", err);
+    }
+  }
+
+  // Normalize order ID
+  let orderId = cleanQuery.toUpperCase();
+  if (!orderId.startsWith("JR-") && /^\d{5,8}$/.test(orderId)) {
+    orderId = "JR-" + orderId;
+  }
 
   // Unsubscribe previous listener before starting a new one
   if (activeTrackerUnsub) {
@@ -764,6 +901,16 @@ export function trackOrderById(orderId) {
     </div>
   `;
 
+  // Remember in device recent
+  try {
+    let recent = JSON.parse(localStorage.getItem("jammy_recent_order_ids") || "[]");
+    if (!recent.includes(orderId)) {
+      recent.unshift(orderId);
+      if (recent.length > 5) recent = recent.slice(0, 5);
+      localStorage.setItem("jammy_recent_order_ids", JSON.stringify(recent));
+    }
+  } catch(e) {}
+
   // subscribeToSingleOrder now returns an unsubscribe function
   activeTrackerUnsub = subscribeToSingleOrder(orderId, (order) => {
     if (currentTrackingOrderId !== orderId) return;
@@ -776,7 +923,8 @@ export function trackOrderById(orderId) {
             Order Not Found
           </h4>
           <p style="font-size: 0.88rem; color: #7F1D1D; max-width: 380px; margin: 0 auto 16px;">
-            We couldn't find an order with reference <strong>#${orderId}</strong>. Please verify the ID from your receipt or account.
+            We couldn't find an order with reference <strong>#${orderId}</strong>.<br>
+            Please verify the ID on your receipt, or enter the phone number you used when ordering!
           </p>
         </div>
       `;

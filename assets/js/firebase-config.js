@@ -1,4 +1,5 @@
 // Live Cloud Synchronization & Store Service
+import { satisfiedCustomersFromFolder } from "./satisfied-customers-data.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getDatabase, 
@@ -213,10 +214,23 @@ export function subscribeToOrders(callback) {
 export function subscribeToSingleOrder(orderId, callback) {
   if (!orderId) return () => {};
 
+  // Clean and normalize order reference
+  let targetId = orderId.toString().trim().toUpperCase();
+  if (targetId.startsWith("#")) targetId = targetId.substring(1).trim();
+  if (!targetId.startsWith("JR-") && /^\d{5,8}$/.test(targetId)) {
+    targetId = "JR-" + targetId;
+  }
+
   // Deliver from cache immediately so UI shows instantly
   const all = getStored(CACHE_KEYS.ORDERS, {});
-  if (all[orderId]) {
-    callback(all[orderId]);
+  let matchedOrder = all[targetId] || all[orderId];
+  if (!matchedOrder) {
+    const foundKey = Object.keys(all).find(k => k.toUpperCase() === targetId || k.toUpperCase() === orderId.toString().trim().toUpperCase());
+    if (foundKey) matchedOrder = all[foundKey];
+  }
+
+  if (matchedOrder) {
+    callback(matchedOrder);
   }
 
   let firebaseRef = null;
@@ -224,17 +238,22 @@ export function subscribeToSingleOrder(orderId, callback) {
 
   if (liveSyncReady && db) {
     try {
-      firebaseRef = ref(db, `orders/${orderId}`);
+      firebaseRef = ref(db, `orders/${targetId}`);
       firebaseHandler = (snapshot) => {
         if (snapshot.exists()) {
           const order = snapshot.val();
           const current = getStored(CACHE_KEYS.ORDERS, {});
-          current[orderId] = order;
+          current[targetId] = order;
           setStored(CACHE_KEYS.ORDERS, current);
           callback(order);
         } else {
-          // Order exists locally but was removed from cloud — still deliver null
-          callback(null);
+          // If not in cloud directly under targetId, check local cache first before nulling
+          const localNow = getStored(CACHE_KEYS.ORDERS, {});
+          if (localNow[targetId] || localNow[orderId]) {
+            callback(localNow[targetId] || localNow[orderId]);
+          } else {
+            callback(null);
+          }
         }
       };
       onValue(firebaseRef, firebaseHandler, () => {});
@@ -243,8 +262,9 @@ export function subscribeToSingleOrder(orderId, callback) {
 
   // Cross-tab updates
   const storeSyncHandler = (e) => {
-    if (e.detail.key === CACHE_KEYS.ORDERS && e.detail.val && e.detail.val[orderId]) {
-      callback(e.detail.val[orderId]);
+    if (e.detail.key === CACHE_KEYS.ORDERS && e.detail.val) {
+      const updated = e.detail.val[targetId] || e.detail.val[orderId];
+      if (updated) callback(updated);
     }
   };
   window.addEventListener("store-sync-update", storeSyncHandler);
@@ -279,6 +299,17 @@ export async function createOrder(orderData) {
   const orders = getStored(CACHE_KEYS.ORDERS, {});
   orders[orderId] = finalOrder;
   setStored(CACHE_KEYS.ORDERS, orders);
+
+  // Record in device's recent orders list for instant 1-tap tracking
+  try {
+    localStorage.setItem("jammy_last_order_id", orderId);
+    let recent = JSON.parse(localStorage.getItem("jammy_recent_order_ids") || "[]");
+    if (!recent.includes(orderId)) {
+      recent.unshift(orderId);
+      if (recent.length > 5) recent = recent.slice(0, 5);
+      localStorage.setItem("jammy_recent_order_ids", JSON.stringify(recent));
+    }
+  } catch (e) {}
 
   // 2. Reduce independent product stocks for each ordered size
   const rawCurrent = getStored(CACHE_KEYS.PRODUCT, jammyProducts);
@@ -506,9 +537,9 @@ export async function deleteReview(reviewId) {
 
 /**
  * Customer Photos Catalog (Synchronized with Firebase Realtime Database)
- * Cloud database node `customerPhotos` is the sole source of truth (no hardcoded images).
+ * Baseline customer smiles with full real-time cloud synchronization.
  */
-export const DEFAULT_CUSTOMER_PHOTOS = {};
+export const DEFAULT_CUSTOMER_PHOTOS = satisfiedCustomersFromFolder;
 
 /**
  * Subscribe to Customer Photos (Live Feed from Firebase Realtime Database)
@@ -522,15 +553,33 @@ export function normalizePhotoUrl(url) {
 export function subscribeToCustomerPhotos(callback) {
   photosSubscribers.add(callback);
   
-  // Deliver current cached photos from Firebase RTDB (or empty object if none cached yet)
-  const cachedPhotos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
-  callback(cachedPhotos);
+  // Deliver current cached or baseline photos immediately so the gallery is never empty
+  const cachedPhotos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, null);
+  const initialPhotos = (cachedPhotos && Object.keys(cachedPhotos).length > 0)
+    ? cachedPhotos
+    : { ...satisfiedCustomersFromFolder };
+  callback(initialPhotos);
 
   if (liveSyncReady && db) {
     try {
       const photosRef = ref(db, "customerPhotos");
       onValue(photosRef, (snapshot) => {
-        const cloudPhotos = snapshot.exists() ? (snapshot.val() || {}) : {};
+        let cloudPhotos = {};
+        if (snapshot.exists()) {
+          cloudPhotos = snapshot.val() || {};
+        }
+
+        // If cloud database is empty, seed it with the baseline photos
+        if (Object.keys(cloudPhotos).length === 0 && Object.keys(satisfiedCustomersFromFolder).length > 0) {
+          try {
+            set(photosRef, satisfiedCustomersFromFolder);
+          } catch (e) {}
+          cloudPhotos = { ...satisfiedCustomersFromFolder };
+        } else {
+          // Merge baseline with cloud photos so customer photos are always shown
+          cloudPhotos = { ...satisfiedCustomersFromFolder, ...cloudPhotos };
+        }
+
         setStored(CACHE_KEYS.CUSTOMER_PHOTOS, cloudPhotos);
         photosSubscribers.forEach(cb => cb(cloudPhotos));
       }, (err) => {
@@ -543,7 +592,7 @@ export function subscribeToCustomerPhotos(callback) {
 
   window.addEventListener("store-sync-update", (e) => {
     if (e.detail.key === CACHE_KEYS.CUSTOMER_PHOTOS) {
-      callback(e.detail.val || {});
+      callback(e.detail.val || satisfiedCustomersFromFolder);
     }
   });
 }
