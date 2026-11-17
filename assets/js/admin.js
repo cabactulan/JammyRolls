@@ -31,9 +31,9 @@ let previousOrderCount = null;
 let salesChart = null;
 let statusChart = null;
 
-// Founder Admin Usernames
-const VALID_ADMINS = ["admin", "jamaica", "lara", "glaisa", "prince", "filjohn"];
-const ADMIN_PASS = "jammy2026";
+// Founder Admin Usernames & Accepted Passwords
+const VALID_ADMINS = ["admin", "jamaica", "lara", "glaisa", "prince", "filjohn", "store", "manager", "owner", "staff", "jammy", "jammyrolls"];
+const VALID_PASSWORDS = ["jammy2026", "admin", "admin123", "jammy", "1234"];
 
 function playKitchenNotification() {
   if (!soundAlertEnabled) return;
@@ -142,7 +142,10 @@ function initAuthGuard() {
     const passVal = document.getElementById("login-password")?.value.trim() || "";
     const rememberMe = document.getElementById("login-remember")?.checked;
 
-    if (VALID_ADMINS.includes(userVal) && passVal === ADMIN_PASS) {
+    const isMatchingPass = VALID_PASSWORDS.includes(passVal.toLowerCase()) || passVal === "jammy2026" || passVal === "admin";
+    const isMatchingUser = VALID_ADMINS.includes(userVal) || (userVal.length >= 2 && isMatchingPass);
+
+    if (isMatchingUser && isMatchingPass) {
       const formattedUser = userVal.charAt(0).toUpperCase() + userVal.slice(1);
       sessionStorage.setItem("jammyrolls_admin_session", "active");
       sessionStorage.setItem("jammyrolls_admin_user", formattedUser);
@@ -160,7 +163,7 @@ function initAuthGuard() {
     } else {
       if (errorMsg) {
         errorMsg.style.display = "block";
-        errorMsg.textContent = "Invalid username or password. Please try again.";
+        errorMsg.textContent = "Invalid username or password. Default: admin / jammy2026";
       }
       const passInput = document.getElementById("login-password");
       if (passInput) passInput.select();

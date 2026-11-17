@@ -22,10 +22,10 @@
     })();
   </script>
   <style>
-    html[data-admin-auth="no"] #admin-login-screen { display: flex; }
-    html[data-admin-auth="no"] #admin-dashboard-app { display: none; }
-    html[data-admin-auth="yes"] #admin-login-screen { display: none; }
-    html[data-admin-auth="yes"] #admin-dashboard-app { display: flex; }
+    html[data-admin-auth="no"] #admin-login-screen { display: flex !important; }
+    html[data-admin-auth="no"] #admin-dashboard-app { display: none !important; }
+    html[data-admin-auth="yes"] #admin-login-screen { display: none !important; }
+    html[data-admin-auth="yes"] #admin-dashboard-app { display: flex !important; }
   </style>
 </head>
 <body>
@@ -63,6 +63,16 @@
         <button type="submit" class="btn-login-submit">
           Log in
         </button>
+
+        <div style="margin-top: 16px; font-size: 0.78rem; color: #6B7280; text-align: center;">
+          Default Login: <strong>admin</strong> / <strong>jammy2026</strong>
+        </div>
+
+        <div style="margin-top: 12px; text-align: center;">
+          <a href="../index.html" style="font-size: 0.82rem; color: #D97706; text-decoration: none; font-weight: 600;">
+            ← Return to Storefront
+          </a>
+        </div>
       </form>
     </div>
   </div>

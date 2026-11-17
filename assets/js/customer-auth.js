@@ -400,6 +400,13 @@ async function updateModalContent(activeTab = "orders") {
               Create one now
             </a>
           </div>
+
+          <div style="margin-top: 20px; padding-top: 14px; border-top: 1px dashed var(--color-border); text-align: center; font-size: 0.8rem; color: var(--color-text-muted);">
+            Store staff or administrator? 
+            <a href="admin/index.html" style="color: #D97706; font-weight: 700; text-decoration: underline; margin-left: 4px;">
+              Open Admin Portal 🔐
+            </a>
+          </div>
         </form>
       `;
 
