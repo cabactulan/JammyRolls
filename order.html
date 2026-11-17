@@ -173,57 +173,96 @@
             <span id="summary-stock-notice" style="font-size: 0.78rem; font-weight: 700; color: #059669;">In Stock</span>
           </h3>
 
-          <!-- Size Choices (Small ₱10 vs Large ₱15) -->
-          <div style="margin-bottom: 16px;">
-            <div style="font-size: 0.82rem; font-weight: 700; color: var(--color-choco-dark); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-              Select Size Option:
+          <!-- Size Choices & Quantities (Order either Small, Large, or Both) -->
+          <div style="margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--color-choco-dark); text-transform: uppercase; letter-spacing: 0.5px;">
+                Choose Size &amp; Quantity:
+              </span>
+              <span style="font-size: 0.72rem; font-weight: 700; color: #92400E; background: #FEF3C7; padding: 2px 8px; border-radius: 9999px; border: 1px solid #FDE68A;">
+                Order either or both! ✨
+              </span>
             </div>
-            <div class="order-size-selector">
-              <div class="order-size-card" id="size-card-small" data-size="small">
-                <div class="size-check-badge">✓</div>
-                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark);">Small</div>
-                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.15rem; color: #D97706;" id="display-price-small">₱10</div>
-                <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 4px;" id="stock-hint-small">Snack size</div>
-              </div>
-              <div class="order-size-card active" id="size-card-large" data-size="large">
-                <div class="size-check-badge">✓</div>
-                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark);">Large</div>
-                <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.15rem; color: #D97706;" id="display-price-large">₱15</div>
-                <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 4px;" id="stock-hint-large">Original signature</div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Selected Item Box -->
-          <div style="display: flex; gap: 14px; align-items: center; background: var(--color-surface-soft); padding: 14px; border-radius: var(--radius-md); margin-bottom: 18px;">
-            <img src="assets/images/jammyrolls-logo.png" alt="JammyRolls" style="width: 54px; height: 54px; object-fit: contain; background: #FFF; border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--color-border);">
-            <div style="flex: 1;">
-              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-choco-dark); line-height: 1.3;" id="summary-item-title">
-                JammyRolls (Large)
-              </h4>
-              <div style="font-size: 0.8rem; color: var(--color-text-muted);" id="summary-unit-price-desc">
-                ₱15 per roll • Hot & Fresh
-              </div>
-            </div>
-            <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.15rem; color: #D97706;" id="summary-item-total">
-              ₱15
-            </div>
-          </div>
+            <div class="order-size-list" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Small Roll Option Card -->
+              <div class="order-size-item-card" id="size-card-small" data-size="small">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6rem;">🍌</span>
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark);">Small Roll</span>
+                        <span style="font-size: 0.7rem; font-weight: 700; background: #FEF3C7; color: #92400E; padding: 2px 6px; border-radius: 4px;">Snack size</span>
+                      </div>
+                      <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;" id="stock-hint-small">Loading stock...</div>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.2rem; color: #D97706;" id="display-price-small">₱10</div>
+                    <div style="font-size: 0.72rem; color: var(--color-text-muted);">per roll</div>
+                  </div>
+                </div>
 
-          <!-- Live Quantity Adjustment -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-            <span style="font-weight: 700; font-size: 0.9rem; color: var(--color-choco-dark);">Quantity:</span>
-            <div class="quantity-control-wrap">
-              <button class="qty-btn" type="button" id="btn-summary-minus">-</button>
-              <span class="qty-val" id="summary-qty-val">1</span>
-              <button class="qty-btn" type="button" id="btn-summary-plus">+</button>
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--color-border); padding-top: 10px;">
+                  <div class="quantity-control-wrap" style="padding: 4px 10px; gap: 12px;">
+                    <button class="qty-btn" type="button" id="btn-qty-minus-small" aria-label="Decrease Small">-</button>
+                    <span class="qty-val" id="qty-val-small">0</span>
+                    <button class="qty-btn" type="button" id="btn-qty-plus-small" aria-label="Increase Small">+</button>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="font-size: 0.75rem; color: var(--color-text-muted);">Item Subtotal:</span>
+                    <span style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark); margin-left: 4px;" id="item-subtotal-small">₱0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Large Roll Option Card -->
+              <div class="order-size-item-card active" id="size-card-large" data-size="large">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6rem;">🔥</span>
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark);">Large Roll</span>
+                        <span style="font-size: 0.7rem; font-weight: 700; background: #FDE68A; color: #78350F; padding: 2px 6px; border-radius: 4px;">Signature</span>
+                      </div>
+                      <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;" id="stock-hint-large">Loading stock...</div>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-family: var(--font-brand); font-weight: 700; font-size: 1.2rem; color: #D97706;" id="display-price-large">₱15</div>
+                    <div style="font-size: 0.72rem; color: var(--color-text-muted);">per roll</div>
+                  </div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed var(--color-border); padding-top: 10px;">
+                  <div class="quantity-control-wrap" style="padding: 4px 10px; gap: 12px;">
+                    <button class="qty-btn" type="button" id="btn-qty-minus-large" aria-label="Decrease Large">-</button>
+                    <span class="qty-val" id="qty-val-large">1</span>
+                    <button class="qty-btn" type="button" id="btn-qty-plus-large" aria-label="Increase Large">+</button>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="font-size: 0.75rem; color: var(--color-text-muted);">Item Subtotal:</span>
+                    <span style="font-family: var(--font-brand); font-weight: 700; font-size: 1.05rem; color: var(--color-choco-dark); margin-left: 4px;" id="item-subtotal-large">₱15</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           <!-- Price Calculations -->
           <div style="border-top: 1px dashed var(--color-border); padding-top: 14px; margin-bottom: 18px;">
+            <div class="cart-summary-line" id="summary-line-small" style="margin-bottom: 6px; display: none;">
+              <span>Small Roll (<span id="summary-count-small">0</span>x)</span>
+              <span id="summary-amount-small">₱0</span>
+            </div>
+            <div class="cart-summary-line" id="summary-line-large" style="margin-bottom: 6px;">
+              <span>Large Roll (<span id="summary-count-large">1</span>x)</span>
+              <span id="summary-amount-large">₱15</span>
+            </div>
             <div class="cart-summary-line" style="margin-bottom: 8px;">
-              <span>Subtotal</span>
+              <span>Items Subtotal</span>
               <span id="summary-subtotal">₱15</span>
             </div>
             <div class="cart-summary-line" style="margin-bottom: 8px;">

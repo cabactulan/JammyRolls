@@ -222,7 +222,7 @@ function initSubscriptions() {
   });
 
   subscribeToProduct((prod) => {
-    liveProduct = prod;
+    liveProducts = prod;
     renderStockManagement();
     updateAnalytics();
   });
