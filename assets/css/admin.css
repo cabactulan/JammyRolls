@@ -832,6 +832,38 @@ body {
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
 }
 
+/* .login-input — shared alias used across admin form text fields */
+.login-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--admin-border);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  color: #1F130B;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  line-height: 1.5;
+}
+
+.login-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+.login-input:hover {
+  border-color: #D97706;
+  background: #FFFDF8;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: #D97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+  background: #FFFDF8;
+}
+
 .login-error-badge {
   background: #FEE2E2;
   color: #991B1B;
@@ -1696,6 +1728,94 @@ body {
 
 .btn-photo-delete:hover {
   background: #FECACA;
+}
+
+/* ==========================================================================
+   Admin Form Inputs — Consistent Text Field Design
+   ========================================================================== */
+
+/* Base admin input — matches the design language of the entire admin portal */
+.admin-form-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--admin-border);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  color: #1F130B;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  line-height: 1.5;
+}
+
+.admin-form-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+.admin-form-input:hover {
+  border-color: #D97706;
+  background: #FFFDF8;
+}
+
+.admin-form-input:focus {
+  outline: none;
+  border-color: #D97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+  background: #FFFDF8;
+}
+
+/* Input wrapper with leading icon */
+.admin-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-input-wrap .admin-input-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 1rem;
+  pointer-events: none;
+  line-height: 1;
+  opacity: 0.75;
+}
+
+.admin-input-wrap .admin-form-input {
+  padding-left: 38px;
+}
+
+/* Admin field group: label + optional hint + input */
+.admin-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-field-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #374151;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-field-hint {
+  font-size: 0.75rem;
+  color: var(--admin-text-muted);
+  line-height: 1.4;
+}
+
+/* Character counter */
+.admin-input-footer {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+  margin-top: 3px;
 }
 
 /* Enhanced Photo Upload & Preview in Admin */

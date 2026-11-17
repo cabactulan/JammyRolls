@@ -577,24 +577,27 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
               <!-- Upload local file -->
               <div class="photo-input-tile">
-                <label class="login-input-label" style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                  <span>📁</span> <strong>Upload Local Photo</strong>
-                </label>
-                <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-bottom: 10px;">
-                  Automatic client compression keeps Firebase sync fast & lean.
+                <div class="admin-field-group">
+                  <label class="admin-field-label" for="new-photo-file">
+                    <span>📁</span> <strong>Upload Photo File</strong>
+                  </label>
+                  <span class="admin-field-hint">Select any photo from your device. It is automatically compressed and saved as cloud image data into Firebase.</span>
+                  <input type="file" id="new-photo-file" accept="image/*" class="photo-file-input">
                 </div>
-                <input type="file" id="new-photo-file" accept="image/*" class="photo-file-input">
               </div>
 
               <!-- Or Paste Image URL -->
               <div class="photo-input-tile">
-                <label class="login-input-label" style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                  <span>🔗</span> <strong>Or Paste Image Web URL</strong>
-                </label>
-                <div style="font-size: 0.78rem; color: var(--admin-text-muted); margin-bottom: 10px;">
-                  Paste a direct link to any hosted photo (https://...).
+                <div class="admin-field-group">
+                  <label class="admin-field-label" for="new-photo-url">
+                    <span>🔗</span> <strong>Or Paste Web Image URL</strong>
+                  </label>
+                  <span class="admin-field-hint">Direct link to any hosted image (https://...). Local file paths are not accepted.</span>
+                  <div class="admin-input-wrap">
+                    <span class="admin-input-icon">🌐</span>
+                    <input type="text" id="new-photo-url" class="admin-form-input" placeholder="https://images.unsplash.com/photo-...">
+                  </div>
                 </div>
-                <input type="text" id="new-photo-url" class="login-input" placeholder="https://images.unsplash.com/photo-..." style="background: #FFF;">
               </div>
             </div>
 
@@ -615,9 +618,18 @@
             </div>
 
             <!-- Photo Caption -->
-            <div class="login-input-group" style="margin-bottom: 18px;">
-              <label class="login-input-label" for="new-photo-caption">Photo Caption *</label>
-              <input type="text" id="new-photo-caption" class="login-input" placeholder="e.g. Fresh JammyRolls merienda shared with awesome friends ✨" required>
+            <div class="admin-field-group" style="margin-bottom: 18px;">
+              <label class="admin-field-label" for="new-photo-caption">
+                <span>✏️</span> Photo Caption <span style="color: #EF4444;">*</span>
+              </label>
+              <span class="admin-field-hint">Write a short description of this photo for the Wall of Smiles.</span>
+              <div class="admin-input-wrap">
+                <span class="admin-input-icon">💬</span>
+                <input type="text" id="new-photo-caption" class="admin-form-input" placeholder="e.g. Fresh JammyRolls merienda shared with awesome friends ✨" required maxlength="120">
+              </div>
+              <div class="admin-input-footer">
+                <span id="caption-char-count">0 / 120</span>
+              </div>
             </div>
 
             <!-- Submit Row -->

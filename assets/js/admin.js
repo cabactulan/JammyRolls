@@ -1369,6 +1369,18 @@ function initCustomerPhotosAdmin() {
     }
   });
 
+  // Caption character counter
+  const captionFieldEl = document.getElementById("new-photo-caption");
+  const captionCounter = document.getElementById("caption-char-count");
+  captionFieldEl?.addEventListener("input", () => {
+    const len = captionFieldEl.value.length;
+    const max = parseInt(captionFieldEl.getAttribute("maxlength") || "120");
+    if (captionCounter) {
+      captionCounter.textContent = `${len} / ${max}`;
+      captionCounter.style.color = len >= max ? "#EF4444" : len >= max * 0.8 ? "#D97706" : "var(--admin-text-muted)";
+    }
+  });
+
   // 3. Form Submit to Firebase RTDB
   const form = document.getElementById("admin-add-photo-form");
   form?.addEventListener("submit", async (e) => {
@@ -1382,6 +1394,12 @@ function initCustomerPhotosAdmin() {
     if (!photoUrl) {
       showAdminNotification("Please upload a photo file or enter an image URL!");
       fileInput?.focus();
+      return;
+    }
+
+    // Strictly ensure no local filesystem directory paths are stored in Firebase
+    if (!photoUrl.startsWith("data:image/") && !photoUrl.startsWith("http://") && !photoUrl.startsWith("https://")) {
+      showAdminNotification("Local directory paths cannot be saved. Please upload the photo file or use a web URL!");
       return;
     }
 
@@ -1515,7 +1533,6 @@ function updatePhotosKPIs() {
   if (featEl) featEl.textContent = featured;
   if (countLabel) countLabel.textContent = `${total} photo${total === 1 ? '' : 's'}`;
 }
-}
 
 function renderAdminPhotosList() {
   const container = document.getElementById("admin-photos-list");
@@ -1569,10 +1586,8 @@ function renderAdminPhotosList() {
       ? new Date(photo.createdAt).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       : "Recently added";
 
-    // Safely resolve image URL
-    const imgSrc = photo.photoUrl && photo.photoUrl.startsWith('assets/') 
-      ? '../' + photo.photoUrl 
-      : (photo.photoUrl || '');
+    // Safely resolve cloud image data URL or web link
+    const imgSrc = photo.photoUrl || '../assets/images/jammyrolls-logo.png';
 
     return `
       <div class="admin-photo-card" data-id="${photo.photoId}">
@@ -1612,9 +1627,7 @@ function setupAdminPhotoLightbox() {
     const dateEl = document.getElementById("admin-lightbox-date");
     const badgeEl = document.getElementById("admin-lightbox-badge");
 
-    const imgSrc = photo.photoUrl && photo.photoUrl.startsWith('assets/') 
-      ? '../' + photo.photoUrl 
-      : (photo.photoUrl || '');
+    const imgSrc = photo.photoUrl || '../assets/images/jammyrolls-logo.png';
 
     if (imgEl) imgEl.src = imgSrc;
     if (captionEl) captionEl.textContent = photo.caption || photo.comment || "Happy JammyRolls Customer ✨";

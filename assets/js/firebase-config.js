@@ -1,5 +1,4 @@
 // Live Cloud Synchronization & Store Service
-import { satisfiedCustomersFromFolder } from "./satisfied-customers-data.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getDatabase, 
@@ -115,6 +114,45 @@ const cachedProd = getStored(CACHE_KEYS.PRODUCT, null);
 if (!cachedProd) {
   setStored(CACHE_KEYS.PRODUCT, jammyProducts);
 }
+
+// ==========================================================================
+// One-time purge: wipe any stale local-directory photo paths from localStorage
+// and from Firebase. Local folder paths (assets/images/...) can never be
+// served cross-device — they must be re-uploaded as real files via Admin Hub.
+// ==========================================================================
+(function purgeLocalPathPhotos() {
+  const PURGE_FLAG = "jammyrolls_local_path_purge_v1";
+  if (localStorage.getItem(PURGE_FLAG)) return; // already done
+
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEYS.CUSTOMER_PHOTOS) || "{}");
+    const badIds = [];
+    const cleaned = {};
+
+    Object.entries(cached).forEach(([id, photo]) => {
+      if (!photo || !photo.photoUrl) return;
+      const url = String(photo.photoUrl).trim();
+      const isValid = url.startsWith("data:image/") || url.startsWith("http://") || url.startsWith("https://");
+      if (isValid) {
+        cleaned[id] = photo;
+      } else {
+        badIds.push(id);
+      }
+    });
+
+    if (badIds.length > 0) {
+      localStorage.setItem(CACHE_KEYS.CUSTOMER_PHOTOS, JSON.stringify(cleaned));
+      // Also nuke them from Firebase
+      if (liveSyncReady && db) {
+        badIds.forEach(id => {
+          try { set(ref(db, `customerPhotos/${id}`), null); } catch (e) {}
+        });
+      }
+    }
+
+    localStorage.setItem(PURGE_FLAG, "1");
+  } catch (e) {}
+})();
 
 // On startup, pull product info from cloud if available
 async function initCloudSync() {
@@ -537,28 +575,57 @@ export async function deleteReview(reviewId) {
 
 /**
  * Customer Photos Catalog (Synchronized with Firebase Realtime Database)
- * Baseline customer smiles with full real-time cloud synchronization.
+ * Photos are loaded exclusively from Firebase Realtime Database.
  */
-export const DEFAULT_CUSTOMER_PHOTOS = satisfiedCustomersFromFolder;
+export const DEFAULT_CUSTOMER_PHOTOS = {};
 
 /**
  * Subscribe to Customer Photos (Live Feed from Firebase Realtime Database)
  */
+/**
+ * Customer Photos Helper — Strictly allow Data URLs or HTTP(S) Web URLs
+ * Completely rejects local filesystem directory paths.
+ */
+export function sanitizeCustomerPhotos(photosObj) {
+  if (!photosObj || typeof photosObj !== "object") return {};
+  const cleaned = {};
+  Object.entries(photosObj).forEach(([id, photo]) => {
+    if (photo && photo.photoUrl) {
+      const url = String(photo.photoUrl).trim();
+      // Only accept actual Base64 image data or hosted web URLs
+      if (url.startsWith("data:image/") || url.startsWith("http://") || url.startsWith("https://")) {
+        cleaned[id] = {
+          ...photo,
+          photoId: photo.photoId || id,
+          photoUrl: url
+        };
+      }
+    }
+  });
+  return cleaned;
+}
+
 export function normalizePhotoUrl(url) {
   if (!url) return "assets/images/jammyrolls-logo.png";
   if (url.startsWith("data:")) return url;
   return url.replace(/ /g, "%20");
 }
 
+/**
+ * Subscribe to Customer Photos (Strictly from Firebase Realtime Database)
+ * Uploads made via Admin Hub are live-streamed directly to this callback.
+ */
+
+// Track if a one-time Firebase cleanup has already run this session
+let _photosCleanupDone = false;
+
 export function subscribeToCustomerPhotos(callback) {
   photosSubscribers.add(callback);
-  
-  // Deliver current cached or baseline photos immediately so the gallery is never empty
-  const cachedPhotos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, null);
-  const initialPhotos = (cachedPhotos && Object.keys(cachedPhotos).length > 0)
-    ? cachedPhotos
-    : { ...satisfiedCustomersFromFolder };
-  callback(initialPhotos);
+
+  // Deliver current cached Firebase photos immediately
+  const cachedPhotos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
+  const cleanCached = sanitizeCustomerPhotos(cachedPhotos);
+  callback(cleanCached);
 
   if (liveSyncReady && db) {
     try {
@@ -566,14 +633,35 @@ export function subscribeToCustomerPhotos(callback) {
       onValue(photosRef, (snapshot) => {
         let cloudPhotos = {};
         if (snapshot.exists()) {
-          // Strictly use photos directly from Firebase Realtime Database
-          cloudPhotos = snapshot.val() || {};
-        } else if (Object.keys(satisfiedCustomersFromFolder).length > 0) {
-          // If cloud database is empty, seed it once with the initial customer catalog
-          try {
-            set(photosRef, satisfiedCustomersFromFolder);
-          } catch (e) {}
-          cloudPhotos = { ...satisfiedCustomersFromFolder };
+          const raw = snapshot.val() || {};
+
+          // Run invalid-URL cleanup only ONCE per session to avoid write→listen loops
+          if (!_photosCleanupDone) {
+            _photosCleanupDone = true;
+            const badIds = [];
+            Object.entries(raw).forEach(([id, photo]) => {
+              if (photo && photo.photoUrl) {
+                const url = String(photo.photoUrl).trim();
+                if (
+                  !url.startsWith("data:image/") &&
+                  !url.startsWith("http://") &&
+                  !url.startsWith("https://")
+                ) {
+                  badIds.push(id);
+                }
+              }
+            });
+            // Fire-and-forget deletions outside the listener callback
+            if (badIds.length > 0) {
+              setTimeout(() => {
+                badIds.forEach(id => {
+                  try { set(ref(db, `customerPhotos/${id}`), null); } catch (e) {}
+                });
+              }, 0);
+            }
+          }
+
+          cloudPhotos = sanitizeCustomerPhotos(raw);
         }
 
         setStored(CACHE_KEYS.CUSTOMER_PHOTOS, cloudPhotos);
@@ -588,34 +676,49 @@ export function subscribeToCustomerPhotos(callback) {
 
   window.addEventListener("store-sync-update", (e) => {
     if (e.detail.key === CACHE_KEYS.CUSTOMER_PHOTOS) {
-      callback(e.detail.val || satisfiedCustomersFromFolder);
+      callback(sanitizeCustomerPhotos(e.detail.val));
     }
   });
 }
 
 /**
  * Create / Add Customer Photo directly to Firebase Realtime Database
+ * Uploads via Admin Hub send compressed Base64 data-URLs (data:image/...) or Web URLs (http/https).
+ * Local file directory paths (such as assets/images/...) are strictly prohibited.
  */
 export async function createCustomerPhoto(photoData) {
   const photoId = "PHOTO-" + Date.now() + "-" + Math.floor(100 + Math.random() * 900);
   const now = new Date().toISOString();
+  const rawUrl = (photoData.photoUrl || "").trim();
+
+  // Validate: strictly require actual uploaded image data (Base64) or hosted web URL
+  if (!rawUrl.startsWith("data:image/") && !rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+    throw new Error("Invalid photo: Only uploaded image files (converted to cloud data) or hosted web URLs (http/https) can be saved to Firebase. Local directory paths are not allowed.");
+  }
+
+  // Reject any string containing hardcoded local folder references
+  if (rawUrl.includes("assets/") || rawUrl.includes("Satisfied Customers") || rawUrl.includes(":\\") || rawUrl.includes(":/")) {
+    if (!rawUrl.startsWith("data:image/") && !rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+      throw new Error("Local directory paths cannot be saved to Firebase. Please upload the photo file or use a web URL.");
+    }
+  }
 
   const finalPhoto = {
     photoId,
     caption: photoData.caption ? photoData.caption.trim() : "Happy JammyRolls customer ✨",
     customerName: photoData.customerName ? photoData.customerName.trim() : "",
-    photoUrl: photoData.photoUrl || "",
+    photoUrl: rawUrl,
     isFeatured: photoData.isFeatured !== undefined ? !!photoData.isFeatured : true,
     createdAt: now
   };
 
   // 1. Optimistic update in local cache
-  const photos = getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {});
+  const photos = sanitizeCustomerPhotos(getStored(CACHE_KEYS.CUSTOMER_PHOTOS, {}));
   photos[photoId] = finalPhoto;
   setStored(CACHE_KEYS.CUSTOMER_PHOTOS, photos);
   photosSubscribers.forEach(cb => cb(photos));
 
-  // 2. Persist to Firebase Realtime Database
+  // 2. Persist directly into Firebase Realtime Database
   if (liveSyncReady && db) {
     try {
       await set(ref(db, `customerPhotos/${photoId}`), finalPhoto);
@@ -663,10 +766,11 @@ export async function toggleCustomerPhotoFeatured(photoId) {
     setStored(CACHE_KEYS.CUSTOMER_PHOTOS, photos);
     photosSubscribers.forEach(cb => cb(photos));
 
+    // Persist featured status update directly to Firebase
     if (liveSyncReady && db) {
       try {
-        await update(ref(db, `customerPhotos/${photoId}`), { 
-          isFeatured: photos[photoId].isFeatured 
+        await update(ref(db, `customerPhotos/${photoId}`), {
+          isFeatured: photos[photoId].isFeatured
         });
       } catch (e) {
         console.warn("Cloud feature photo notice:", e);
