@@ -233,6 +233,16 @@ function renderProductSection() {
         `;
       }).join("")}
     </div>
+
+    <!-- Order Both Sizes CTA -->
+    <div id="order-both-cta" style="margin-top: 24px; text-align: center;">
+      <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 10px;">
+        Can't decide? Order <strong>both sizes</strong> in a single checkout!
+      </p>
+      <button class="btn btn-primary" id="btn-order-both" style="padding: 12px 28px; font-size: 1rem; justify-content: center;">
+        <span>🍌🔥</span> <span>Order Both Sizes</span>
+      </button>
+    </div>
   `;
 
   // Attach Quantity Listeners for each size
@@ -270,6 +280,19 @@ function renderProductSection() {
       }
       window.location.href = `order.html?size=${key}&qty=${heroQtys[key] || 1}`;
     });
+  });
+
+  // "Order Both Sizes" CTA button
+  container.querySelector("#btn-order-both")?.addEventListener("click", () => {
+    const smallAvail = liveProducts?.small?.isAvailable && (liveProducts?.small?.stock || 0) > 0;
+    const largeAvail = liveProducts?.large?.isAvailable && (liveProducts?.large?.stock || 0) > 0;
+    if (!smallAvail && !largeAvail) {
+      showToast("Sorry, all sizes are currently sold out!", "warning");
+      return;
+    }
+    const qtySmall = smallAvail ? (heroQtys.small || 1) : 0;
+    const qtyLarge = largeAvail ? (heroQtys.large || 1) : 0;
+    window.location.href = `order.html?small=${qtySmall}&large=${qtyLarge}`;
   });
 }
 

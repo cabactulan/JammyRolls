@@ -3029,6 +3029,26 @@ img {
   }
 }
 
+/* ── Multi-Size Item Cards (new) ── */
+.order-size-item-card {
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  background: #FFF;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.order-size-item-card:hover {
+  border-color: #D97706;
+}
+
+.order-size-item-card.active {
+  border-color: #D97706;
+  background: #FFFDF8;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.15);
+}
+
 .order-size-card {
   border: 2px solid var(--color-border);
   border-radius: var(--radius-lg);
