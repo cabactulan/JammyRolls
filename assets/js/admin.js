@@ -228,6 +228,115 @@ function initSubscriptions() {
   });
 }
 
+// ==========================================================================
+// Notification Unread State Helpers (Orders & Reviews)
+// ==========================================================================
+function getReadOrderIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem("jammy_read_orders_ids") || "[]"));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function getUnreadOrdersCount() {
+  const readIds = getReadOrderIds();
+  const allList = Object.values(allOrders || {});
+  return allList.filter(o => !readIds.has(String(o.orderId))).length;
+}
+
+function updateOrdersNotificationBadge() {
+  const unreadCount = getUnreadOrdersCount();
+  const sidebarBadge = document.getElementById("sidebar-pending-badge");
+  const bnavBadge = document.getElementById("bnav-pending-badge");
+
+  if (sidebarBadge) {
+    sidebarBadge.textContent = unreadCount;
+    sidebarBadge.style.display = unreadCount > 0 ? "inline-flex" : "none";
+  }
+  if (bnavBadge) {
+    bnavBadge.textContent = unreadCount;
+    bnavBadge.style.display = unreadCount > 0 ? "inline-flex" : "none";
+  }
+}
+
+function markOrderAsRead(orderId) {
+  if (!orderId) return;
+  const readIds = getReadOrderIds();
+  if (!readIds.has(String(orderId))) {
+    readIds.add(String(orderId));
+    localStorage.setItem("jammy_read_orders_ids", JSON.stringify([...readIds]));
+    updateOrdersNotificationBadge();
+    const row = document.querySelector(`tr[data-order-id="${orderId}"]`);
+    if (row) {
+      row.classList.remove("unread-item-row");
+      row.querySelector(".unread-notification-dot")?.remove();
+    }
+  }
+}
+
+function markAllOrdersAsRead() {
+  const readIds = getReadOrderIds();
+  Object.keys(allOrders || {}).forEach(id => readIds.add(String(id)));
+  localStorage.setItem("jammy_read_orders_ids", JSON.stringify([...readIds]));
+  updateOrdersNotificationBadge();
+  renderOrdersTable();
+  showAdminNotification("All orders marked as read ✓");
+}
+
+function getReadReviewIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem("jammy_read_reviews_ids") || "[]"));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function getUnreadReviewsCount() {
+  const readIds = getReadReviewIds();
+  const allList = Object.values(allReviews || {});
+  return allList.filter(r => !readIds.has(String(r.reviewId || r.id))).length;
+}
+
+function updateReviewsNotificationBadge() {
+  const unreadCount = getUnreadReviewsCount();
+  const sidebarReviewsBadge = document.getElementById("sidebar-reviews-badge");
+  const bnavReviewsBadge = document.getElementById("bnav-reviews-badge");
+
+  if (sidebarReviewsBadge) {
+    sidebarReviewsBadge.textContent = unreadCount;
+    sidebarReviewsBadge.style.display = unreadCount > 0 ? "inline-flex" : "none";
+  }
+  if (bnavReviewsBadge) {
+    bnavReviewsBadge.textContent = unreadCount;
+    bnavReviewsBadge.style.display = unreadCount > 0 ? "inline-flex" : "none";
+  }
+}
+
+function markReviewAsRead(reviewId) {
+  if (!reviewId) return;
+  const readIds = getReadReviewIds();
+  if (!readIds.has(String(reviewId))) {
+    readIds.add(String(reviewId));
+    localStorage.setItem("jammy_read_reviews_ids", JSON.stringify([...readIds]));
+    updateReviewsNotificationBadge();
+    const row = document.querySelector(`tr[data-review-id="${reviewId}"]`);
+    if (row) {
+      row.classList.remove("unread-item-row");
+      row.querySelector(".unread-notification-dot")?.remove();
+    }
+  }
+}
+
+function markAllReviewsAsRead() {
+  const readIds = getReadReviewIds();
+  Object.keys(allReviews || {}).forEach(id => readIds.add(String(id)));
+  localStorage.setItem("jammy_read_reviews_ids", JSON.stringify([...readIds]));
+  updateReviewsNotificationBadge();
+  renderReviewsTable();
+  showAdminNotification("All reviews marked as read ✓");
+}
+
 function updateAnalytics() {
   const ordersList = Object.values(allOrders || {});
 
@@ -276,18 +385,8 @@ function updateAnalytics() {
     stockBadge.style.color = isLow ? "var(--color-danger)" : "var(--color-success)";
   }
 
-  const sidebarBadge = document.getElementById("sidebar-pending-badge");
-  if (sidebarBadge) {
-    sidebarBadge.textContent = activeOrdersCount;
-    sidebarBadge.style.display = activeOrdersCount > 0 ? "inline-block" : "none";
-  }
-
-  // Also update bottom nav badge
-  const bnavBadge = document.getElementById("bnav-pending-badge");
-  if (bnavBadge) {
-    bnavBadge.textContent = activeOrdersCount;
-    bnavBadge.style.display = activeOrdersCount > 0 ? "inline-block" : "none";
-  }
+  // Update orders notification badge based on unread orders
+  updateOrdersNotificationBadge();
 }
 
 function renderOrdersTable() {
@@ -313,7 +412,10 @@ function renderOrdersTable() {
     return;
   }
 
+  const readOrderIds = getReadOrderIds();
+
   tbody.innerHTML = filtered.map(order => {
+    const isUnread = !readOrderIds.has(String(order.orderId));
     const dateFormatted = order.createdAt 
       ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
       : '--:--';
@@ -321,9 +423,12 @@ function renderOrdersTable() {
     const itemsSummary = (order.items || []).map(i => `${i.quantity}x ${i.name || 'JammyRolls'}`).join(", ");
 
     return `
-      <tr data-order-id="${order.orderId}">
+      <tr data-order-id="${order.orderId}" class="${isUnread ? 'unread-item-row' : ''}">
         <td data-label="Order #">
-          <span class="order-id-badge">#${order.orderId}</span>
+          <div style="display: flex; align-items: center;">
+            ${isUnread ? '<span class="unread-notification-dot" title="New unread order"></span>' : ''}
+            <span class="order-id-badge">#${order.orderId}</span>
+          </div>
           <div style="font-size: 0.75rem; color: var(--admin-text-muted);">${dateFormatted}</div>
         </td>
         <td data-label="Customer">
@@ -363,6 +468,14 @@ function renderOrdersTable() {
       </tr>
     `;
   }).join("");
+
+  // Clicking an order row (container) marks it as read and decreases notification badge
+  tbody.querySelectorAll("tr[data-order-id]").forEach(tr => {
+    tr.addEventListener("click", () => {
+      const orderId = tr.getAttribute("data-order-id");
+      markOrderAsRead(orderId);
+    });
+  });
 
   tbody.querySelectorAll(".btn-status-update").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -699,6 +812,15 @@ function setupAdminControls() {
     });
   });
 
+  // Read All Notifications Buttons
+  document.getElementById("btn-read-all-orders")?.addEventListener("click", () => {
+    markAllOrdersAsRead();
+  });
+
+  document.getElementById("btn-read-all-reviews")?.addEventListener("click", () => {
+    markAllReviewsAsRead();
+  });
+
   // Live Clock
   setInterval(() => {
     const clockEl = document.getElementById("admin-live-clock");
@@ -1022,14 +1144,8 @@ function updateReviewKPIs() {
   if (fiveStarEl) fiveStarEl.textContent = fiveStarCount;
   if (fiveStarPctEl) fiveStarPctEl.textContent = `${fiveStarPct}% of reviews`;
 
-  if (sidebarReviewsBadge) {
-    sidebarReviewsBadge.textContent = totalCount;
-    sidebarReviewsBadge.style.display = totalCount > 0 ? "inline-block" : "none";
-  }
-  if (bnavReviewsBadge) {
-    bnavReviewsBadge.textContent = totalCount;
-    bnavReviewsBadge.style.display = totalCount > 0 ? "inline-block" : "none";
-  }
+  // Update unread reviews notification badge
+  updateReviewsNotificationBadge();
 }
 
 function renderReviewsTable() {
@@ -1055,7 +1171,10 @@ function renderReviewsTable() {
     return;
   }
 
+  const readReviewIds = getReadReviewIds();
+
   tbody.innerHTML = filtered.map(r => {
+    const isUnread = !readReviewIds.has(String(r.reviewId || r.id));
     const formattedDate = r.createdAt 
       ? new Date(r.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
       : "Recent";
@@ -1065,9 +1184,12 @@ function renderReviewsTable() {
     const starEmpty = "☆".repeat(5 - ratingNum);
 
     return `
-      <tr data-review-id="${r.reviewId}">
+      <tr data-review-id="${r.reviewId}" class="${isUnread ? 'unread-item-row' : ''}">
         <td data-label="Date">
-          <div style="font-size: 0.82rem; font-weight: 600; color: #1F130B;">${formattedDate}</div>
+          <div style="display: flex; align-items: center;">
+            ${isUnread ? '<span class="unread-notification-dot" title="New unread feedback"></span>' : ''}
+            <div style="font-size: 0.82rem; font-weight: 600; color: #1F130B;">${formattedDate}</div>
+          </div>
           <div style="font-size: 0.72rem; color: var(--admin-text-muted);">${r.reviewId}</div>
         </td>
         <td data-label="Customer">
@@ -1092,6 +1214,14 @@ function renderReviewsTable() {
       </tr>
     `;
   }).join("");
+
+  // Clicking a review row (container) marks it as read and decreases notification badge
+  tbody.querySelectorAll("tr[data-review-id]").forEach(tr => {
+    tr.addEventListener("click", () => {
+      const reviewId = tr.getAttribute("data-review-id");
+      markReviewAsRead(reviewId);
+    });
+  });
 
   // Connect Delete Review buttons with confirmation
   tbody.querySelectorAll(".btn-delete-review").forEach(btn => {
@@ -1377,32 +1507,11 @@ function updatePhotosKPIs() {
   const totalEl = document.getElementById("kpi-photos-total");
   const featEl = document.getElementById("kpi-photos-featured");
   const countLabel = document.getElementById("admin-photos-count-label");
-  const sidebarBadge = document.getElementById("sidebar-photos-badge");
-  const bnavBadge = document.getElementById("bnav-photos-badge");
 
   if (totalEl) totalEl.textContent = total;
   if (featEl) featEl.textContent = featured;
-  if (countLabel) countLabel.textContent = `${total} photo${total === 1 ? '' : 's'} in Firebase`;
-
-  // Desktop sidebar badge
-  if (sidebarBadge) {
-    if (total > 0) {
-      sidebarBadge.textContent = total;
-      sidebarBadge.style.display = "inline-flex";
-    } else {
-      sidebarBadge.style.display = "none";
-    }
-  }
-
-  // Mobile bottom navigation badge
-  if (bnavBadge) {
-    if (total > 0) {
-      bnavBadge.textContent = total;
-      bnavBadge.style.display = "inline-flex";
-    } else {
-      bnavBadge.style.display = "none";
-    }
-  }
+  if (countLabel) countLabel.textContent = `${total} photo${total === 1 ? '' : 's'}`;
+}
 }
 
 function renderAdminPhotosList() {

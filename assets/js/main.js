@@ -529,7 +529,7 @@ function renderHomepageGallery() {
         <div style="font-size: 2.8rem; margin-bottom: 10px;">📸</div>
         <h4 style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.25rem;">Wall of Jammy Smiles</h4>
         <p style="color: var(--color-text-muted); font-size: 0.9rem; max-width: 460px; margin: 0 auto 16px;">
-          Live customer moments from our Firebase database will appear here!
+          Moments shared by our happy customers will appear here!
         </p>
         <a href="customers.html" class="btn btn-primary" style="padding: 10px 24px; font-size: 0.88rem;">
           Visit Customer Gallery

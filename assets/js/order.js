@@ -416,8 +416,8 @@ function renderConfirmationView(createdOrder, orderData) {
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px; border-bottom: 1px dashed var(--color-border); padding-bottom: 10px;">
           <span style="font-size: 1.3rem;">🛵</span>
           <div>
-            <div style="font-family: var(--font-brand); font-size: 1rem; color: var(--color-choco-dark); font-weight: 700;">Live Kitchen Tracker</div>
-            <div style="font-size: 0.74rem; color: var(--color-text-muted);">Updates automatically — no refresh needed</div>
+            <div style="font-family: var(--font-brand); font-size: 1rem; color: var(--color-choco-dark); font-weight: 700;">Order Status Tracker</div>
+            <div style="font-size: 0.74rem; color: var(--color-text-muted);">Updates automatically as your rolls are prepared</div>
           </div>
         </div>
         <div id="inline-live-tracker-body">

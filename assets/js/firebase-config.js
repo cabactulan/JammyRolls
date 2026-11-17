@@ -566,18 +566,14 @@ export function subscribeToCustomerPhotos(callback) {
       onValue(photosRef, (snapshot) => {
         let cloudPhotos = {};
         if (snapshot.exists()) {
+          // Strictly use photos directly from Firebase Realtime Database
           cloudPhotos = snapshot.val() || {};
-        }
-
-        // If cloud database is empty, seed it with the baseline photos
-        if (Object.keys(cloudPhotos).length === 0 && Object.keys(satisfiedCustomersFromFolder).length > 0) {
+        } else if (Object.keys(satisfiedCustomersFromFolder).length > 0) {
+          // If cloud database is empty, seed it once with the initial customer catalog
           try {
             set(photosRef, satisfiedCustomersFromFolder);
           } catch (e) {}
           cloudPhotos = { ...satisfiedCustomersFromFolder };
-        } else {
-          // Merge baseline with cloud photos so customer photos are always shown
-          cloudPhotos = { ...satisfiedCustomersFromFolder, ...cloudPhotos };
         }
 
         setStored(CACHE_KEYS.CUSTOMER_PHOTOS, cloudPhotos);

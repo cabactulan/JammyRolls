@@ -897,7 +897,7 @@ export async function trackOrderById(query) {
   body.innerHTML = `
     <div style="text-align: center; padding: 40px 20px; color: var(--color-text-muted);">
       <div style="font-size: 2.5rem; margin-bottom: 10px;">⏳</div>
-      <p style="font-weight: 600;">Connecting to kitchen live feed for #${orderId}...</p>
+      <p style="font-weight: 600;">Checking kitchen status for #${orderId}...</p>
     </div>
   `;
 
@@ -1002,13 +1002,6 @@ export function buildTrackerHTML(order) {
   `).join("");
 
   return `
-    <!-- LIVE badge -->
-    <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 14px;">
-      <span class="live-pulse-dot"></span>
-      <span style="font-size: 0.72rem; font-weight: 800; color: #DC2626; letter-spacing: 0.08em; text-transform: uppercase;">Live Update</span>
-      <span style="font-size: 0.72rem; color: var(--color-text-muted);">— auto-syncing via Firebase</span>
-    </div>
-
     <!-- Top Status Box -->
     <div class="tracker-status-box" style="margin-bottom: 20px;">
       <div style="font-size: 0.8rem; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); margin-bottom: 6px;">
@@ -1101,7 +1094,7 @@ export function attachInlineTracker(orderId, containerEl) {
   containerEl.innerHTML = `
     <div style="text-align: center; padding: 30px 20px; color: var(--color-text-muted);">
       <div style="font-size: 2rem; margin-bottom: 8px;">📡</div>
-      <p style="font-weight: 600; font-size: 0.9rem;">Connecting to live kitchen feed…</p>
+      <p style="font-weight: 600; font-size: 0.9rem;">Checking order status…</p>
     </div>
   `;
 

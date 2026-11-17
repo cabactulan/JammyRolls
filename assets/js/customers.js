@@ -30,7 +30,7 @@ function renderGallery() {
         <div style="font-size: 3.5rem; margin-bottom: 12px;">📸</div>
         <h3 style="font-family: var(--font-brand); color: var(--color-choco-dark); font-size: 1.4rem; margin-bottom: 8px;">Wall of Jammy Smiles</h3>
         <p style="color: var(--color-text-muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto 20px;">
-          Our live customer gallery is powered directly by Firebase Realtime Database. Moments shared by our happy customers will appear here!
+          Moments shared by our happy customers will appear here!
         </p>
         <a href="index.html#reviews" class="btn btn-primary" style="padding: 10px 24px; font-size: 0.9rem;">
           Leave a Review & Share Your Smile ⭐

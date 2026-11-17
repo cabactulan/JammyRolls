@@ -2244,3 +2244,36 @@ body {
     flex: 1 1 calc(33.333% - 6px) !important;
   }
 }
+
+/* ── Unread Notification Row & Read All Button ── */
+.btn-read-all {
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.btn-read-all:hover {
+  background: #FDE68A !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+.btn-read-all:active {
+  transform: translateY(0);
+}
+.unread-item-row {
+  background-color: #FFFBEB !important;
+  cursor: pointer;
+  position: relative;
+}
+.unread-item-row:hover {
+  background-color: #FEF3C7 !important;
+}
+.unread-notification-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #EF4444;
+  margin-right: 6px;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+  animation: pulse-dot 1.8s infinite;
+  flex-shrink: 0;
+}

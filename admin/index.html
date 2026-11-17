@@ -108,7 +108,6 @@
         <button class="nav-item-btn" data-section="gallery">
           <span>📸</span>
           <span>Photos</span>
-          <span class="nav-badge-pill" id="sidebar-photos-badge" style="display: none;">0</span>
         </button>
 
         <button class="nav-item-btn" data-section="founders">
@@ -242,19 +241,25 @@
       <!-- SECTION 2: LIVE KITCHEN ORDERS -->
       <section class="admin-section" id="section-orders" style="display: none;">
         <div class="panel-card">
-          <div class="panel-header">
+          <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
             <div>
               <h2 style="font-family: 'Fredoka', cursive; font-size: 1.4rem;">Live Orders</h2>
               <p style="font-size: 0.85rem; color: var(--admin-text-muted);">Orders placed by customers appear here</p>
             </div>
 
-            <div class="filter-pills-row">
-              <button class="filter-pill order-filter-pill active" data-status="all">All Orders</button>
-              <button class="filter-pill order-filter-pill" data-status="Pending">Pending (New)</button>
-              <button class="filter-pill order-filter-pill" data-status="Preparing">Preparing / Frying</button>
-              <button class="filter-pill order-filter-pill" data-status="Ready">Ready / Out for Delivery</button>
-              <button class="filter-pill order-filter-pill" data-status="Completed">Completed</button>
-              <button class="filter-pill order-filter-pill" data-status="Cancelled">Cancelled</button>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div class="filter-pills-row">
+                <button class="filter-pill order-filter-pill active" data-status="all">All Orders</button>
+                <button class="filter-pill order-filter-pill" data-status="Pending">Pending (New)</button>
+                <button class="filter-pill order-filter-pill" data-status="Preparing">Preparing / Frying</button>
+                <button class="filter-pill order-filter-pill" data-status="Ready">Ready / Out for Delivery</button>
+                <button class="filter-pill order-filter-pill" data-status="Completed">Completed</button>
+                <button class="filter-pill order-filter-pill" data-status="Cancelled">Cancelled</button>
+              </div>
+
+              <button type="button" class="btn-read-all" id="btn-read-all-orders" title="Mark all orders as read" style="background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 6px 14px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <span>✓</span> <span>Read All</span>
+              </button>
             </div>
           </div>
 
@@ -469,13 +474,18 @@
         <div class="admin-card">
           <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <h3 style="font-family: 'Fredoka', cursive; font-size: 1.15rem;">Customer Feedback Log</h3>
-            <div class="filter-pills-row order-filter-pills" id="review-filter-pills">
-              <button class="filter-pill order-filter-pill active" data-rating="all">All</button>
-              <button class="filter-pill order-filter-pill" data-rating="5">5 <span class="star-icon">★</span></button>
-              <button class="filter-pill order-filter-pill" data-rating="4">4 <span class="star-icon">★</span></button>
-              <button class="filter-pill order-filter-pill" data-rating="3">3 <span class="star-icon">★</span></button>
-              <button class="filter-pill order-filter-pill" data-rating="2">2 <span class="star-icon">★</span></button>
-              <button class="filter-pill order-filter-pill" data-rating="1">1 <span class="star-icon">★</span></button>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div class="filter-pills-row order-filter-pills" id="review-filter-pills">
+                <button class="filter-pill order-filter-pill active" data-rating="all">All</button>
+                <button class="filter-pill order-filter-pill" data-rating="5">5 <span class="star-icon">★</span></button>
+                <button class="filter-pill order-filter-pill" data-rating="4">4 <span class="star-icon">★</span></button>
+                <button class="filter-pill order-filter-pill" data-rating="3">3 <span class="star-icon">★</span></button>
+                <button class="filter-pill order-filter-pill" data-rating="2">2 <span class="star-icon">★</span></button>
+                <button class="filter-pill order-filter-pill" data-rating="1">1 <span class="star-icon">★</span></button>
+              </div>
+              <button type="button" class="btn-read-all" id="btn-read-all-reviews" title="Mark all reviews as read" style="background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 6px 14px; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <span>✓</span> <span>Read All</span>
+              </button>
             </div>
           </div>
 
@@ -665,7 +675,6 @@
         <button class="admin-bnav-btn" data-section="gallery">
           <span class="bnav-icon">📸</span>
           <span>Photos</span>
-          <span class="admin-bnav-badge" id="bnav-photos-badge" style="display: none;">0</span>
         </button>
         <button class="admin-bnav-btn" data-section="founders">
           <span class="bnav-icon">👥</span>
